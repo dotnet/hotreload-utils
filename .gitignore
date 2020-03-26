@@ -1,0 +1,9 @@
+Output/
+bin/
+obj/
+*~
+*.dll
+*.pdb
+*.dil
+*.dmeta
+*.dpdb
