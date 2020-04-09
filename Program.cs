@@ -24,7 +24,7 @@ namespace RoslynILDiff
 		{
 			OutputKind kind = OutputKind.DynamicallyLinkedLibrary;
 			if (args.Length == 0) {
-				Console.WriteLine("roslynildiff.exe file.cs");
+				Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
 				return;
 			}
 
@@ -62,14 +62,13 @@ namespace RoslynILDiff
 				return;
 			}
 
-			Directory.CreateDirectory("Output");
-			using (var baseLineFile = File.Create(Path.Combine("Output", outputAsm)))
+			using (var baseLineFile = File.Create(outputAsm))
             {
 				baselineImage.Seek(0, SeekOrigin.Begin);
 				baselineImage.CopyTo(baseLineFile);
 				baseLineFile.Flush();
             }
-            using (var baseLinePdbFile = File.Create(Path.Combine("Output", filenameNoExt + ".pdb")))
+            using (var baseLinePdbFile = File.Create(filenameNoExt + ".pdb"))
             {
 				baselinePdb.Seek(0, SeekOrigin.Begin);
 				baselinePdb.CopyTo(baseLinePdbFile);
@@ -138,9 +137,9 @@ namespace RoslynILDiff
 
 			var changeCount = ".1";
 
-			using (var metaStream = File.Create ("Output/" + outputAsm + changeCount + ".dmeta"))
-			using (var ilStream = File.Create ("Output/" + outputAsm + changeCount + ".dil")) 
-			using (var pdbStream = File.Create ("Output/" + outputAsm + changeCount + ".dpdb")) {
+			using (var metaStream = File.Create (outputAsm + changeCount + ".dmeta"))
+			using (var ilStream = File.Create (outputAsm + changeCount + ".dil")) 
+			using (var pdbStream = File.Create (outputAsm + changeCount + ".dpdb")) {
 				var updatedMethods = new List<MethodDefinitionHandle> ();
 				EmitDifferenceResult emitResult = updatedCompilation.Result.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
 				if (!emitResult.Success) {
@@ -153,11 +152,6 @@ namespace RoslynILDiff
 				ilStream.Flush();
 				pdbStream.Flush();
 			}
-		}
-
-		static void TestMethod ()
-		{
-			5.ToString ();
 		}
 	}
 }
