@@ -23,9 +23,16 @@ namespace RoslynILDiff
 		static void Main(string[] args)
 		{
 			OutputKind kind = OutputKind.DynamicallyLinkedLibrary;
-			if (args.Length == 0) {
+			if (args.Length <= 1) {
 				Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
 				return;
+			}
+
+			foreach (string fn in args) {
+				if (!File.Exists (fn)) {
+					Console.WriteLine ($"File {fn} doesn't exist");
+					return;
+				}
 			}
 
 			var sourcePath = args[0];
@@ -81,15 +88,13 @@ namespace RoslynILDiff
 			EmitBaseline baseline = EmitBaseline.CreateInitialBaseline (baselineMetadata, (handle) => default);
 
 
-			Console.WriteLine ("Make changes and press enter");
-			Console.ReadLine ();
+			List<SemanticEdit> edits = new List<SemanticEdit> ();
 
-			
-			var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
-			/*Project currentProject = project;
-			for (int i = 0; i < currentProject.DocumentIds.Count; i++) {
-				Document document = currentProject.GetDocument (project.DocumentIds[i]);*/
-				string contents = File.ReadAllText (sourcePath);
+			for (int i = 1; i < args.Length; i++) {
+				var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
+				Console.WriteLine ($"parsing patch {args [i]} and creating delta");
+
+				string contents = File.ReadAllText (args [i]);
 				Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
 				project = updatedDocument.Project;
 
@@ -111,46 +116,42 @@ namespace RoslynILDiff
 
 					changedSymbols.Add (symbol);
 				}
-			//}
 
-			var updatedCompilation = project.GetCompilationAsync ();
+				var updatedCompilation = project.GetCompilationAsync ();
 
-			List<SemanticEdit> edits = new List<SemanticEdit> ();
+				foreach (var kvp in changedSymbolsPerDoc) {
+					Document doc = project.GetDocument (kvp.Key);
+					SemanticModel model = doc.GetSemanticModelAsync ().Result;
 
-			foreach (var kvp in changedSymbolsPerDoc) {
-				Document doc = project.GetDocument (kvp.Key);
-				SemanticModel model = doc.GetSemanticModelAsync ().Result;
-
-				foreach (ISymbol symbol in kvp.Value) {
-					ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
-					edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
-				}
-			}
-
-			foreach (var diag in updatedCompilation.Result.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
-				Console.WriteLine (diag);
-				failed = true;
-			}
-
-			if (failed)
-				return;
-
-			var changeCount = ".1";
-
-			using (var metaStream = File.Create (outputAsm + changeCount + ".dmeta"))
-			using (var ilStream = File.Create (outputAsm + changeCount + ".dil")) 
-			using (var pdbStream = File.Create (outputAsm + changeCount + ".dpdb")) {
-				var updatedMethods = new List<MethodDefinitionHandle> ();
-				EmitDifferenceResult emitResult = updatedCompilation.Result.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
-				if (!emitResult.Success) {
-					Console.WriteLine ("Emit failed");
-					foreach (var diag in result.Diagnostics.Where (d => d.Severity == DiagnosticSeverity.Error))
-						Console.WriteLine (diag);
+					foreach (ISymbol symbol in kvp.Value) {
+						ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
+						edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
+					}
 				}
 
-				metaStream.Flush ();
-				ilStream.Flush();
-				pdbStream.Flush();
+				foreach (var diag in updatedCompilation.Result.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
+					Console.WriteLine (diag);
+					failed = true;
+				}
+
+				if (failed)
+					return;
+
+				using (var metaStream = File.Create (outputAsm + "." + i + ".dmeta"))
+				using (var ilStream   = File.Create (outputAsm + "." + i + ".dil"))
+				using (var pdbStream  = File.Create (outputAsm + "." + i + ".dpdb")) {
+					var updatedMethods = new List<MethodDefinitionHandle> ();
+					EmitDifferenceResult emitResult = updatedCompilation.Result.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
+					if (!emitResult.Success) {
+						Console.WriteLine ("Emit failed");
+						foreach (var diag in result.Diagnostics.Where (d => d.Severity == DiagnosticSeverity.Error))
+							Console.WriteLine (diag);
+					}
+
+					metaStream.Flush ();
+					ilStream.Flush();
+					pdbStream.Flush();
+				}
 			}
 		}
 	}
