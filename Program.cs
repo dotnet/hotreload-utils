@@ -20,30 +20,42 @@ namespace RoslynILDiff
 	 */
 	class Program
 	{
-		static void Main(string[] args)
+		static int Main(string[] args)
 		{
-			OutputKind kind = OutputKind.DynamicallyLinkedLibrary;
-			if (args.Length <= 1) {
-				Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
-				return;
-			}
+			var libs = new List<string>();
+			var files = new List<string>();
+			OutputKind kind = OutputKind.ConsoleApplication;
 
-			foreach (string fn in args) {
-				if (!File.Exists (fn)) {
+			for (int i = 0; i < args.Length; i++) {
+				string fn = args [i];
+				if (fn.StartsWith ("-l:")) {
+					libs.Add (fn.Substring (3));
+				} else if (fn == "-target:library") {
+					kind = OutputKind.DynamicallyLinkedLibrary;
+				} else if (!File.Exists (fn)) {
 					Console.WriteLine ($"File {fn} doesn't exist");
-					return;
+					return 2;
+				} else {
+					files.Add (fn);
 				}
 			}
 
-			var sourcePath = args[0];
+			if (files.Count <= 1) {
+				Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
+			}
+
+			var sourcePath = files[0];
 			var filename = Path.GetFileName(sourcePath);
 			var filenameNoExt = Path.GetFileNameWithoutExtension(filename);
 			var outputAsm = filenameNoExt + ".dll";
 
 			AdhocWorkspace workspace = new AdhocWorkspace();
-			Project project = workspace.AddProject ("Project", LanguageNames.CSharp);
+			Project project = workspace.AddProject ("CalcKit", LanguageNames.CSharp);
 			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(object).Assembly.Location));
 			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location));
+			foreach (string lib in libs) {
+				project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
+			}
 			project = project.WithCompilationOptions (new CSharpCompilationOptions (kind));
 			var document = project.AddDocument (filename, SourceText.From (File.ReadAllText (sourcePath), Encoding.Unicode));
 			project = document.Project;
@@ -57,7 +69,7 @@ namespace RoslynILDiff
 			}
 
 			if (failed)
-				return;
+				return 3;
 
 			var baselineImage = new MemoryStream();
 			var baselinePdb = new MemoryStream();
@@ -66,7 +78,7 @@ namespace RoslynILDiff
 				foreach (var diag in result.Diagnostics.Where (d => d.Severity == DiagnosticSeverity.Error))
 					Console.WriteLine (diag);
 				
-				return;
+				return 4;
 			}
 
 			using (var baseLineFile = File.Create(outputAsm))
@@ -90,17 +102,17 @@ namespace RoslynILDiff
 
 			List<SemanticEdit> edits = new List<SemanticEdit> ();
 
-			for (int i = 1; i < args.Length; i++) {
+			for (int i = 1; i < files.Count; i++) {
 				var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
-				Console.WriteLine ($"parsing patch {args [i]} and creating delta");
+				Console.WriteLine ($"parsing patch {files [i]} and creating delta");
 
-				string contents = File.ReadAllText (args [i]);
+				string contents = File.ReadAllText (files [i]);
 				Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
 				project = updatedDocument.Project;
 
 				var changes = updatedDocument.GetTextChangesAsync (document).Result.ToArray();
 				if (changes.Length == 0)
-					return;//continue
+					return 5;//continue
 
 				Console.WriteLine ($"Found changes in {document.FilePath}");
 
@@ -124,8 +136,13 @@ namespace RoslynILDiff
 					SemanticModel model = doc.GetSemanticModelAsync ().Result;
 
 					foreach (ISymbol symbol in kvp.Value) {
-						ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
-						edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
+						try {
+							ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
+							edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
+						} catch (System.InvalidOperationException e) {
+							// fixme
+							continue;
+						}
 					}
 				}
 
@@ -135,7 +152,7 @@ namespace RoslynILDiff
 				}
 
 				if (failed)
-					return;
+					return 6;
 
 				using (var metaStream = File.Create (outputAsm + "." + i + ".dmeta"))
 				using (var ilStream   = File.Create (outputAsm + "." + i + ".dil"))
@@ -153,6 +170,7 @@ namespace RoslynILDiff
 					pdbStream.Flush();
 				}
 			}
+			return 0;
 		}
 	}
 }
