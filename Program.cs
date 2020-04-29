@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -53,6 +54,7 @@ namespace RoslynILDiff
 			Project project = workspace.AddProject ("CalcKit", LanguageNames.CSharp);
 			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(object).Assembly.Location));
 			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location));
+			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Semaphore).Assembly.Location));
 			foreach (string lib in libs) {
 				project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
 			}
@@ -111,8 +113,10 @@ namespace RoslynILDiff
 				project = updatedDocument.Project;
 
 				var changes = updatedDocument.GetTextChangesAsync (document).Result.ToArray();
-				if (changes.Length == 0)
+				if (changes.Length == 0) {
+					Console.WriteLine ("no changes found");
 					return 5;//continue
+				}
 
 				Console.WriteLine ($"Found changes in {document.FilePath}");
 
