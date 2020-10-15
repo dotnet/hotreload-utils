@@ -59,7 +59,7 @@ namespace RoslynILDiff
 				project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
 			}
 			project = project.WithCompilationOptions (new CSharpCompilationOptions (kind));
-			var document = project.AddDocument (filename, SourceText.From (File.ReadAllText (sourcePath), Encoding.Unicode));
+			var document = project.AddDocument (name: filename, text: SourceText.From (File.ReadAllText (sourcePath), Encoding.Unicode), folders: null, filePath: filename);
 			project = document.Project;
 			Console.WriteLine ("Building baseline...");
 			Compilation baseCompilation = project.GetCompilationAsync ().Result;
@@ -118,7 +118,7 @@ namespace RoslynILDiff
 					return 5;//continue
 				}
 
-				Console.WriteLine ($"Found changes in {document.FilePath}");
+				Console.WriteLine ($"Found changes in {document.Name}");
 
 				SemanticModel baselineModel = document.GetSemanticModelAsync ().Result;
 
