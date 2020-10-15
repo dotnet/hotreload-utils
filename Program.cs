@@ -21,15 +21,26 @@ namespace RoslynILDiff
 	 */
 	class Program
 	{
+
+		enum TfmType {
+			Netcore,
+			MonoMono
+		}
 		static int Main(string[] args)
 		{
 			var libs = new List<string>();
 			var files = new List<string>();
+			var tfmType = TfmType.Netcore;
+			var bclBase = "";
 			OutputKind kind = OutputKind.ConsoleApplication;
 
 			for (int i = 0; i < args.Length; i++) {
 				string fn = args [i];
-				if (fn.StartsWith ("-l:")) {
+				if (fn == "-mono") {
+					tfmType = TfmType.MonoMono;
+				} else if (fn.StartsWith("-bcl:")) {
+					bclBase = fn.Substring(5);
+				} else if (fn.StartsWith ("-l:")) {
 					libs.Add (fn.Substring (3));
 				} else if (fn == "-target:library") {
 					kind = OutputKind.DynamicallyLinkedLibrary;
@@ -52,14 +63,27 @@ namespace RoslynILDiff
 
 			AdhocWorkspace workspace = new AdhocWorkspace();
 			Project project = workspace.AddProject ("CalcKit", LanguageNames.CSharp);
-			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(object).Assembly.Location));
-			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location));
-			project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Semaphore).Assembly.Location));
+			switch (tfmType) {
+				case TfmType.Netcore:
+					project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(object).Assembly.Location));
+					project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location));
+					project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Semaphore).Assembly.Location));
+					break;
+				case TfmType.MonoMono:
+					// FIXME: hack
+					project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(bclBase, "mscorlib.dll")));
+					project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(bclBase, "System.Core.dll")));
+					project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(bclBase, "System.dll")));
+					break;
+				default:
+					throw new Exception($"unexpected TfmType {tfmType}");
+			}
+
 			foreach (string lib in libs) {
 				project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
 			}
 			project = project.WithCompilationOptions (new CSharpCompilationOptions (kind));
-			var document = project.AddDocument (filename, SourceText.From (File.ReadAllText (sourcePath), Encoding.Unicode));
+			var document = project.AddDocument (name: filename, text: SourceText.From (File.ReadAllText (sourcePath), Encoding.Unicode), folders: null, filePath: filename);
 			project = document.Project;
 			Console.WriteLine ("Building baseline...");
 			Compilation baseCompilation = project.GetCompilationAsync ().Result;
@@ -118,7 +142,7 @@ namespace RoslynILDiff
 					return 5;//continue
 				}
 
-				Console.WriteLine ($"Found changes in {document.FilePath}");
+				Console.WriteLine ($"Found changes in {document.Name}");
 
 				SemanticModel baselineModel = document.GetSemanticModelAsync ().Result;
 
@@ -143,7 +167,7 @@ namespace RoslynILDiff
 						try {
 							ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
 							edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
-						} catch (System.InvalidOperationException e) {
+						} catch (System.InvalidOperationException) {
 							// fixme
 							continue;
 						}

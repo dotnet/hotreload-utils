@@ -4,7 +4,7 @@ Simple roslyn E&C driver.
 ## How to use it
 
 ```
-$ mono roslynildiff.exe [-l:Lib.dll ...] [-target:library] file.cs file_v1.cs file_v2.cs ...
+$ dotnet roslynildiff.dll [-mono] [-bcl:PATH] [-l:Lib.dll ...] [-target:library] file.cs file_v1.cs file_v2.cs ...
 
 ```
 
@@ -12,10 +12,9 @@ It saves the baseline file to `file.dll` and `file.pdb` and saves the deltas to 
 
 The `file_vN.cs` files must include all the unchanged code from `file.cs`, too, not just the changes.
 
+By default it makes .NET 5 assemblies.  To build something for non-netcore Mono, pass `-mono` and `-bcl:PATH` where `PATH` is the directory containing `mscorlib.dll`, `System.dll`, etc.
+
 ## How to build it
 
-build the project in VS Mac.
+Install .NET 5, run `dotnet build`
 
-It seems like if .NET Core is installed you need this `SQLitePCLRaw.core` nuget.
-
-Tested with `Mono JIT compiler version 6.8.0.123 (2019-10/1d0d939dc30 Thu Mar 12 23:19:08 EDT 2020)`
