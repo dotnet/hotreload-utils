@@ -7,3 +7,4 @@ obj/
 *.dil
 *.dmeta
 *.dpdb
+/.vscode/
