@@ -22,54 +22,51 @@ namespace RoslynILDiff
 	class Program
 	{
 
-		enum TfmType {
-			Netcore,
-			MonoMono
-		}
+		
 		static int Main(string[] args)
 		{
-			var libs = new List<string>();
-			var files = new List<string>();
-			var tfmType = TfmType.Netcore;
+			var builder = Diffy.Config.Builder();
+			var tfmType = Diffy.Config.TfmType.Netcore;
 			var bclBase = "";
 			OutputKind kind = OutputKind.ConsoleApplication;
 
 			for (int i = 0; i < args.Length; i++) {
 				string fn = args [i];
 				if (fn == "-mono") {
-					tfmType = TfmType.MonoMono;
+					tfmType = Diffy.Config.TfmType.MonoMono;
 				} else if (fn.StartsWith("-bcl:")) {
 					bclBase = fn.Substring(5);
 				} else if (fn.StartsWith ("-l:")) {
-					libs.Add (fn.Substring (3));
+					builder.Libs.Add (fn.Substring (3));
 				} else if (fn == "-target:library") {
 					kind = OutputKind.DynamicallyLinkedLibrary;
 				} else if (!File.Exists (fn)) {
 					Console.WriteLine ($"File {fn} doesn't exist");
 					return 2;
 				} else {
-					files.Add (fn);
+					builder.Files.Add (fn);
 				}
 			}
 
-			if (files.Count <= 1) {
+			if (builder.Files.Count <= 1) {
 				Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
 			}
 
-			var sourcePath = files[0];
-			var filename = Path.GetFileName(sourcePath);
+			var config = builder.Bake();
+
+			var filename = config.Filename;
 			var filenameNoExt = Path.GetFileNameWithoutExtension(filename);
 			var outputAsm = filenameNoExt + ".dll";
 
 			AdhocWorkspace workspace = new AdhocWorkspace();
 			Project project = workspace.AddProject ("CalcKit", LanguageNames.CSharp);
 			switch (tfmType) {
-				case TfmType.Netcore:
+				case Diffy.Config.TfmType.Netcore:
 					project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(object).Assembly.Location));
 					project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location));
 					project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Semaphore).Assembly.Location));
 					break;
-				case TfmType.MonoMono:
+				case Diffy.Config.TfmType.MonoMono:
 					// FIXME: hack
 					project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(bclBase, "mscorlib.dll")));
 					project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(bclBase, "System.Core.dll")));
@@ -79,23 +76,28 @@ namespace RoslynILDiff
 					throw new Exception($"unexpected TfmType {tfmType}");
 			}
 
-			foreach (string lib in libs) {
+			foreach (string lib in config.Libs) {
 				project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
 			}
 			project = project.WithCompilationOptions (new CSharpCompilationOptions (kind));
-			var document = project.AddDocument (name: filename, text: SourceText.From (File.ReadAllText (sourcePath), Encoding.Unicode), folders: null, filePath: filename);
+			var document = project.AddDocument (name: filename, text: SourceText.From (File.ReadAllText (config.SourcePath), Encoding.Unicode), folders: null, filePath: filename);
 			project = document.Project;
 			Console.WriteLine ("Building baseline...");
-			Compilation baseCompilation = project.GetCompilationAsync ().Result;
+			Compilation? baseCompilation = project.GetCompilationAsync ().Result;
 
-			bool failed = false;
-			foreach (var diag in baseCompilation.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
-				Console.WriteLine (diag);
-				failed = true;
-			}
-
-			if (failed)
+			if (baseCompilation == null) {
+				Console.WriteLine ("base compilation was null");
 				return 3;
+			} else {
+				bool failed = false;
+				foreach (var diag in baseCompilation.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
+					Console.WriteLine (diag);
+					failed = true;
+				}
+
+				if (failed)
+					return 3;
+			}
 
 			var baselineImage = new MemoryStream();
 			var baselinePdb = new MemoryStream();
@@ -128,11 +130,11 @@ namespace RoslynILDiff
 
 			List<SemanticEdit> edits = new List<SemanticEdit> ();
 
-			for (int i = 1; i < files.Count; i++) {
+			foreach (var (file, i) in config.DeltaFiles.Select ((value, i)=> (value, i))) {
 				var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
-				Console.WriteLine ($"parsing patch {files [i]} and creating delta");
+				Console.WriteLine ($"parsing patch #{i} from {file} and creating delta");
 
-				string contents = File.ReadAllText (files [i]);
+				string contents = File.ReadAllText (file);
 				Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
 				project = updatedDocument.Project;
 
@@ -144,9 +146,9 @@ namespace RoslynILDiff
 
 				Console.WriteLine ($"Found changes in {document.Name}");
 
-				SemanticModel baselineModel = document.GetSemanticModelAsync ().Result;
+				SemanticModel baselineModel = document.GetSemanticModelAsync ().Result!;
 
-				HashSet<ISymbol> changedSymbols = null;
+				HashSet<ISymbol>? changedSymbols = null;
 
 				foreach (TextChange change in changes) {
 					var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
@@ -160,8 +162,8 @@ namespace RoslynILDiff
 				var updatedCompilation = project.GetCompilationAsync ();
 
 				foreach (var kvp in changedSymbolsPerDoc) {
-					Document doc = project.GetDocument (kvp.Key);
-					SemanticModel model = doc.GetSemanticModelAsync ().Result;
+					Document doc = project.GetDocument (kvp.Key)!;
+					SemanticModel model = doc.GetSemanticModelAsync ().Result!;
 
 					foreach (ISymbol symbol in kvp.Value) {
 						try {
@@ -174,7 +176,8 @@ namespace RoslynILDiff
 					}
 				}
 
-				foreach (var diag in updatedCompilation.Result.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
+				bool failed = false;
+				foreach (var diag in updatedCompilation.Result!.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
 					Console.WriteLine (diag);
 					failed = true;
 				}
