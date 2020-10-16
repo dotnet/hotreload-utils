@@ -90,6 +90,10 @@ namespace RoslynILDiff
 
 				foreach (TextChange change in changes) {
 					var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
+					if (symbol == null) {
+						Console.WriteLine ($"Change {change} doesn't have an enclosing symbol");
+						continue;
+					}
 					Console.WriteLine ($"Found changes for symbol: {symbol}");
 					if (changedSymbols == null)
 						changedSymbolsPerDoc[document.Id] = changedSymbols = new HashSet<ISymbol> ();
