@@ -25,6 +25,8 @@ namespace Diffy
 
             public string? BclBase {get; set; } = default;
 
+            public string OutputDir {get; set;} = ".";
+
             public Microsoft.CodeAnalysis.OutputKind OutputKind {get; set; } = Microsoft.CodeAnalysis.OutputKind.ConsoleApplication;
             public Config Bake () => new Config(this);
         }
@@ -35,6 +37,7 @@ namespace Diffy
             TfmType = builder.TfmType;
             OutputKind = builder.OutputKind;
             BclBase = builder.BclBase;
+            OutputDir = builder.OutputDir;
         }
 
         /// The libraries added to the project
@@ -47,6 +50,9 @@ namespace Diffy
         public string? BclBase { get; }
 
         public Microsoft.CodeAnalysis.OutputKind OutputKind { get; }
+
+        /// Destination path for baseline and deltas
+        public string OutputDir { get; }
 
         /// The full path of the baseline source file
         internal string SourcePath { get => Files[0]; }

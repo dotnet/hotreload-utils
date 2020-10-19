@@ -32,8 +32,10 @@ namespace RoslynILDiff
 			
 			var filename = config.Filename;
 			var filenameNoExt = Path.GetFileNameWithoutExtension(filename);
-			var outputAsm = filenameNoExt + ".dll";
-			var outputPdb = filenameNoExt + ".pdb";
+			var outputAsm = Path.Combine (config.OutputDir, filenameNoExt + ".dll");
+			var outputPdb = Path.Combine (config.OutputDir, filenameNoExt + ".pdb");
+
+			Directory.CreateDirectory(config.OutputDir);
 
 			var (workspace, project, document) = PrepareProject (config, filenameNoExt);
 
@@ -127,12 +129,14 @@ namespace RoslynILDiff
 				string fn = args [i];
 				if (fn == "-mono") {
 					builder.TfmType = Diffy.TfmType.MonoMono;
-				} else if (fn.StartsWith("-bcl:")) {
+				} else if (fn.StartsWith("-bcl:") || fn.StartsWith("-bcl=")) {
 					builder.BclBase = fn.Substring(5);
 				} else if (fn.StartsWith ("-l:")) {
 					builder.Libs.Add (fn.Substring (3));
 				} else if (fn == "-target:library") {
 					builder.OutputKind = OutputKind.DynamicallyLinkedLibrary;
+				} else if (fn.StartsWith("-out:") || fn.StartsWith("-out=")) {
+					builder.OutputDir = fn.Substring(5);
 				} else if (!File.Exists (fn)) {
 					Console.WriteLine ($"File {fn} doesn't exist");
 					config = null;
