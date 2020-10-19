@@ -10,7 +10,7 @@ namespace Diffy
         MonoMono
     }
 
-    public class Config 
+    public class Config
     {
 
         public static ConfigBuilder Builder () => new ConfigBuilder ();

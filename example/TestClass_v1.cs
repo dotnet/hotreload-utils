@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace RoslynILDiff
 {
-	class TestClass
-	{
-		public int DoStuff (int x, int y)
-		{
-			return x * x + y * y;
-		}
-	}
+    class TestClass
+    {
+        public int DoStuff (int x, int y)
+        {
+            return x * x + y * y;
+        }
+    }
 }
