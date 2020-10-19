@@ -18,3 +18,11 @@ By default it makes .NET 5 assemblies.  To build something for non-netcore Mono,
 
 Install .NET 5, run `dotnet build`
 
+## Example
+
+```console
+$ dotnet run -- -out:out -target:library example/TestClass.cs example/TestClass_v1.cs
+$ mdv out/TestClass.dll.1.dmeta
+```
+
+See [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) from https://github.com/dotnet/metadata-tools

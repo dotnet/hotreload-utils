@@ -8,3 +8,4 @@ obj/
 *.dmeta
 *.dpdb
 /.vscode/
+/out/
