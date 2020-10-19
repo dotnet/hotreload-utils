@@ -33,109 +33,23 @@ namespace RoslynILDiff
 			var filename = config.Filename;
 			var filenameNoExt = Path.GetFileNameWithoutExtension(filename);
 			var outputAsm = filenameNoExt + ".dll";
+			var outputPdb = filenameNoExt + ".pdb";
 
 			var (workspace, project, document) = PrepareProject (config, filenameNoExt);
-			Console.WriteLine ("Building baseline...");
 
-			if (!CheckCompilationDiagnostics (project.GetCompilationAsync(), "base", out var baseCompilation))
-				return 3;
+			int exitStatus = 0;
 
-			var baselineImage = new MemoryStream();
-			var baselinePdb = new MemoryStream();
-			EmitResult result = baseCompilation.Emit (baselineImage, baselinePdb);
-			if (!CheckEmitResult(result))	
-				return 4;
-			
-
-			using (var baseLineFile = File.Create(outputAsm))
-            {
-				baselineImage.Seek(0, SeekOrigin.Begin);
-				baselineImage.CopyTo(baseLineFile);
-				baseLineFile.Flush();
-            }
-            using (var baseLinePdbFile = File.Create(filenameNoExt + ".pdb"))
-            {
-				baselinePdb.Seek(0, SeekOrigin.Begin);
-				baselinePdb.CopyTo(baseLinePdbFile);
-				baseLinePdbFile.Flush();
-            }
-
-			baselineImage.Seek(0, SeekOrigin.Begin);
-			baselinePdb.Seek (0, SeekOrigin.Begin);
-			var baselineMetadata = ModuleMetadata.CreateFromStream (baselineImage);
-			EmitBaseline baseline = EmitBaseline.CreateInitialBaseline (baselineMetadata, (handle) => default);
+			if (!BuildBaseline (ref project, outputAsm, outputPdb, out EmitBaseline? baseline, out exitStatus))
+				return exitStatus;
 
 
 			List<SemanticEdit> edits = new List<SemanticEdit> ();
 
-			foreach (var (file, i) in config.DeltaFiles.Select ((value, i)=> (value, i))) {
-				var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
-				Console.WriteLine ($"parsing patch #{i} from {file} and creating delta");
-
-				string contents = File.ReadAllText (file);
-				Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
-				project = updatedDocument.Project;
-
-				var changes = updatedDocument.GetTextChangesAsync (document).Result;
-				if (!changes.Any()) {
-					Console.WriteLine ("no changes found");
-					return 5;//continue
-				}
-
-				Console.WriteLine ($"Found changes in {document.Name}");
-
-				SemanticModel baselineModel = document.GetSemanticModelAsync ().Result!;
-
-				HashSet<ISymbol>? changedSymbols = null;
-
-				foreach (TextChange change in changes) {
-					var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
-					if (symbol == null) {
-						Console.WriteLine ($"Change {change} doesn't have an enclosing symbol");
-						continue;
-					}
-					Console.WriteLine ($"Found changes for symbol: {symbol}");
-					if (changedSymbols == null)
-						changedSymbolsPerDoc[document.Id] = changedSymbols = new HashSet<ISymbol> ();
-
-					changedSymbols.Add (symbol);
-				}
-
-				var updatedCompilation = project.GetCompilationAsync ();
-
-				foreach (var kvp in changedSymbolsPerDoc) {
-					Document doc = project.GetDocument (kvp.Key)!;
-					SemanticModel model = doc.GetSemanticModelAsync ().Result!;
-
-					foreach (ISymbol symbol in kvp.Value) {
-						try {
-							ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
-							edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
-						} catch (System.InvalidOperationException) {
-							// fixme
-							continue;
-						}
-					}
-				}
-
-				if (!CheckCompilationDiagnostics(updatedCompilation, $"delta {i}", out var updatedCompilationResult))
-					return 6;
-
-
-				using (var metaStream = File.Create (outputAsm + "." + i + ".dmeta"))
-				using (var ilStream   = File.Create (outputAsm + "." + i + ".dil"))
-				using (var pdbStream  = File.Create (outputAsm + "." + i + ".dpdb")) {
-					var updatedMethods = new List<MethodDefinitionHandle> ();
-					EmitDifferenceResult emitResult = updatedCompilationResult.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
-					CheckEmitResult(emitResult);
-
-					metaStream.Flush ();
-					ilStream.Flush();
-					pdbStream.Flush();
-
-					// FIXME: don't we need this? the updated compilation should be the next baseline.
-					// baseline = emitResult.Baseline;
-				}
+			int rev = 1;
+			foreach (var file in config.DeltaFiles) {
+				if (!BuildDelta (ref project, ref document, baseline, edits, outputAsm, file, rev, out exitStatus))
+					return exitStatus;
+				++rev;
 			}
 			return 0;
 		}
@@ -235,6 +149,126 @@ namespace RoslynILDiff
 			}
 
 			config = builder.Bake();
+			return true;
+		}
+
+		static bool BuildBaseline (ref Project project, string outputAsm, string outputPdb, [MaybeNullWhen(false)] out EmitBaseline baseline, out int exitStatus)
+		{
+			Console.WriteLine ("Building baseline...");
+
+			baseline = null;
+			exitStatus = 0;
+			if (!CheckCompilationDiagnostics (project.GetCompilationAsync(), "base", out var baseCompilation)) {
+				exitStatus = 3;
+				return false;
+			}
+
+			var baselineImage = new MemoryStream();
+			var baselinePdb = new MemoryStream();
+			EmitResult result = baseCompilation.Emit (baselineImage, baselinePdb);
+			if (!CheckEmitResult(result)) {
+				exitStatus = 4;
+				return false;
+			}
+			
+			using (var baseLineFile = File.Create(outputAsm))
+            {
+				baselineImage.Seek(0, SeekOrigin.Begin);
+				baselineImage.CopyTo(baseLineFile);
+				baseLineFile.Flush();
+            }
+            using (var baseLinePdbFile = File.Create(outputPdb))
+            {
+				baselinePdb.Seek(0, SeekOrigin.Begin);
+				baselinePdb.CopyTo(baseLinePdbFile);
+				baseLinePdbFile.Flush();
+            }
+
+			baselineImage.Seek(0, SeekOrigin.Begin);
+			baselinePdb.Seek (0, SeekOrigin.Begin);
+			var baselineMetadata = ModuleMetadata.CreateFromStream (baselineImage);
+			baseline = EmitBaseline.CreateInitialBaseline (baselineMetadata, (handle) => default);
+
+			return true;
+		}
+
+		static bool BuildDelta (ref Project project, ref Document document, EmitBaseline baseline, List<SemanticEdit> edits, string outputAsm, string deltaFile, int rev, out int exitStatus)
+		{
+			exitStatus = 0;
+			string file = deltaFile;
+			var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
+			Console.WriteLine ($"parsing patch #{rev} from {file} and creating delta");
+
+			string contents = File.ReadAllText (file);
+			Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
+			project = updatedDocument.Project;
+
+			var changes = updatedDocument.GetTextChangesAsync (document).Result;
+			if (!changes.Any()) {
+				Console.WriteLine ("no changes found");
+				exitStatus = 5;
+				return false; //FIXME can continue here and just ignore the revision
+			}
+
+			Console.WriteLine ($"Found changes in {document.Name}");
+
+			SemanticModel baselineModel = document.GetSemanticModelAsync ().Result!;
+
+			HashSet<ISymbol>? changedSymbols = null;
+
+			foreach (TextChange change in changes) {
+				var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
+				if (symbol == null) {
+					Console.WriteLine ($"Change {change} doesn't have an enclosing symbol");
+					continue;
+				}
+				Console.WriteLine ($"Found changes for symbol ({symbol}): {change.Span}");
+				if (changedSymbols == null)
+					changedSymbolsPerDoc[document.Id] = changedSymbols = new HashSet<ISymbol> ();
+
+				changedSymbols.Add (symbol);
+			}
+
+			var updatedCompilation = project.GetCompilationAsync ();
+
+			foreach (var kvp in changedSymbolsPerDoc) {
+				Document doc = project.GetDocument (kvp.Key)!;
+				SemanticModel model = doc.GetSemanticModelAsync ().Result!;
+
+				foreach (ISymbol symbol in kvp.Value) {
+					try {
+						ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
+						edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
+					} catch (System.InvalidOperationException) {
+						// fixme
+						continue;
+					}
+				}
+			}
+
+			if (!CheckCompilationDiagnostics(updatedCompilation, $"delta {rev}", out var updatedCompilationResult)) {
+				exitStatus = 6;
+				return false;
+			}
+
+
+			using (var metaStream = File.Create (outputAsm + "." + rev + ".dmeta"))
+			using (var ilStream   = File.Create (outputAsm + "." + rev + ".dil"))
+			using (var pdbStream  = File.Create (outputAsm + "." + rev + ".dpdb")) {
+				var updatedMethods = new List<MethodDefinitionHandle> ();
+				EmitDifferenceResult emitResult = updatedCompilationResult.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
+				CheckEmitResult(emitResult);
+
+				metaStream.Flush ();
+				ilStream.Flush();
+				pdbStream.Flush();
+
+				// FIXME: Why do we start from the original baseline each iteration?
+				// Updated compilation should be the next baseline.  Maybe because we look for the symbols in the wrong document?
+				// baseline = emitResult.Baseline;
+				// edits = new List<SemanticsEdits>();
+			}
+
 			return true;
 		}
 	}
