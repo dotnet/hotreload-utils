@@ -200,7 +200,6 @@ namespace RoslynILDiff
         {
             exitStatus = 0;
             string file = deltaFile;
-            var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
             Console.WriteLine ($"parsing patch #{rev} from {file} and creating delta");
 
             string contents = File.ReadAllText (file);
@@ -216,39 +215,10 @@ namespace RoslynILDiff
 
             Console.WriteLine ($"Found changes in {document.Name}");
 
-            SemanticModel baselineModel = document.GetSemanticModelAsync ().Result!;
-
-            HashSet<ISymbol>? changedSymbols = null;
-
-            foreach (TextChange change in changes) {
-                var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
-                if (symbol == null) {
-                    Console.WriteLine ($"Change {change} doesn't have an enclosing symbol");
-                    continue;
-                }
-                Console.WriteLine ($"Found changes for symbol ({symbol}): {change.Span}");
-                if (changedSymbols == null)
-                    changedSymbolsPerDoc[document.Id] = changedSymbols = new HashSet<ISymbol> ();
-
-                changedSymbols.Add (symbol);
-            }
 
             var updatedCompilation = project.GetCompilationAsync ();
 
-            foreach (var kvp in changedSymbolsPerDoc) {
-                Document doc = project.GetDocument (kvp.Key)!;
-                SemanticModel model = doc.GetSemanticModelAsync ().Result!;
-
-                foreach (ISymbol symbol in kvp.Value) {
-                    try {
-                        ISymbol updatedSymbol = model.Compilation.GetSymbolsWithName (symbol.Name, SymbolFilter.Member).Single();
-                        edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
-                    } catch (System.InvalidOperationException) {
-                        // fixme
-                        continue;
-                    }
-                }
-            }
+            CompileEdits (project, document, changes, edits);
 
             if (!CheckCompilationDiagnostics(updatedCompilation, $"delta {rev}", out var updatedCompilationResult)) {
                 exitStatus = 6;
@@ -274,6 +244,65 @@ namespace RoslynILDiff
             }
 
             return true;
+        }
+
+        public static void CompileEdits (Project project, Document document, IEnumerable<TextChange> changes, List<SemanticEdit> edits)
+        {
+            SemanticModel baselineModel = document.GetSemanticModelAsync ().Result!;
+
+            // For eventual support of multiple source documents per project revision.
+            var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
+            HashSet<ISymbol>? changedSymbols = null;
+
+            foreach (TextChange change in changes) {
+                var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
+                if (symbol == null) {
+                    Console.WriteLine ($"\tChange {change} doesn't have an enclosing symbol");
+                    continue;
+                }
+                Console.WriteLine ($"\tFound changes for symbol ({symbol}): {change.Span}");
+                if (changedSymbols == null)
+                    changedSymbolsPerDoc[document.Id] = changedSymbols = new HashSet<ISymbol> ();
+
+                changedSymbols.Add (symbol);
+            }
+
+            Console.WriteLine($"Applying changes:");
+
+            foreach (var kvp in changedSymbolsPerDoc) {
+                Document doc = project.GetDocument (kvp.Key)!;
+                SemanticModel model = doc.GetSemanticModelAsync ().Result!;
+
+                foreach (ISymbol symbol in kvp.Value) {
+                    Console.WriteLine($"\tChange enclosed in a {symbol.Kind}");
+                    SymbolFilter symbolFilter;
+                    switch (symbol.Kind) {
+                        case SymbolKind.Namespace:
+                        case SymbolKind.NamedType:
+                            symbolFilter = SymbolFilter.Namespace | SymbolFilter.Type;
+                            Console.WriteLine("\t\t\tWARN: ignoring change, only method body updated supported");
+                            continue;
+                        case SymbolKind.Method:
+                        case SymbolKind.Event:
+                        case SymbolKind.Property:
+                        case SymbolKind.Field:
+                            /* FIXME: not all of these probably work like this */
+                            symbolFilter = SymbolFilter.Member;
+                            break;
+                        default:
+                            throw new Exception($"Got unsupported symbol kind {symbol.Kind}");
+                    }
+
+                    var updatedSymbols = model.Compilation.GetSymbolsWithName (symbol.Name, symbolFilter);
+                    if (!updatedSymbols.Any()) {
+                        Console.WriteLine ($"\tChange for {symbol} doesn't have an updated symbol in delta");
+                        continue;
+                    }
+
+                    var updatedSymbol = updatedSymbols.First(); /* FIXME: how to pick the right overload? */
+                    edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
+                }
+            }
         }
     }
 }
