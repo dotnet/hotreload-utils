@@ -37,11 +37,11 @@ namespace RoslynILDiff
 
             Directory.CreateDirectory(config.OutputDir);
 
-            var (workspace, project, document) = PrepareProject (config, filenameNoExt);
+            var project = PrepareProject (config, filenameNoExt);
 
             int exitStatus = 0;
 
-            if (!BuildBaseline (ref project, outputAsm, outputPdb, out EmitBaseline? baseline, out exitStatus))
+            if (!BuildBaseline (project, outputAsm, outputPdb, out EmitBaseline? baseline, out exitStatus))
                 return exitStatus;
 
 
@@ -49,7 +49,7 @@ namespace RoslynILDiff
 
             int rev = 1;
             foreach (var file in config.DeltaFiles) {
-                if (!BuildDelta (ref project, ref document, baseline, edits, outputAsm, file, rev, out exitStatus))
+                if (!BuildDelta (ref project, baseline, edits, outputAsm, file, rev, out exitStatus))
                     return exitStatus;
                 ++rev;
             }
@@ -57,7 +57,7 @@ namespace RoslynILDiff
         }
 
 
-        static (Workspace, Project, Document) PrepareProject (Diffy.Config config, string projectName)
+        static Project PrepareProject (Diffy.Config config, string projectName)
         {
 
             AdhocWorkspace workspace = new AdhocWorkspace();
@@ -87,7 +87,7 @@ namespace RoslynILDiff
             var document = project.AddDocument (name: config.Filename, text: SourceText.From (File.ReadAllText (config.SourcePath), Encoding.Unicode), folders: null, filePath: config.SourcePath);
             project = document.Project;
 
-            return (workspace, project, document);
+            return project;
         }
 
         /// <summary>Waits for compilation to finish, and writes the errors, if any.</summary>
@@ -156,7 +156,7 @@ namespace RoslynILDiff
             return true;
         }
 
-        static bool BuildBaseline (ref Project project, string outputAsm, string outputPdb, [MaybeNullWhen(false)] out EmitBaseline baseline, out int exitStatus)
+        static bool BuildBaseline (Project project, string outputAsm, string outputPdb, [MaybeNullWhen(false)] out EmitBaseline baseline, out int exitStatus)
         {
             Console.WriteLine ("Building baseline...");
 
@@ -196,12 +196,13 @@ namespace RoslynILDiff
             return true;
         }
 
-        static bool BuildDelta (ref Project project, ref Document document, EmitBaseline baseline, List<SemanticEdit> edits, string outputAsm, string deltaFile, int rev, out int exitStatus)
+        static bool BuildDelta (ref Project project, EmitBaseline baseline, List<SemanticEdit> edits, string outputAsm, string deltaFile, int rev, out int exitStatus)
         {
             exitStatus = 0;
             string file = deltaFile;
             Console.WriteLine ($"parsing patch #{rev} from {file} and creating delta");
 
+            Document document = project.Documents.First();
             string contents = File.ReadAllText (file);
             Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
             project = updatedDocument.Project;
@@ -218,8 +219,7 @@ namespace RoslynILDiff
 
             var updatedCompilation = project.GetCompilationAsync ();
 
-            CompileEdits2 (document, updatedDocument, edits).Wait();
-            //CompileEdits (project, document, changes, edits);
+            CompileEdits (document, updatedDocument, edits).Wait();
 
             if (!CheckCompilationDiagnostics(updatedCompilation, $"delta {rev}", out var updatedCompilationResult)) {
                 exitStatus = 6;
@@ -247,7 +247,7 @@ namespace RoslynILDiff
             return true;
         }
 
-        public static async Task CompileEdits2 (Document document, Document updatedDocument, List<SemanticEdit> edits)
+        public static async Task CompileEdits (Document document, Document updatedDocument, List<SemanticEdit> edits)
         {
             var changeMaker = new Diffy.ChangeMaker();
 
@@ -255,63 +255,5 @@ namespace RoslynILDiff
             edits.AddRange(edits2);
         }
 
-        public static void CompileEdits (Project project, Document document, IEnumerable<TextChange> changes, List<SemanticEdit> edits)
-        {
-            SemanticModel baselineModel = document.GetSemanticModelAsync ().Result!;
-
-            // For eventual support of multiple source documents per project revision.
-            var changedSymbolsPerDoc = new Dictionary<DocumentId, HashSet<ISymbol>> ();
-            HashSet<ISymbol>? changedSymbols = null;
-
-            foreach (TextChange change in changes) {
-                var symbol = baselineModel.GetEnclosingSymbol (change.Span.Start);
-                if (symbol == null) {
-                    Console.WriteLine ($"\tChange {change} doesn't have an enclosing symbol");
-                    continue;
-                }
-                Console.WriteLine ($"\tFound changes for symbol ({symbol}): {change.Span}");
-                if (changedSymbols == null)
-                    changedSymbolsPerDoc[document.Id] = changedSymbols = new HashSet<ISymbol> ();
-
-                changedSymbols.Add (symbol);
-            }
-
-            Console.WriteLine($"Applying changes:");
-
-            foreach (var kvp in changedSymbolsPerDoc) {
-                Document doc = project.GetDocument (kvp.Key)!;
-                SemanticModel model = doc.GetSemanticModelAsync ().Result!;
-
-                foreach (ISymbol symbol in kvp.Value) {
-                    Console.WriteLine($"\tChange enclosed in a {symbol.Kind}");
-                    SymbolFilter symbolFilter;
-                    switch (symbol.Kind) {
-                        case SymbolKind.Namespace:
-                        case SymbolKind.NamedType:
-                            symbolFilter = SymbolFilter.Namespace | SymbolFilter.Type;
-                            Console.WriteLine("\t\t\tWARN: ignoring change, only method body updated supported");
-                            continue;
-                        case SymbolKind.Method:
-                        case SymbolKind.Event:
-                        case SymbolKind.Property:
-                        case SymbolKind.Field:
-                            /* FIXME: not all of these probably work like this */
-                            symbolFilter = SymbolFilter.Member;
-                            break;
-                        default:
-                            throw new Exception($"Got unsupported symbol kind {symbol.Kind}");
-                    }
-
-                    var updatedSymbols = model.Compilation.GetSymbolsWithName (symbol.Name, symbolFilter);
-                    if (!updatedSymbols.Any()) {
-                        Console.WriteLine ($"\tChange for {symbol} doesn't have an updated symbol in delta");
-                        continue;
-                    }
-
-                    var updatedSymbol = updatedSymbols.First(); /* FIXME: how to pick the right overload? */
-                    edits.Add (new SemanticEdit (SemanticEditKind.Update, symbol, updatedSymbol));
-                }
-            }
-        }
     }
 }
