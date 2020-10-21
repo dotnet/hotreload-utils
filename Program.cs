@@ -18,8 +18,8 @@ namespace RoslynILDiff
 {
     /*
      * Limitations:
-     *	- Doesn't handle overloads
-     *  - Doesn't support preserve locals
+     * - Only works for changes to a single .cs file
+     * - Doesn't understand .csproj
      */
     class Program
     {
