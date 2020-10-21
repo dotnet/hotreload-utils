@@ -12,5 +12,12 @@ namespace RoslynILDiff
         {
             return x * x + y * y;
         }
+
+#if true
+        public class Nesty {
+            public static void P () { }
+        }
+
+#endif
     }
 }

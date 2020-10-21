@@ -218,7 +218,8 @@ namespace RoslynILDiff
 
             var updatedCompilation = project.GetCompilationAsync ();
 
-            CompileEdits (project, document, changes, edits);
+            CompileEdits2 (document, updatedDocument, edits).Wait();
+            //CompileEdits (project, document, changes, edits);
 
             if (!CheckCompilationDiagnostics(updatedCompilation, $"delta {rev}", out var updatedCompilationResult)) {
                 exitStatus = 6;
@@ -244,6 +245,14 @@ namespace RoslynILDiff
             }
 
             return true;
+        }
+
+        public static async Task CompileEdits2 (Document document, Document updatedDocument, List<SemanticEdit> edits)
+        {
+            var changeMaker = new Diffy.ChangeMaker();
+
+            var edits2 = await changeMaker.GetChanges(document, updatedDocument);
+            edits.AddRange(edits2);
         }
 
         public static void CompileEdits (Project project, Document document, IEnumerable<TextChange> changes, List<SemanticEdit> edits)
