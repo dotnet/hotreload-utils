@@ -45,11 +45,11 @@ namespace RoslynILDiff
                 return exitStatus;
 
 
-            List<SemanticEdit> edits = new List<SemanticEdit> ();
 
             int rev = 1;
             foreach (var file in config.DeltaFiles) {
-                if (!BuildDelta (ref project, baseline, edits, outputAsm, file, rev, out exitStatus))
+                List<SemanticEdit> edits = new List<SemanticEdit> ();
+                if (!BuildDelta (ref project, ref baseline, edits, outputAsm, file, rev, out exitStatus))
                     return exitStatus;
                 ++rev;
             }
@@ -196,7 +196,7 @@ namespace RoslynILDiff
             return true;
         }
 
-        static bool BuildDelta (ref Project project, EmitBaseline baseline, List<SemanticEdit> edits, string outputAsm, string deltaFile, int rev, out int exitStatus)
+        static bool BuildDelta (ref Project project, ref EmitBaseline baseline, List<SemanticEdit> edits, string outputAsm, string deltaFile, int rev, out int exitStatus)
         {
             exitStatus = 0;
             string file = deltaFile;
@@ -238,10 +238,9 @@ namespace RoslynILDiff
                 ilStream.Flush();
                 pdbStream.Flush();
 
-                // FIXME: Why do we start from the original baseline each iteration?
-                // Updated compilation should be the next baseline.  Maybe because we look for the symbols in the wrong document?
-                // baseline = emitResult.Baseline;
-                // edits = new List<SemanticsEdits>();
+                // Update baseline and edits for next delta
+                baseline = emitResult.Baseline;
+                edits.Clear();
             }
 
             return true;
