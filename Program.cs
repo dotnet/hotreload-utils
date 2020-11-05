@@ -64,9 +64,18 @@ namespace RoslynILDiff
             Project project = workspace.AddProject (projectName, LanguageNames.CSharp);
             switch (config.TfmType) {
                 case Diffy.TfmType.Netcore:
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(object).Assembly.Location));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (typeof(Semaphore).Assembly.Location));
+                    //FIXME: hack
+                    //  need to hook into msbuild and get this stuff from there
+#if false
+                    var spcPath = typeof(object).Assembly.Location;
+                    var spcBase = Path.GetDirectoryName (spcPath)!;
+                    if (config.BclBase != null)
+                        spcBase = config.BclBase;
+                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Private.CoreLib.dll")));
+                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Runtime.dll")));
+                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.dll")));
+                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Console.dll")));
+#endif
                     break;
                 case Diffy.TfmType.MonoMono:
                     // FIXME: hack
