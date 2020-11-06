@@ -1,0 +1,5 @@
+#! /bin/bash
+
+d=$(dirname $0)
+
+exec dotnet $d/bin/Debug/roslynildiff.dll "$@"
