@@ -19,9 +19,17 @@
     <!-- this one has the EnC analyzer that we need-->
     <PackageReference Include="Microsoft.CodeAnalysis.Features" Version="3.8.0-4.final" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0-4.final" />
+    <!-- to support MSBuildWorkspace -->
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="3.8.0-4.final" />
+    <!-- added to fix error when opening an MSBuildWorkspace project:
+        "ProcessFrameworkReferences" task failed unexpectedly.
+        System.IO.FileNotFoundException: Could not load file or assembly 'NuGet.Frameworks' ...
+    -->
+    <PackageReference Include="Nuget.ProjectModel" Version="5.8.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="example/*.cs" />
+    <Compile Remove="example*/**/*.cs" />
   </ItemGroup>
 </Project>

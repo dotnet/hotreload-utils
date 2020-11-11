@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <OutputType>library</OutputType>
+        <EnableDefaultItems>false</EnableDefaultItems>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="TestClass.cs"/>
+    </ItemGroup>
+</Project>

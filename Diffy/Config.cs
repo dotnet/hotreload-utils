@@ -6,6 +6,7 @@ using System.IO;
 namespace Diffy
 {
     public enum TfmType {
+        Msbuild,
         Netcore,
         MonoMono
     }
@@ -23,6 +24,7 @@ namespace Diffy
 
             public TfmType TfmType {get; set; } = TfmType.Netcore;
 
+            public string ProjectPath {get; set; } = "";
             public string? BclBase {get; set; } = default;
 
             public string OutputDir {get; set;} = ".";
@@ -38,6 +40,7 @@ namespace Diffy
             OutputKind = builder.OutputKind;
             BclBase = builder.BclBase;
             OutputDir = builder.OutputDir;
+            ProjectPath = builder.ProjectPath;
         }
 
         /// The libraries added to the project
@@ -48,6 +51,9 @@ namespace Diffy
         public TfmType TfmType { get; }
 
         public string? BclBase { get; }
+
+        /// If TfmType is Msbuild, this is the csproj for this project
+        public string ProjectPath { get; }
 
         public Microsoft.CodeAnalysis.OutputKind OutputKind { get; }
 

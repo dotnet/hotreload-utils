@@ -16,7 +16,7 @@ dotnet run -- -out:out -target:library example/TestClass.cs example/TestClass_v1
 mdv out/TestClass.dll.1.dmeta
 ```
 
-See [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) from https://github.com/dotnet/metadata-tools
+See [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) from <https://github.com/dotnet/metadata-tools>
 
 ### Details
 
