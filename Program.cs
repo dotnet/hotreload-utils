@@ -42,7 +42,11 @@ namespace RoslynILDiff
 
             int exitStatus = 0;
 
-            if (!BuildBaseline (project, outputAsm, outputPdb, out EmitBaseline? baseline, out exitStatus))
+            EmitBaseline? baseline;
+            if (config.TfmType == Diffy.TfmType.Msbuild) {
+                if (!ConsumeBaseline (project, out outputAsm, out baseline))
+                    throw new Exception ("could not consume baseline");
+            } else if (!BuildBaseline (project, outputAsm, outputPdb, out baseline, out exitStatus))
                 return exitStatus;
 
 
@@ -71,13 +75,22 @@ namespace RoslynILDiff
                 case Diffy.TfmType.Msbuild:
                     InitMSBuild ();
                     Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
-                    msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create();
+                    // FIXME: don't hardcode Debug here.
+                    // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify a config to get an output path, is that true?
+                    var props = new Dictionary<string,string> () {
+                        { "Configuration", "Debug" }
+                    };
+                    msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
+                    msw.LoadMetadataForReferencedProjects = true;
                     msw.WorkspaceFailed += (_sender, diag) => {
                         Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
                         Console.WriteLine ($"{diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
                         throw new Exception ("failed workspace");
                     };
                     project = await msw.OpenProjectAsync (config.ProjectPath);
+                    foreach (var kvp in msw.Properties) {
+                        Console.WriteLine ($"[{kvp.Key}]: {kvp.Value}");
+                    }
                     break;
                 case Diffy.TfmType.Netcore:
                     //FIXME: hack
@@ -192,6 +205,23 @@ namespace RoslynILDiff
             return true;
         }
 
+        static bool ConsumeBaseline (Project project, [MaybeNullWhen(false)] out string outputAsm, [MaybeNullWhen(false)] out EmitBaseline baseline)
+        {
+            baseline = null;
+            outputAsm = project.OutputFilePath ;
+            if (outputAsm == null) {
+                Console.Error.WriteLine ("msbuild project doesn't have an output path");
+                return false;
+            }
+            if (!File.Exists(outputAsm)) {
+                Console.Error.WriteLine ("msbuild project output assembly {0} doesn't exist.  Build the project first", outputAsm);
+                return false;
+            }
+
+            var baselineMetadata = ModuleMetadata.CreateFromFile(outputAsm);
+            baseline = EmitBaseline.CreateInitialBaseline(baselineMetadata, (handle) => default);
+            return true;
+        }
         static bool BuildBaseline (Project project, string outputAsm, string outputPdb, [MaybeNullWhen(false)] out EmitBaseline baseline, out int exitStatus)
         {
             Console.WriteLine ("Building baseline...");

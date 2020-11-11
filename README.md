@@ -9,14 +9,30 @@ Install .NET 5, run `dotnet build`
 
 ## How to use it
 
-### Example
+### Example (bare C# files)
 
 ```console
 dotnet run -- -out:out -target:library example/TestClass.cs example/TestClass_v1.cs
-mdv out/TestClass.dll.1.dmeta
+
+mdv out/TestClass.dll /il- /g:out/TestClass.dll.1.dmeta
 ```
 
-See [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) from <https://github.com/dotnet/metadata-tools>
+We can use [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) from [dotnet/metadata-tools](https://github.com/dotnet/metadata-tools) to examine the metadata of a baseline assembly and its delta.
+
+### Example (msbuild)
+
+```console
+pushd example-msbuild
+dotnet build
+popd
+
+dotnet run -- -msbuild:example-msbuild/TestClass.csproj example-msbuild/TestClass.cs  example-msbuild/TestClass_v1.cs
+
+mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta
+```
+
+Use `msbuild` to build the project first, then run `roslyn-ildiff` to generate
+a delta with respect to the `msbuild`-produced baseline.
 
 ### Details
 
