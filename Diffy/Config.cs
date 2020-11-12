@@ -5,8 +5,14 @@ using System.IO;
 
 namespace Diffy
 {
-    public enum TfmType {
+
+    /// Are we using a .csproj file or is this an ad-hoc 'csc' compilation?
+    public enum ProjectType {
         Msbuild,
+        Adhoc
+    }
+    /// Only for ProjectType.Adhoc - are we targeting dotnet/runtime or mono/mono
+    public enum TfmType {
         Netcore,
         MonoMono
     }
@@ -18,6 +24,8 @@ namespace Diffy
 
         public class ConfigBuilder {
             internal ConfigBuilder () {}
+
+            public ProjectType ProjectType {get; set;} = ProjectType.Adhoc;
 
             public List<string> Files {get; set; } = new List<string> ();
             public List<string> Libs {get; set; } = new List<String> ();
@@ -31,13 +39,23 @@ namespace Diffy
             public string OutputDir {get; set;} = ".";
 
             public Microsoft.CodeAnalysis.OutputKind OutputKind {get; set; } = Microsoft.CodeAnalysis.OutputKind.ConsoleApplication;
-            public Config Bake () => new Config(this);
+            public Config Bake () {
+                switch (ProjectType) {
+                    case ProjectType.Adhoc:
+                        return new AdhocConfig(this);
+                    case ProjectType.Msbuild:
+                        return new MsbuildConfig(this);
+                    default:
+                        throw new Exception ("Expected ProjectType Adhoc or Msbuild");
+                }
+            }
         }
 
-        Config (ConfigBuilder builder) {
+        protected Config (ConfigBuilder builder) {
             Files = builder.Files;
             Libs = builder.Libs;
             Properties = builder.Properties;
+            ProjectType = builder.ProjectType;
             TfmType = builder.TfmType;
             OutputKind = builder.OutputKind;
             BclBase = builder.BclBase;
@@ -52,6 +70,8 @@ namespace Diffy
 
 
         public IReadOnlyList<KeyValuePair<string,string>> Properties { get; }
+
+        public ProjectType ProjectType { get; }
         public TfmType TfmType { get; }
 
         public string? BclBase { get; }
@@ -76,5 +96,13 @@ namespace Diffy
         public IReadOnlyList<string> DeltaFiles { get => Files.Skip(1).ToList(); }
 
 
+    }
+
+    internal class AdhocConfig : Config {
+        internal AdhocConfig (ConfigBuilder builder) : base (builder) {}
+    }
+
+    internal class MsbuildConfig : Config {
+        internal MsbuildConfig (ConfigBuilder builder) : base (builder) {}
     }
 }

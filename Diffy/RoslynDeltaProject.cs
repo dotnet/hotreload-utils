@@ -33,11 +33,7 @@ namespace Diffy
         public int Rev => _rev;
     }
 
-    class DeltaCompilationException : Exception {
-        public DeltaCompilationException() : base () {}
-        public DeltaCompilationException(string message) : base (message) {}
-        public DeltaCompilationException(string message, Exception innerException) : base (message, innerException) {}
-    }
+    /// Drives the creation of deltas from textual changes.
     public class RoslynDeltaProject
     {
         readonly ChangeMaker _changeMaker;
@@ -46,13 +42,20 @@ namespace Diffy
 
         readonly DocumentId _baseDocumentId;
 
-        public RoslynDeltaProject (Project project, EmitBaseline baseline, string baselinePath) {
+
+        public RoslynDeltaProject(BaselineArtifacts artifacts)
+            : this (artifacts.workspace, artifacts.baselineProjectId, artifacts.emitBaseline, artifacts.baselineDocumentId) {}
+
+        private RoslynDeltaProject(Workspace workspace, ProjectId projectId, EmitBaseline baseline, DocumentId baseDocumentId)
+            : this (workspace.CurrentSolution.GetProject(projectId)!, baseline, baseDocumentId) {}
+
+        private RoslynDeltaProject (Project project, EmitBaseline baseline, DocumentId baseDocumentId) {
             _changeMaker = new ChangeMaker();
             _project = new AsyncLocal<Project>();
             _project.Value = project;
             _baseline = new AsyncLocal<EmitBaseline?>();
             _baseline.Value = baseline;
-            _baseDocumentId = project.Documents.Where((doc) => doc.FilePath == baselinePath).First().Id;
+            _baseDocumentId = baseDocumentId; /*project.Documents.Where((doc) => doc.FilePath == baselinePath).First().Id;*/
         }
 
 
@@ -70,10 +73,9 @@ namespace Diffy
         public DocumentId BaseDocumentId => _baseDocumentId;
 
         /// Builds a delta for the specified document given a path to its updated contents and a revision count
-        /// On success returns (true, 0) on failure returns (false, exitStatus) with exitStatus > 0
-        public async Task<(bool, int)> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo)
+        /// On failure throws a DiffyException and with exitStatus > 0
+        public async Task BuildDelta (string deltaFile, DerivedArtifactInfo dinfo)
         {
-            int exitStatus = 0;
             Console.WriteLine ($"parsing patch #{dinfo.Rev} from {deltaFile} and creating delta");
 
             Document document = Project.GetDocument(BaseDocumentId)!;
@@ -89,30 +91,24 @@ namespace Diffy
             var changes = await updatedDocument.GetTextChangesAsync (document);
             if (!changes.Any()) {
                 Console.WriteLine ("no changes found");
-                exitStatus = 5;
-                return (false, exitStatus); //FIXME can continue here and just ignore the revision
+                //FIXME can continue here and just ignore the revision
+                throw new DiffyException ($"no changes in revision {dinfo.Rev}", exitStatus: 5);
             }
 
             Console.WriteLine ($"Found changes in {document.Name}");
 
-
             Task<Compilation> updatedCompilation = Task.Run(async () => {
                 var compilation = await Project.GetCompilationAsync ();
                 if (!CheckCompilationDiagnostics(compilation, $"delta {dinfo.Rev}"))
-                    throw new DeltaCompilationException();
+                    throw new DeltaCompilationException(exitStatus: 6);
                 else
                     return compilation;
             });
 
             var editsCompilation = Task.Run(() => CompileEdits (document, updatedDocument));
 
-            Compilation updatedCompilationResult;
-            try {
-                updatedCompilationResult = await updatedCompilation;
-            } catch (DeltaCompilationException) {
-                exitStatus = 6;
-                return (false, exitStatus);
-            }
+            Compilation updatedCompilationResult = await updatedCompilation;
+
             var edits = await editsCompilation;
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
             var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
@@ -130,8 +126,6 @@ namespace Diffy
                 // Update baseline for next delta
                 Baseline = emitResult.Baseline;
             }
-
-            return (true, exitStatus);
         }
 
         Task<IEnumerable<SemanticEdit>> CompileEdits (Document document, Document updatedDocument)
@@ -139,15 +133,9 @@ namespace Diffy
             return _changeMaker.GetChanges(document, updatedDocument);
         }
 
-        /// <summary>Waits for compilation to finish, and writes the errors, if any.</summary>
-        /// <returns>true if compilation succeeded, or false if there were errors</returns>
-        public static bool CheckCompilationDiagnostics (Task<Compilation?> compilation, string diagnosticPrefix, [NotNullWhen(true)] out Compilation? result)
-        {
-            result = compilation.Result;
-            return CheckCompilationDiagnostics (result, diagnosticPrefix);
-        }
 
-        static bool CheckCompilationDiagnostics ([NotNullWhen(true)] Compilation? compilation, string diagnosticPrefix)
+        /// <returns>true if compilation succeeded, or false if there were errors</returns>
+        internal static bool CheckCompilationDiagnostics ([NotNullWhen(true)] Compilation? compilation, string diagnosticPrefix)
         {
             if (compilation == null) {
                 Console.WriteLine ($"{diagnosticPrefix} compilation was null");
