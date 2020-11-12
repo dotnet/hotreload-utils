@@ -75,11 +75,9 @@ namespace RoslynILDiff
                 case Diffy.TfmType.Msbuild:
                     InitMSBuild ();
                     Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
-                    // FIXME: don't hardcode Debug here.
-                    // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify a config to get an output path, is that true?
-                    var props = new Dictionary<string,string> () {
-                        { "Configuration", "Debug" }
-                    };
+                    // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
+                    // to get an output path, is that true?
+                    var props = new Dictionary<string,string> (config.Properties);
                     msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
                     msw.LoadMetadataForReferencedProjects = true;
                     msw.WorkspaceFailed += (_sender, diag) => {
@@ -88,9 +86,6 @@ namespace RoslynILDiff
                         throw new Exception ("failed workspace");
                     };
                     project = await msw.OpenProjectAsync (config.ProjectPath);
-                    foreach (var kvp in msw.Properties) {
-                        Console.WriteLine ($"[{kvp.Key}]: {kvp.Value}");
-                    }
                     break;
                 case Diffy.TfmType.Netcore:
                     //FIXME: hack
@@ -176,7 +171,7 @@ namespace RoslynILDiff
                 if (fn.StartsWith(msbuildOptPrefix)) {
                     builder.TfmType = Diffy.TfmType.Msbuild;
                     builder.ProjectPath = fn.Substring(msbuildOptPrefix.Length);
-                }else if (fn == "-mono") {
+                } else if (fn == "-mono") {
                     builder.TfmType = Diffy.TfmType.MonoMono;
                 } else if (fn.StartsWith("-bcl:") || fn.StartsWith("-bcl=")) {
                     builder.BclBase = fn.Substring(5);
@@ -186,6 +181,16 @@ namespace RoslynILDiff
                     builder.OutputKind = OutputKind.DynamicallyLinkedLibrary;
                 } else if (fn.StartsWith("-out:") || fn.StartsWith("-out=")) {
                     builder.OutputDir = fn.Substring(5);
+                } else if (fn.StartsWith("-p:")) {
+                    var s = fn.Substring(3);
+                    if (s.IndexOf('=') is int j && j > 0 && j+1 < s.Length) {
+                        var k = s.Substring(0, j);
+                        var v = s.Substring(j+1);
+                        // Console.WriteLine ($"got <{k}>=<{v}>");
+                        builder.Properties.Add(KeyValuePair.Create(k,v));
+                    } else {
+                        throw new ArgumentException ("-p option needs a key=value pair");
+                    }
                 } else if (!File.Exists (fn)) {
                     Console.WriteLine ($"File {fn} doesn't exist");
                     config = null;

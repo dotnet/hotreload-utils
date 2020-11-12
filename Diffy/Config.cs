@@ -22,6 +22,7 @@ namespace Diffy
             public List<string> Files {get; set; } = new List<string> ();
             public List<string> Libs {get; set; } = new List<String> ();
 
+            public List<KeyValuePair<string,string>> Properties {get; set;} = new List<KeyValuePair<string,string>> ();
             public TfmType TfmType {get; set; } = TfmType.Netcore;
 
             public string ProjectPath {get; set; } = "";
@@ -36,6 +37,7 @@ namespace Diffy
         Config (ConfigBuilder builder) {
             Files = builder.Files;
             Libs = builder.Libs;
+            Properties = builder.Properties;
             TfmType = builder.TfmType;
             OutputKind = builder.OutputKind;
             BclBase = builder.BclBase;
@@ -48,6 +50,8 @@ namespace Diffy
         /// The source file and its sequence of changes
         public IReadOnlyList<string> Files { get; }
 
+
+        public IReadOnlyList<KeyValuePair<string,string>> Properties { get; }
         public TfmType TfmType { get; }
 
         public string? BclBase { get; }

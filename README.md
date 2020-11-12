@@ -23,10 +23,10 @@ We can use [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) f
 
 ```console
 pushd example-msbuild
-dotnet build
+dotnet build /p:Configuration=Debug
 popd
 
-dotnet run -- -msbuild:example-msbuild/TestClass.csproj example-msbuild/TestClass.cs  example-msbuild/TestClass_v1.cs
+dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug example-msbuild/TestClass.cs  example-msbuild/TestClass_v1.cs
 
 mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta
 ```
