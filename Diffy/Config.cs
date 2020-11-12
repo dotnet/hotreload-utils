@@ -69,6 +69,9 @@ namespace Diffy
         /// Just the base file name of the baseline source file
         public string Filename { get => Path.GetFileName(SourcePath);}
 
+
+        /// The baseline assembly name (in the sense of AsssemblyName.Name)
+        public string ProjectName { get => Path.GetFileNameWithoutExtension(Filename); }
         /// Just the files containing sequence of changes
         public IReadOnlyList<string> DeltaFiles { get => Files.Skip(1).ToList(); }
 

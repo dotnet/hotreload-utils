@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Metadata;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -31,34 +29,37 @@ namespace RoslynILDiff
                 return 2;
 
             var baselinePath = Path.GetFullPath (config.SourcePath);
-            var filename = config.Filename;
-            var filenameNoExt = Path.GetFileNameWithoutExtension(filename);
-            var outputAsm = Path.Combine (config.OutputDir, filenameNoExt + ".dll");
-            var outputPdb = Path.Combine (config.OutputDir, filenameNoExt + ".pdb");
 
-            Directory.CreateDirectory(config.OutputDir);
+            var project = PrepareProject (config).Result;
 
-            var project = PrepareProject (config, filenameNoExt).Result;
-
-            int exitStatus = 0;
-
+            string? outputAsm;
             EmitBaseline? baseline;
             if (config.TfmType == Diffy.TfmType.Msbuild) {
                 if (!ConsumeBaseline (project, out outputAsm, out baseline))
                     throw new Exception ("could not consume baseline");
-            } else if (!BuildBaseline (project, outputAsm, outputPdb, out baseline, out exitStatus))
-                return exitStatus;
-
-
-
-            var baseDocumnetId = project.Documents.Where((doc) => doc.FilePath == baselinePath).First().Id;
-            int rev = 1;
-            foreach (var file in config.DeltaFiles) {
-                List<SemanticEdit> edits = new List<SemanticEdit> ();
-                if (!BuildDelta (ref project, ref baseline, edits, outputAsm, baseDocumnetId, file, rev, out exitStatus))
+            } else {
+                Directory.CreateDirectory(config.OutputDir);
+                // FIXME: this is a mess
+                //   1. this path stuff is part of the config, the defaults are just derived from the other args
+                //   2. this hardcodes the assumption that the assembly name and the baseline source filename are the same.
+                var projectName = config.ProjectName;
+                outputAsm = Path.Combine (config.OutputDir, projectName + ".dll");
+                var outputPdb = Path.Combine (config.OutputDir, projectName + ".pdb");
+                if (!BuildBaseline (project, outputAsm, outputPdb, out baseline, out int exitStatus))
                     return exitStatus;
-                ++rev;
             }
+
+            var deltaProject = new Diffy.RoslynDeltaProject (project, baseline, baselinePath);
+
+
+            var derivedInputs = config.DeltaFiles.Select((deltaFile, idx) => (deltaFile, new Diffy.DerivedArtifactInfo(outputAsm, 1+idx)));
+            foreach ((var deltaFile, var dinfo) in derivedInputs) {
+                List<SemanticEdit> edits = new List<SemanticEdit> ();
+                (bool success, int exitStatus) = deltaProject.BuildDelta (deltaFile, dinfo).Result;
+                if (!success)
+                    return exitStatus;
+            }
+
             return 0;
         }
 
@@ -67,31 +68,19 @@ namespace RoslynILDiff
             Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
         }
 
-        static async Task<Project> PrepareProject (Diffy.Config config, string projectName)
+        static async Task<Project> PrepareProject (Diffy.Config config)
         {
 
             Project project;
             switch (config.TfmType) {
                 case Diffy.TfmType.Msbuild:
                     InitMSBuild ();
-                    Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
-                    // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
-                    // to get an output path, is that true?
-                    var props = new Dictionary<string,string> (config.Properties);
-                    msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
-                    msw.LoadMetadataForReferencedProjects = true;
-                    msw.WorkspaceFailed += (_sender, diag) => {
-                        Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
-                        Console.WriteLine ($"{diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
-                        throw new Exception ("failed workspace");
-                    };
-                    project = await msw.OpenProjectAsync (config.ProjectPath);
-                    break;
+                    return await PrepareMSBuildProject (config);
                 case Diffy.TfmType.Netcore:
                     //FIXME: hack
                     {
                         var adhoc = new AdhocWorkspace();
-                        project = adhoc.AddProject (projectName, LanguageNames.CSharp);
+                        project = adhoc.AddProject (config.ProjectName, LanguageNames.CSharp);
                     }
                     var spcPath = typeof(object).Assembly.Location;
                     var spcBase = Path.GetDirectoryName (spcPath)!;
@@ -106,7 +95,7 @@ namespace RoslynILDiff
                 case Diffy.TfmType.MonoMono:
                     {
                         var adhoc = new AdhocWorkspace();
-                        project =  adhoc.AddProject (projectName, LanguageNames.CSharp);
+                        project =  adhoc.AddProject (config.ProjectName, LanguageNames.CSharp);
                     }
                     // FIXME: hack
                     if (config.BclBase == null)
@@ -119,46 +108,34 @@ namespace RoslynILDiff
                     throw new Exception($"unexpected TfmType {config.TfmType}");
             }
 
-            if (config.TfmType != Diffy.TfmType.Msbuild) {
-                foreach (string lib in config.Libs) {
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
-                }
-                project = project.WithCompilationOptions (new CSharpCompilationOptions (config.OutputKind));
-                var document = project.AddDocument (name: config.Filename, text: SourceText.From (File.ReadAllText (config.SourcePath), Encoding.Unicode), folders: null, filePath: config.SourcePath);
+            if (config.TfmType == Diffy.TfmType.Msbuild)
+                throw new Exception ("msbuild projects shouldn't get here");
+
+            foreach (string lib in config.Libs) {
+                project = project.AddMetadataReference (MetadataReference.CreateFromFile (lib));
+            }
+            project = project.WithCompilationOptions (new CSharpCompilationOptions (config.OutputKind));
+            using (var source = File.OpenRead(config.SourcePath)) {
+                var document = project.AddDocument (name: config.Filename, text: SourceText.From (source, Encoding.UTF8), folders: null, filePath: Path.GetFullPath (config.SourcePath));
                 project = document.Project;
             }
             return project;
         }
 
-        /// <summary>Waits for compilation to finish, and writes the errors, if any.</summary>
-        /// <returns>true if compilation succeeded, or false if there were errors</returns>
-        static bool CheckCompilationDiagnostics (Task<Compilation?> compilation, string diagnosticPrefix, [NotNullWhen(true)] out Compilation? result)
+        static Task<Project> PrepareMSBuildProject (Diffy.Config config)
         {
-            result = compilation.Result;
-            if (result == null) {
-                Console.WriteLine ($"{diagnosticPrefix} compilation was null");
-                return false;
-            } else {
-                bool failed = false;
-                foreach (var diag in result.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
-                    Console.WriteLine ($"{diagnosticPrefix} --- {diag}");
-                    failed = true;
-                }
-
-                return !failed;
-            }
-
-        }
-
-        /// <summary>Check <see cref="EmitResult"/> or <see cref="EmitDifferenceResult"/> for failures</summary>
-        static bool CheckEmitResult (EmitResult emitResult)
-        {
-            if (!emitResult.Success) {
-                Console.WriteLine ("Emit failed");
-                foreach (var diag in emitResult.Diagnostics.Where (d => d.Severity == DiagnosticSeverity.Error))
-                    Console.WriteLine (diag);
-            }
-            return emitResult.Success;
+                    Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
+                    // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
+                    // to get an output path, is that true?
+                    var props = new Dictionary<string,string> (config.Properties);
+                    msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
+                    msw.LoadMetadataForReferencedProjects = true;
+                    msw.WorkspaceFailed += (_sender, diag) => {
+                        Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
+                        Console.WriteLine ($"{diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
+                        throw new Exception ("failed workspace");
+                    };
+                    return msw.OpenProjectAsync (config.ProjectPath);
         }
 
         static bool ParseArgs (string[] args, [NotNullWhen(true)] out Diffy.Config? config)
@@ -210,7 +187,7 @@ namespace RoslynILDiff
             return true;
         }
 
-        static bool ConsumeBaseline (Project project, [MaybeNullWhen(false)] out string outputAsm, [MaybeNullWhen(false)] out EmitBaseline baseline)
+        static bool ConsumeBaseline (Project project, [MaybeNullWhen(false)] out string outputAsm, [NotNullWhen(true)] out EmitBaseline? baseline)
         {
             baseline = null;
             outputAsm = project.OutputFilePath ;
@@ -227,13 +204,14 @@ namespace RoslynILDiff
             baseline = EmitBaseline.CreateInitialBaseline(baselineMetadata, (handle) => default);
             return true;
         }
-        static bool BuildBaseline (Project project, string outputAsm, string outputPdb, [MaybeNullWhen(false)] out EmitBaseline baseline, out int exitStatus)
+        static bool BuildBaseline (Project project, string outputAsm, string outputPdb, [NotNullWhen(true)] out EmitBaseline? baseline, out int exitStatus)
         {
             Console.WriteLine ("Building baseline...");
 
+
             baseline = null;
             exitStatus = 0;
-            if (!CheckCompilationDiagnostics (project.GetCompilationAsync(), "base", out var baseCompilation)) {
+            if (!Diffy.RoslynDeltaProject.CheckCompilationDiagnostics (project.GetCompilationAsync(), "base", out var baseCompilation)) {
                 exitStatus = 3;
                 return false;
             }
@@ -241,7 +219,7 @@ namespace RoslynILDiff
             var baselineImage = new MemoryStream();
             var baselinePdb = new MemoryStream();
             EmitResult result = baseCompilation.Emit (baselineImage, baselinePdb);
-            if (!CheckEmitResult(result)) {
+            if (!Diffy.RoslynDeltaProject.CheckEmitResult(result)) {
                 exitStatus = 4;
                 return false;
             }
@@ -267,66 +245,7 @@ namespace RoslynILDiff
             return true;
         }
 
-        static bool BuildDelta (ref Project project, ref EmitBaseline baseline, List<SemanticEdit> edits, string outputAsm, DocumentId baseDocumentId, string deltaFile, int rev, out int exitStatus)
-        {
-            exitStatus = 0;
-            string file = deltaFile;
-            Console.WriteLine ($"parsing patch #{rev} from {file} and creating delta");
 
-            Document document = project.GetDocument(baseDocumentId)!;
-
-            string contents = File.ReadAllText (file);
-            Document updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
-            project = updatedDocument.Project;
-            if (updatedDocument.Id != baseDocumentId)
-                throw new Exception ("Unexpectedly, document Id of the delta != base document Id");
-
-            var changes = updatedDocument.GetTextChangesAsync (document).Result;
-            if (!changes.Any()) {
-                Console.WriteLine ("no changes found");
-                exitStatus = 5;
-                return false; //FIXME can continue here and just ignore the revision
-            }
-
-            Console.WriteLine ($"Found changes in {document.Name}");
-
-
-            var updatedCompilation = project.GetCompilationAsync ();
-
-            CompileEdits (document, updatedDocument, edits).Wait();
-
-            if (!CheckCompilationDiagnostics(updatedCompilation, $"delta {rev}", out var updatedCompilationResult)) {
-                exitStatus = 6;
-                return false;
-            }
-
-
-            using (var metaStream = File.Create (outputAsm + "." + rev + ".dmeta"))
-            using (var ilStream   = File.Create (outputAsm + "." + rev + ".dil"))
-            using (var pdbStream  = File.Create (outputAsm + "." + rev + ".dpdb")) {
-                var updatedMethods = new List<MethodDefinitionHandle> ();
-                EmitDifferenceResult emitResult = updatedCompilationResult.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
-                CheckEmitResult(emitResult);
-
-                metaStream.Flush ();
-                ilStream.Flush();
-                pdbStream.Flush();
-
-                // Update baseline and edits for next delta
-                baseline = emitResult.Baseline;
-                edits.Clear();
-            }
-
-            return true;
-        }
-
-        public static async Task CompileEdits (Document document, Document updatedDocument, List<SemanticEdit> edits)
-        {
-            var changeMaker = new Diffy.ChangeMaker();
-
-            var edits2 = await changeMaker.GetChanges(document, updatedDocument);
-            edits.AddRange(edits2);
-        }
 
     }
 }
