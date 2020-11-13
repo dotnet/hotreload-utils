@@ -6,6 +6,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
+    <PublishDir>$(MSBuildProjectDirectory)\publish</PublishDir>
   </PropertyGroup>
 
   <PropertyGroup>

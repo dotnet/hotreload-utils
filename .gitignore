@@ -1,6 +1,7 @@
 Output/
 bin/
 obj/
+publish/
 *~
 *.dll
 *.pdb

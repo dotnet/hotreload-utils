@@ -1,5 +1,13 @@
 #! /bin/bash
 
-d=$(dirname $0)
+d=$(realpath $(dirname $0))
 
-exec dotnet $d/bin/Debug/roslynildiff.dll "$@"
+f="${d}/publish/roslynildiff.dll"
+
+if [ ! -f "${f}" ]; then
+    echo "The file \"${f}\" does not exist"
+    echo "Did you remember to run 'dotnet publish --self-contained -r <RID>'"
+    exit 1
+fi
+
+exec dotnet "${f}" "$@"
