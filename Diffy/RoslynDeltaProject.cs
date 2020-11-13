@@ -37,56 +37,58 @@ namespace Diffy
     public class RoslynDeltaProject
     {
         readonly ChangeMaker _changeMaker;
-        readonly AsyncLocal<Project> _project;
-        readonly AsyncLocal<EmitBaseline?> _baseline;
 
+        readonly Solution _solution;
+        readonly EmitBaseline _baseline;
+        readonly ProjectId _baseProjectId;
         readonly DocumentId _baseDocumentId;
 
 
-        public RoslynDeltaProject(BaselineArtifacts artifacts)
-            : this (artifacts.workspace, artifacts.baselineProjectId, artifacts.emitBaseline, artifacts.baselineDocumentId) {}
 
-        private RoslynDeltaProject(Workspace workspace, ProjectId projectId, EmitBaseline baseline, DocumentId baseDocumentId)
-            : this (workspace.CurrentSolution.GetProject(projectId)!, baseline, baseDocumentId) {}
-
-        private RoslynDeltaProject (Project project, EmitBaseline baseline, DocumentId baseDocumentId) {
+        public RoslynDeltaProject(BaselineArtifacts artifacts) {
             _changeMaker = new ChangeMaker();
-            _project = new AsyncLocal<Project>();
-            _project.Value = project;
-            _baseline = new AsyncLocal<EmitBaseline?>();
-            _baseline.Value = baseline;
-            _baseDocumentId = baseDocumentId; /*project.Documents.Where((doc) => doc.FilePath == baselinePath).First().Id;*/
+            _solution = artifacts.baselineSolution;
+            _baseline = artifacts.emitBaseline;
+            _baseProjectId = artifacts.baselineProjectId;
+            _baseDocumentId = artifacts.baselineDocumentId;
         }
 
-
-        /// Note Project changes as deltas are built
-        public Project Project {
-            get => _project.Value ?? throw new NullReferenceException("no Project async local value");
-            internal set { _project.Value = value; }
+        internal RoslynDeltaProject (RoslynDeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
+        {
+            _changeMaker = prev._changeMaker;
+            _solution = newSolution;
+            _baseline = newBaseline;
+            _baseProjectId = prev._baseProjectId;
+            _baseDocumentId = prev._baseDocumentId;
         }
 
-        public EmitBaseline? Baseline {
-            get => _baseline.Value;
-            internal set { _baseline.Value = value; }
-        }
+        public Solution Solution => _solution;
 
+        public EmitBaseline Baseline => _baseline;
+
+        public ProjectId BaseProjectId => _baseProjectId;
         public DocumentId BaseDocumentId => _baseDocumentId;
 
         /// Builds a delta for the specified document given a path to its updated contents and a revision count
         /// On failure throws a DiffyException and with exitStatus > 0
-        public async Task BuildDelta (string deltaFile, DerivedArtifactInfo dinfo)
+        public async Task<RoslynDeltaProject> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo)
         {
             Console.WriteLine ($"parsing patch #{dinfo.Rev} from {deltaFile} and creating delta");
 
-            Document document = Project.GetDocument(BaseDocumentId)!;
+            Project project = Solution.GetProject(BaseProjectId)!;
+
+            Document document = project.GetDocument(BaseDocumentId)!;
 
             Document updatedDocument;
             using (var contents = File.OpenRead (deltaFile)) {
-                updatedDocument = document.WithText (SourceText.From (contents, Encoding.UTF8));
+                Solution updatedSolution = Solution.WithDocumentText (BaseDocumentId, SourceText.From (contents, Encoding.UTF8));
+                updatedDocument = updatedSolution.GetDocument(BaseDocumentId)!;
             }
-            Project = updatedDocument.Project;
+            if (updatedDocument.Project.Id != BaseProjectId)
+                throw new Exception ("Unexpectedly, project Id of the delta != base project Id");
             if (updatedDocument.Id != BaseDocumentId)
                 throw new Exception ("Unexpectedly, document Id of the delta != base document Id");
+            project = updatedDocument.Project;
 
             var changes = await updatedDocument.GetTextChangesAsync (document);
             if (!changes.Any()) {
@@ -98,7 +100,7 @@ namespace Diffy
             Console.WriteLine ($"Found changes in {document.Name}");
 
             Task<Compilation> updatedCompilation = Task.Run(async () => {
-                var compilation = await Project.GetCompilationAsync ();
+                var compilation = await project.GetCompilationAsync ();
                 if (!CheckCompilationDiagnostics(compilation, $"delta {dinfo.Rev}"))
                     throw new DeltaCompilationException(exitStatus: 6);
                 else
@@ -122,9 +124,9 @@ namespace Diffy
                 metaStream.Flush();
                 ilStream.Flush();
                 pdbStream.Flush();
-
-                // Update baseline for next delta
-                Baseline = emitResult.Baseline;
+                Console.WriteLine ($"wrote {dinfo.Dmeta}");
+                // return a new deltaproject that can build the next update
+                return new RoslynDeltaProject(this, project.Solution, emitResult.Baseline);
             }
         }
 

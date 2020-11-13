@@ -17,8 +17,8 @@ namespace Diffy
         readonly string _outputAsm;
         readonly string _outputPdb;
 
-        private RoslynBaselineAdhocProject (Workspace workspace, ProjectId projectId, DocumentId documentId,
-                                            string outputAsm, string outputPdb) : base (workspace, projectId) {
+        private RoslynBaselineAdhocProject (Solution solution, ProjectId projectId, DocumentId documentId,
+                                            string outputAsm, string outputPdb) : base (solution, projectId) {
             _documentId = documentId;
             _outputAsm = outputAsm;
             _outputPdb = outputPdb;
@@ -27,7 +27,7 @@ namespace Diffy
 
         public static RoslynBaselineProject Make (Config config)
         {
-            var (workspace, projectId, baselineDocumentId) = PrepareAdhocProject (config);
+            var (solution, projectId, baselineDocumentId) = PrepareAdhocProject (config);
 
             Directory.CreateDirectory(config.OutputDir);
 
@@ -38,7 +38,7 @@ namespace Diffy
             var outputAsm = Path.Combine (config.OutputDir, projectName + ".dll");
             var outputPdb = Path.Combine (config.OutputDir, projectName + ".pdb");
 
-            return new RoslynBaselineAdhocProject(workspace, projectId, baselineDocumentId, outputAsm, outputPdb);
+            return new RoslynBaselineAdhocProject(solution, projectId, baselineDocumentId, outputAsm, outputPdb);
         }
 
         public async override Task<BaselineArtifacts> PrepareBaseline () {
@@ -46,7 +46,7 @@ namespace Diffy
             var baseline = await BuildBaseline ();
 
             var artifacts = new BaselineArtifacts() {
-                workspace = workspace,
+                baselineSolution = solution,
                 baselineProjectId = projectId,
                 baselineDocumentId = _documentId,
                 baselineOutputAsmPath = _outputAsm,
@@ -55,14 +55,16 @@ namespace Diffy
             return artifacts;
         }
 
-        static (Workspace, ProjectId, DocumentId) PrepareAdhocProject (Diffy.Config config)
+        static (Solution, ProjectId, DocumentId) PrepareAdhocProject (Diffy.Config config)
         {
-            var adhoc = new AdhocWorkspace();
             Project project;
+            {
+                var adhoc = new AdhocWorkspace();
+                project = adhoc.AddProject (config.ProjectName, LanguageNames.CSharp);
+            }
             switch (config.TfmType) {
                 case Diffy.TfmType.Netcore:
                     //FIXME: hack
-                    project = adhoc.AddProject (config.ProjectName, LanguageNames.CSharp);
                     var spcPath = typeof(object).Assembly.Location;
                     var spcBase = Path.GetDirectoryName (spcPath)!;
                     if (config.BclBase != null)
@@ -74,7 +76,6 @@ namespace Diffy
                     project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Linq.dll")));
                     break;
                 case Diffy.TfmType.MonoMono:
-                    project =  adhoc.AddProject (config.ProjectName, LanguageNames.CSharp);
                     // FIXME: hack
                     if (config.BclBase == null)
                         throw new Exception ("bcl base not specified for MonoMono compilation");
@@ -99,18 +100,16 @@ namespace Diffy
                 baselineDocumentId = document.Id;
             }
 
-            if (!adhoc.TryApplyChanges(project.Solution))
-                throw new Exception ("couldn't apply new solution to adhoc workspace");
+            var solution = project.Solution;
 
-
-            return (adhoc, project.Id, baselineDocumentId);
+            return (solution, project.Id, baselineDocumentId);
         }
 
         async Task<EmitBaseline> BuildBaseline ()
         {
             Console.WriteLine ("Building baseline...");
 
-            var project = workspace.CurrentSolution.GetProject(projectId)!;
+            var project = solution.GetProject(projectId)!;
             var outputAsm = _outputAsm;
             var outputPdb = _outputPdb;
 

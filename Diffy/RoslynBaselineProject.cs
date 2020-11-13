@@ -7,7 +7,7 @@ namespace Diffy
 {
 
     public struct BaselineArtifacts {
-        public Workspace workspace;
+        public Solution baselineSolution;
         /// the project we are working on
         public ProjectId baselineProjectId;
 
@@ -21,12 +21,12 @@ namespace Diffy
     }
     public abstract class RoslynBaselineProject {
 
-        protected RoslynBaselineProject (Workspace workspace, ProjectId projectId) {
-            this.workspace = workspace;
+        protected RoslynBaselineProject (Solution solution, ProjectId projectId) {
+            this.solution = solution;
             this.projectId = projectId;
         }
 
-        protected readonly Workspace workspace;
+        protected readonly Solution solution;
 
         protected readonly ProjectId projectId;
 

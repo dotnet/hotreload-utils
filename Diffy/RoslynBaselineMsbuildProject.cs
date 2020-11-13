@@ -13,18 +13,18 @@ namespace Diffy
     public class RoslynBaselineMsbuildProject : RoslynBaselineProject {
 
         readonly DocumentId _baselineDocumentId;
-        private RoslynBaselineMsbuildProject (Workspace workspace, ProjectId projectId, DocumentId documentId)
-            : base (workspace, projectId) {
+        private RoslynBaselineMsbuildProject (Solution solution, ProjectId projectId, DocumentId documentId)
+            : base (solution, projectId) {
                 _baselineDocumentId = documentId;
             }
 
 
         public static async Task<RoslynBaselineMsbuildProject> Make (Config config) {
-            (var workspace, var projectId, var documentId) = await PrepareMSBuildProject(config);
-            return new RoslynBaselineMsbuildProject(workspace, projectId, documentId);
+            (var solution, var projectId, var documentId) = await PrepareMSBuildProject(config);
+            return new RoslynBaselineMsbuildProject(solution, projectId, documentId);
         }
 
-        static async Task<(Workspace, ProjectId, DocumentId)> PrepareMSBuildProject (Config config)
+        static async Task<(Solution, ProjectId, DocumentId)> PrepareMSBuildProject (Config config)
         {
                     Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
                     // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
@@ -41,17 +41,17 @@ namespace Diffy
                     var baselinePath = Path.GetFullPath (config.SourcePath);
 
                     var baselineDocumentId = project.Documents.Where((doc) => doc.FilePath == baselinePath).First().Id;
-                    return (msw, project.Id, baselineDocumentId);
+                    return (msw.CurrentSolution, project.Id, baselineDocumentId);
         }
 
 
         public override Task<BaselineArtifacts> PrepareBaseline () {
-            var project = workspace.CurrentSolution.GetProject(projectId)!;
+            var project = solution.GetProject(projectId)!;
 
             if (!ConsumeBaseline (project, out string? outputAsm, out EmitBaseline? emitBaseline))
                     throw new Exception ("could not consume baseline");
             var artifacts = new BaselineArtifacts() {
-                workspace = workspace,
+                baselineSolution = solution,
                 baselineProjectId = projectId,
                 baselineDocumentId = _baselineDocumentId,
                 baselineOutputAsmPath = outputAsm,

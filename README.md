@@ -26,9 +26,9 @@ pushd example-msbuild
 dotnet build /p:Configuration=Debug
 popd
 
-dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug example-msbuild/TestClass.cs  example-msbuild/TestClass_v1.cs
+dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug example-msbuild/TestClass.cs  example-msbuild/TestClass_v1.cs example-msbuild/TestClass_v2.cs
 
-mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta
+mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.2.dmeta
 ```
 
 Use `msbuild` to build the project first, then run `roslyn-ildiff` to generate

@@ -21,16 +21,23 @@ namespace RoslynILDiff
             if (!ParseArgs (args, out var config))
                 return 2;
 
-            try {
-                Run(config).Wait();
-            } catch (Diffy.DiffyException exn) {
-                Console.Error.WriteLine ($"failed: {exn.Message}");
-                return exn.ExitStatus;
-            }
+            var exitStatus = RunWithExitStatus(config).Result;
 
             return 0;
         }
 
+        static async Task<int> RunWithExitStatus(Diffy.Config config)
+        {
+            try {
+                await Run(config);
+                return 0;
+            } catch (Diffy.DiffyException exn) {
+                Console.Error.WriteLine ($"failed: {exn.Message}");
+                if (exn.ExitStatus == 0)
+                    return 1; /* really shouldn't happen, but just in case */
+                return exn.ExitStatus;
+            }
+        }
         static async Task Run (Diffy.Config config)
         {
             Diffy.RoslynBaselineProject? baselineProject;
@@ -49,8 +56,9 @@ namespace RoslynILDiff
             var derivedInputs = config.DeltaFiles.Select((deltaFile, idx) => (deltaFile, new Diffy.DerivedArtifactInfo(outputAsm, 1+idx)));
 
             foreach ((var deltaFile, var dinfo) in derivedInputs) {
-                await deltaProject.BuildDelta (deltaFile, dinfo);
+                deltaProject = await deltaProject.BuildDelta (deltaFile, dinfo);
             }
+            Console.WriteLine ("done");
         }
 
         private static void InitMSBuild ()
