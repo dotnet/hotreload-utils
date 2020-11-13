@@ -30,6 +30,8 @@ namespace Diffy
             public List<string> Files {get; set; } = new List<string> ();
             public List<string> Libs {get; set; } = new List<String> ();
 
+            public bool Barebones {get ; set; } = false;
+
             public List<KeyValuePair<string,string>> Properties {get; set;} = new List<KeyValuePair<string,string>> ();
             public TfmType TfmType {get; set; } = TfmType.Netcore;
 
@@ -61,6 +63,7 @@ namespace Diffy
             BclBase = builder.BclBase;
             OutputDir = builder.OutputDir;
             ProjectPath = builder.ProjectPath;
+            Barebones = builder.Barebones;
         }
 
         /// The libraries added to the project
@@ -68,6 +71,7 @@ namespace Diffy
         /// The source file and its sequence of changes
         public IReadOnlyList<string> Files { get; }
 
+        public bool Barebones {get; }
 
         public IReadOnlyList<KeyValuePair<string,string>> Properties { get; }
 

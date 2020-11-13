@@ -62,29 +62,29 @@ namespace Diffy
                 var adhoc = new AdhocWorkspace();
                 project = adhoc.AddProject (config.ProjectName, LanguageNames.CSharp);
             }
-            switch (config.TfmType) {
-                case Diffy.TfmType.Netcore:
-                    //FIXME: hack
-                    var spcPath = typeof(object).Assembly.Location;
-                    var spcBase = Path.GetDirectoryName (spcPath)!;
-                    if (config.BclBase != null)
-                        spcBase = config.BclBase;
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Private.CoreLib.dll")));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Runtime.dll")));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.dll")));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Console.dll")));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Linq.dll")));
-                    break;
-                case Diffy.TfmType.MonoMono:
-                    // FIXME: hack
-                    if (config.BclBase == null)
-                        throw new Exception ("bcl base not specified for MonoMono compilation");
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(config.BclBase, "mscorlib.dll")));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(config.BclBase, "System.Core.dll")));
-                    project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(config.BclBase, "System.dll")));
-                    break;
-                default:
-                    throw new Exception($"unexpected TfmType {config.TfmType}");
+            if (!config.Barebones) {
+                switch (config.TfmType) {
+                    case Diffy.TfmType.Netcore:
+                        var spcPath = typeof(object).Assembly.Location;
+                        var spcBase = Path.GetDirectoryName (spcPath)!;
+                        if (config.BclBase != null)
+                            spcBase = config.BclBase;
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Private.CoreLib.dll")));
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Runtime.dll")));
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.dll")));
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Console.dll")));
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine (spcBase, "System.Linq.dll")));
+                        break;
+                    case Diffy.TfmType.MonoMono:
+                        if (config.BclBase == null)
+                            throw new Exception ("bcl base not specified for MonoMono compilation");
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(config.BclBase, "mscorlib.dll")));
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(config.BclBase, "System.Core.dll")));
+                        project = project.AddMetadataReference (MetadataReference.CreateFromFile (Path.Combine(config.BclBase, "System.dll")));
+                        break;
+                    default:
+                        throw new Exception($"unexpected TfmType {config.TfmType}");
+                }
             }
 
             foreach (string lib in config.Libs) {

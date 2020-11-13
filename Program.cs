@@ -81,6 +81,8 @@ namespace RoslynILDiff
                     builder.TfmType = Diffy.TfmType.MonoMono;
                 } else if (fn.StartsWith("-bcl:") || fn.StartsWith("-bcl=")) {
                     builder.BclBase = fn.Substring(5);
+                } else if (fn == "-empty") {
+                    builder.Barebones = true;
                 } else if (fn.StartsWith ("-l:")) {
                     builder.Libs.Add (fn.Substring (3));
                 } else if (fn == "-target:library") {
