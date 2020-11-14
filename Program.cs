@@ -21,9 +21,8 @@ namespace RoslynILDiff
             if (!ParseArgs (args, out var config))
                 return 2;
 
-            var exitStatus = RunWithExitStatus(config).Result;
+            return RunWithExitStatus(config).Result;
 
-            return 0;
         }
 
         static async Task<int> RunWithExitStatus(Diffy.Config config)
