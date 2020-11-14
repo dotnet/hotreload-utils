@@ -19,13 +19,13 @@ namespace Diffy
         private const string csharpCodeAnalyzerTypeName = "Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer";
         private const string activeStatementTypeName = "Microsoft.CodeAnalysis.EditAndContinue.ActiveStatement";
 
-        private Type _codeAnalyzer;
-        private Type _activeStatement;
+        private readonly Type _codeAnalyzer;
+        private readonly Type _activeStatement;
 
         public ChangeMaker () {
-            var tys = ReflectionInit();
-            _codeAnalyzer = tys.codeAnalyzer;
-            _activeStatement = tys.activeStatement;
+            var (codeAnalyzer, activeStatement) = ReflectionInit();
+            _codeAnalyzer = codeAnalyzer;
+            _activeStatement = activeStatement;
         }
         // Get all the Roslyn stuff we need
         private static (Type codeAnalyzer, Type activeStatement) ReflectionInit ()
@@ -47,7 +47,7 @@ namespace Diffy
             return (codeAnalyzer: ca, activeStatement: actS);
         }
 
-        public Task<IEnumerable<SemanticEdit>> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IEnumerable<SemanticEdit>> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default)
         {
             // Effectively
             //

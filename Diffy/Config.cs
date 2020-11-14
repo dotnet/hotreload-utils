@@ -42,14 +42,12 @@ namespace Diffy
 
             public Microsoft.CodeAnalysis.OutputKind OutputKind {get; set; } = Microsoft.CodeAnalysis.OutputKind.ConsoleApplication;
             public Config Bake () {
-                switch (ProjectType) {
-                    case ProjectType.Adhoc:
-                        return new AdhocConfig(this);
-                    case ProjectType.Msbuild:
-                        return new MsbuildConfig(this);
-                    default:
-                        throw new Exception ("Expected ProjectType Adhoc or Msbuild");
-                }
+                return ProjectType switch
+                {
+                    ProjectType.Adhoc => new AdhocConfig(this),
+                    ProjectType.Msbuild => new MsbuildConfig(this),
+                    _ => throw new Exception("Expected ProjectType Adhoc or Msbuild"),
+                };
             }
         }
 

@@ -115,19 +115,18 @@ namespace Diffy
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
             var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
 
-            using (var metaStream = File.Create (dinfo.Dmeta))
-            using (var ilStream   = File.Create (dinfo.Dil))
-            using (var pdbStream  = File.Create (dinfo.Dpdb)) {
-                EmitDifferenceResult emitResult = updatedCompilationResult.EmitDifference (baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
-                CheckEmitResult(emitResult);
+            using var metaStream = File.Create(dinfo.Dmeta);
+            using var ilStream = File.Create(dinfo.Dil);
+            using var pdbStream = File.Create(dinfo.Dpdb);
+            EmitDifferenceResult emitResult = updatedCompilationResult.EmitDifference(baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
+            CheckEmitResult(emitResult);
 
-                metaStream.Flush();
-                ilStream.Flush();
-                pdbStream.Flush();
-                Console.WriteLine ($"wrote {dinfo.Dmeta}");
-                // return a new deltaproject that can build the next update
-                return new RoslynDeltaProject(this, project.Solution, emitResult.Baseline);
-            }
+            metaStream.Flush();
+            ilStream.Flush();
+            pdbStream.Flush();
+            Console.WriteLine($"wrote {dinfo.Dmeta}");
+            // return a new deltaproject that can build the next update
+            return new RoslynDeltaProject(this, project.Solution, emitResult.Baseline);
         }
 
         Task<IEnumerable<SemanticEdit>> CompileEdits (Document document, Document updatedDocument)

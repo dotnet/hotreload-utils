@@ -75,24 +75,24 @@ namespace RoslynILDiff
                 string fn = args [i];
                 if (fn.StartsWith(msbuildOptPrefix)) {
                     builder.ProjectType = Diffy.ProjectType.Msbuild;
-                    builder.ProjectPath = fn.Substring(msbuildOptPrefix.Length);
+                    builder.ProjectPath = fn[msbuildOptPrefix.Length..];
                 } else if (fn == "-mono") {
                     builder.TfmType = Diffy.TfmType.MonoMono;
                 } else if (fn.StartsWith("-bcl:") || fn.StartsWith("-bcl=")) {
-                    builder.BclBase = fn.Substring(5);
+                    builder.BclBase = fn[5..];
                 } else if (fn == "-empty") {
                     builder.Barebones = true;
                 } else if (fn.StartsWith ("-l:")) {
-                    builder.Libs.Add (fn.Substring (3));
+                    builder.Libs.Add (fn[3..]);
                 } else if (fn == "-target:library") {
                     builder.OutputKind = Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary;
                 } else if (fn.StartsWith("-out:") || fn.StartsWith("-out=")) {
-                    builder.OutputDir = fn.Substring(5);
+                    builder.OutputDir = fn[5..];
                 } else if (fn.StartsWith("-p:")) {
-                    var s = fn.Substring(3);
+                    var s = fn[3..];
                     if (s.IndexOf('=') is int j && j > 0 && j+1 < s.Length) {
-                        var k = s.Substring(0, j);
-                        var v = s.Substring(j+1);
+                        var k = s[0..j];
+                        var v = s[(j + 1)..];
                         // Console.WriteLine ($"got <{k}>=<{v}>");
                         builder.Properties.Add(KeyValuePair.Create(k,v));
                     } else {
