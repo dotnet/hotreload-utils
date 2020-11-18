@@ -33,9 +33,12 @@ namespace Diffy
                     msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
                     msw.LoadMetadataForReferencedProjects = true;
                     msw.WorkspaceFailed += (_sender, diag) => {
-                        Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
-                        Console.WriteLine ($"{diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
-                        throw new Exception ("failed workspace");
+                        bool warning = diag.Diagnostic.Kind == WorkspaceDiagnosticKind.Warning;
+                        if (!warning)
+                            Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
+                        Console.WriteLine ($"MSBuildWorkspace {diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
+                        if (!warning)
+                            throw new DiffyException ("failed workspace", 1);
                     };
                     var project = await msw.OpenProjectAsync (config.ProjectPath);
                     var baselinePath = Path.GetFullPath (config.SourcePath);
