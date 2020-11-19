@@ -49,6 +49,8 @@ namespace RoslynILDiff
 
             var baselineArtifacts = await baselineProject.PrepareBaseline();
 
+            Console.WriteLine ("baseline ready");
+
             var deltaProject = new Diffy.RoslynDeltaProject (baselineArtifacts);
 
             string outputAsm = baselineArtifacts.baselineOutputAsmPath;
