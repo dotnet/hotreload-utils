@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
+using Diffy.AsyncUtils;
 
 
 namespace RoslynILDiff
@@ -54,13 +57,37 @@ namespace RoslynILDiff
             var deltaProject = new Diffy.RoslynDeltaProject (baselineArtifacts);
 
             string outputAsm = baselineArtifacts.baselineOutputAsmPath;
-            var derivedInputs = config.DeltaFiles.Select((deltaFile, idx) => (deltaFile, new Diffy.DerivedArtifactInfo(outputAsm, 1+idx)));
+            IAsyncEnumerable<(string deltaFile, Diffy.DerivedArtifactInfo dinfo)> derivedInputs;
 
-            foreach ((var deltaFile, var dinfo) in derivedInputs) {
+            if (config.Live) {
+                derivedInputs = Livecoding (config.SourcePath, outputAsm);
+            } else {
+                derivedInputs = config.DeltaFiles.Select((deltaFile, idx) => (deltaFile, new Diffy.DerivedArtifactInfo(outputAsm, 1+idx))).Asynchronously();
+            }
+
+            await foreach ((var deltaFile, var dinfo) in derivedInputs) {
                 deltaProject = await deltaProject.BuildDelta (deltaFile, dinfo);
             }
             Console.WriteLine ("done");
         }
+
+        public static async IAsyncEnumerable<(string deltaFile, Diffy.DerivedArtifactInfo dinfo)> Livecoding (string watchPath, string outputAsm, [EnumeratorCancellation] CancellationToken cancellationToken= default) {
+            int rev = 1;
+            var last = DateTime.UtcNow;
+            var interval = TimeSpan.FromMilliseconds(250); /* FIXME: make this configurable */
+            using var fswgen = new Diffy.FSWGen (Path.GetDirectoryName(watchPath) ?? ".", Path.GetFileName(watchPath));
+            await foreach (var fsevent in fswgen.Watch().WithCancellation (cancellationToken).ConfigureAwait(false)) {
+                if ((fsevent.ChangeType & WatcherChangeTypes.Changed) != 0) {
+                    var e = DateTime.UtcNow;
+                    if (e - last < interval)
+                        continue;
+                    last = e;
+                    yield return (deltaFile: watchPath, new Diffy.DerivedArtifactInfo(outputAsm, rev));
+                    ++rev;
+                }
+            }
+        }
+
 
         private static void InitMSBuild ()
         {
@@ -78,6 +105,8 @@ namespace RoslynILDiff
                 if (fn.StartsWith(msbuildOptPrefix)) {
                     builder.ProjectType = Diffy.ProjectType.Msbuild;
                     builder.ProjectPath = fn[msbuildOptPrefix.Length..];
+                } else if (fn == "-live") {
+                    builder.Live = true;
                 } else if (fn == "-mono") {
                     builder.TfmType = Diffy.TfmType.MonoMono;
                 } else if (fn.StartsWith("-bcl:") || fn.StartsWith("-bcl=")) {
@@ -109,8 +138,12 @@ namespace RoslynILDiff
                 }
             }
 
-            if (builder.Files.Count <= 1) {
+            if (!builder.Live && builder.Files.Count <= 1) {
                 Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
+                config = null;
+                return false;
+            } else if (builder.Live && builder.Files.Count != 1) {
+                Console.WriteLine("roslynildiff.exe -live watchfile.cs");
                 config = null;
                 return false;
             }

@@ -27,6 +27,7 @@ namespace Diffy
 
             public ProjectType ProjectType {get; set;} = ProjectType.Adhoc;
 
+            public bool Live {get; set;} = false;
             public List<string> Files {get; set; } = new List<string> ();
             public List<string> Libs {get; set; } = new List<String> ();
 
@@ -54,6 +55,7 @@ namespace Diffy
         protected Config (ConfigBuilder builder) {
             Files = builder.Files;
             Libs = builder.Libs;
+            Live = builder.Live;
             Properties = builder.Properties;
             ProjectType = builder.ProjectType;
             TfmType = builder.TfmType;
@@ -68,6 +70,8 @@ namespace Diffy
         public IReadOnlyList<string> Libs { get; }
         /// The source file and its sequence of changes
         public IReadOnlyList<string> Files { get; }
+
+        public bool Live { get; }
 
         public bool Barebones {get; }
 
