@@ -72,7 +72,7 @@ namespace Diffy
 
         /// Builds a delta for the specified document given a path to its updated contents and a revision count
         /// On failure throws a DiffyException and with exitStatus > 0
-        public async Task<RoslynDeltaProject> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo)
+        public async Task<RoslynDeltaProject> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo, bool ignoreUnchanged = false)
         {
             Console.WriteLine ($"parsing patch #{dinfo.Rev} from {deltaFile} and creating delta");
 
@@ -94,6 +94,8 @@ namespace Diffy
             var changes = await updatedDocument.GetTextChangesAsync (document);
             if (!changes.Any()) {
                 Console.WriteLine ("no changes found");
+                if (ignoreUnchanged)
+                    return this;
                 //FIXME can continue here and just ignore the revision
                 throw new DiffyException ($"no changes in revision {dinfo.Rev}", exitStatus: 5);
             }
@@ -113,6 +115,13 @@ namespace Diffy
             Compilation updatedCompilationResult = await updatedCompilation;
 
             var edits = await editsCompilation;
+            if (edits.IsDefault || !edits.Any()) {
+                Console.WriteLine("no semantic changes");
+                if (ignoreUnchanged)
+                    return this;
+                else
+                    throw new DeltaCompilationException("no semantic changes in revision", exitStatus: 7);
+            }
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
             var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
 
