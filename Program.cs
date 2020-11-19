@@ -66,7 +66,9 @@ namespace RoslynILDiff
             }
 
             await foreach ((var deltaFile, var dinfo) in derivedInputs) {
-                deltaProject = await deltaProject.BuildDelta (deltaFile, dinfo);
+                Console.WriteLine ("got a change");
+                /* fixme: why does FSW sometimes queue up 2 events in quick succession after a single save? */
+                deltaProject = await deltaProject.BuildDelta (deltaFile, dinfo, ignoreUnchanged: config.Live);
             }
             Console.WriteLine ("done");
         }
@@ -79,8 +81,12 @@ namespace RoslynILDiff
             await foreach (var fsevent in fswgen.Watch().WithCancellation (cancellationToken).ConfigureAwait(false)) {
                 if ((fsevent.ChangeType & WatcherChangeTypes.Changed) != 0) {
                     var e = DateTime.UtcNow;
-                    if (e - last < interval)
+                    Console.WriteLine($"change in {fsevent.FullPath} is a {fsevent.ChangeType} at {e}");
+                    if (e - last < interval) {
+                        Console.WriteLine($"too soon {e-last}");
                         continue;
+                    }
+                    Console.WriteLine($"more than 250ms since last change");
                     last = e;
                     yield return (deltaFile: watchPath, new Diffy.DerivedArtifactInfo(outputAsm, rev));
                     ++rev;

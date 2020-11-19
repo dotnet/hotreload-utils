@@ -16,9 +16,10 @@ namespace Diffy
         {
             _channel = Channel.CreateUnbounded<System.IO.FileSystemEventArgs> (new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = true});
             _fsw = new System.IO.FileSystemWatcher(directoryPath, filter);
+            _fsw.NotifyFilter = System.IO.NotifyFilters.LastWrite; /* FIXME: generalize */
             _fsw.Changed += OnChanged;
-            _fsw.Created += OnChanged;
-            _fsw.Deleted += OnChanged;
+            // _fsw.Created += OnChanged;
+            // _fsw.Deleted += OnChanged; // FIXME: deletion is interesting, actually
         }
 
         private void OnChanged (object sender, System.IO.FileSystemEventArgs eventArgs)
