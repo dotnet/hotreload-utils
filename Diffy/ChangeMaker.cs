@@ -47,7 +47,7 @@ namespace Diffy
             return (codeAnalyzer: ca, activeStatement: actS);
         }
 
-        public Task<IEnumerable<SemanticEdit>> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default)
+        public Task<ImmutableArray<SemanticEdit>> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default)
         {
             // Effectively
             //
@@ -93,12 +93,12 @@ namespace Diffy
 
             var awaiter = taskResult.GetType().GetMethod("GetAwaiter")!.Invoke(taskResult, Array.Empty<object>())!;
 
-            TaskCompletionSource<IEnumerable<SemanticEdit>> tcs = new TaskCompletionSource<IEnumerable<SemanticEdit>>();
+            TaskCompletionSource<ImmutableArray<SemanticEdit>> tcs = new TaskCompletionSource<ImmutableArray<SemanticEdit>>();
 
             Action onCompleted = delegate {
                 try {
                     var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
-                    var edits = (IEnumerable<SemanticEdit>)result.GetType().GetProperty("SemanticEdits")!.GetValue(result)!;
+                    var edits = (ImmutableArray<SemanticEdit>)result.GetType().GetProperty("SemanticEdits")!.GetValue(result)!;
                     tcs.TrySetResult(edits);
                 } catch (TaskCanceledException e) {
                     tcs.TrySetCanceled(e.CancellationToken);

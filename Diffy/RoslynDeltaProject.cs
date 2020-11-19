@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -129,7 +130,7 @@ namespace Diffy
             return new RoslynDeltaProject(this, project.Solution, emitResult.Baseline);
         }
 
-        Task<IEnumerable<SemanticEdit>> CompileEdits (Document document, Document updatedDocument)
+        Task<ImmutableArray<SemanticEdit>> CompileEdits (Document document, Document updatedDocument)
         {
             return _changeMaker.GetChanges(document, updatedDocument);
         }
