@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -30,6 +31,6 @@ namespace Diffy
 
         protected readonly ProjectId projectId;
 
-        public abstract Task<BaselineArtifacts> PrepareBaseline ();
+        public abstract Task<BaselineArtifacts> PrepareBaseline (CancellationToken ct = default);
     }
 }

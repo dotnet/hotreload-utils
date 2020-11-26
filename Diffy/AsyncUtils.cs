@@ -12,7 +12,7 @@ namespace Diffy.AsyncUtils {
     }
 
     internal class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T> {
-        IEnumerable<T> enumerable;
+        readonly IEnumerable<T> enumerable;
 
         internal AsyncEnumerableAdapter(IEnumerable<T> enumerable) {
             this.enumerable = enumerable;
@@ -23,7 +23,7 @@ namespace Diffy.AsyncUtils {
         }
     }
     internal class AsyncEnumeratorAdapter<T> : IAsyncEnumerator<T> {
-        IEnumerator<T> enumerator;
+        readonly IEnumerator<T> enumerator;
         internal AsyncEnumeratorAdapter(IEnumerator<T> enumerator) {
             this.enumerator = enumerator;
         }

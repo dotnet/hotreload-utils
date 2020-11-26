@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -19,12 +20,12 @@ namespace Diffy
             }
 
 
-        public static async Task<RoslynBaselineMsbuildProject> Make (Config config) {
-            (var solution, var projectId, var documentId) = await PrepareMSBuildProject(config);
+        public static async Task<RoslynBaselineMsbuildProject> Make (Config config, CancellationToken ct = default) {
+            (var solution, var projectId, var documentId) = await PrepareMSBuildProject(config, ct);
             return new RoslynBaselineMsbuildProject(solution, projectId, documentId);
         }
 
-        static async Task<(Solution, ProjectId, DocumentId)> PrepareMSBuildProject (Config config)
+        static async Task<(Solution, ProjectId, DocumentId)> PrepareMSBuildProject (Config config, CancellationToken ct = default)
         {
                     Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
                     // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
@@ -40,7 +41,7 @@ namespace Diffy
                         if (!warning)
                             throw new DiffyException ("failed workspace", 1);
                     };
-                    var project = await msw.OpenProjectAsync (config.ProjectPath);
+                    var project = await msw.OpenProjectAsync (config.ProjectPath, null, ct);
                     var baselinePath = Path.GetFullPath (config.SourcePath);
 
                     var baselineDocumentId = project.Documents.Where((doc) => doc.FilePath == baselinePath).First().Id;
@@ -48,7 +49,7 @@ namespace Diffy
         }
 
 
-        public async override Task<BaselineArtifacts> PrepareBaseline () {
+        public async override Task<BaselineArtifacts> PrepareBaseline (CancellationToken ct = default) {
             var project = solution.GetProject(projectId)!;
 
             // gets a snapshot of the text of the baseline document in memory
@@ -58,9 +59,9 @@ namespace Diffy
             var t = Task.Run (async () => {
                 var doc = solution.GetDocument(_baselineDocumentId);
                 if (doc != null)
-                    await doc.GetTextAsync();
+                    await doc.GetTextAsync(ct);
 
-            });
+            }, ct);
             if (!ConsumeBaseline (project, out string? outputAsm, out EmitBaseline? emitBaseline))
                     throw new Exception ("could not consume baseline");
             var artifacts = new BaselineArtifacts() {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Diffy.AsyncUtils;
+
 
 
 namespace RoslynILDiff
@@ -42,63 +42,19 @@ namespace RoslynILDiff
         }
         static async Task Run (Diffy.Config config)
         {
-            Diffy.RoslynBaselineProject? baselineProject;
-            if (config.ProjectType == Diffy.ProjectType.Msbuild) {
-                InitMSBuild();
-                baselineProject = await Diffy.RoslynBaselineMsbuildProject.Make (config);
-            } else {
-                baselineProject = Diffy.RoslynBaselineAdhocProject.Make (config);
-            }
-
-            var baselineArtifacts = await baselineProject.PrepareBaseline();
-
-            Console.WriteLine ("baseline ready");
+            var runner = new Diffy.Runner (config);
+            var baselineArtifacts = await runner.SetupBaseline ();
 
             var deltaProject = new Diffy.RoslynDeltaProject (baselineArtifacts);
+            var derivedInputs = runner.SetupDerivedInputs (baselineArtifacts);
 
-            string outputAsm = baselineArtifacts.baselineOutputAsmPath;
-            IAsyncEnumerable<(string deltaFile, Diffy.DerivedArtifactInfo dinfo)> derivedInputs;
-
-            if (config.Live) {
-                derivedInputs = Livecoding (config.SourcePath, outputAsm);
-            } else {
-                derivedInputs = config.DeltaFiles.Select((deltaFile, idx) => (deltaFile, new Diffy.DerivedArtifactInfo(outputAsm, 1+idx))).Asynchronously();
-            }
-
-            await foreach ((var deltaFile, var dinfo) in derivedInputs) {
-                Console.WriteLine ("got a change");
-                /* fixme: why does FSW sometimes queue up 2 events in quick succession after a single save? */
-                deltaProject = await deltaProject.BuildDelta (deltaFile, dinfo, ignoreUnchanged: config.Live);
-            }
+            await runner.GenerateDeltas (deltaProject, derivedInputs);
             Console.WriteLine ("done");
         }
 
-        public static async IAsyncEnumerable<(string deltaFile, Diffy.DerivedArtifactInfo dinfo)> Livecoding (string watchPath, string outputAsm, [EnumeratorCancellation] CancellationToken cancellationToken= default) {
-            int rev = 1;
-            var last = DateTime.UtcNow;
-            var interval = TimeSpan.FromMilliseconds(250); /* FIXME: make this configurable */
-            using var fswgen = new Diffy.FSWGen (Path.GetDirectoryName(watchPath) ?? ".", Path.GetFileName(watchPath));
-            await foreach (var fsevent in fswgen.Watch().WithCancellation (cancellationToken).ConfigureAwait(false)) {
-                if ((fsevent.ChangeType & WatcherChangeTypes.Changed) != 0) {
-                    var e = DateTime.UtcNow;
-                    Console.WriteLine($"change in {fsevent.FullPath} is a {fsevent.ChangeType} at {e}");
-                    if (e - last < interval) {
-                        Console.WriteLine($"too soon {e-last}");
-                        continue;
-                    }
-                    Console.WriteLine($"more than 250ms since last change");
-                    last = e;
-                    yield return (deltaFile: watchPath, new Diffy.DerivedArtifactInfo(outputAsm, rev));
-                    ++rev;
-                }
-            }
-        }
 
 
-        private static void InitMSBuild ()
-        {
-            Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
-        }
+
 
         static bool ParseArgs (string[] args, [NotNullWhen(true)] out Diffy.Config? config)
         {

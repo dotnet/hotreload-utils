@@ -34,6 +34,31 @@ namespace Diffy
         public int Rev => _rev;
     }
 
+    public sealed class DeltaOutputStreams : IAsyncDisposable {
+        public Stream MetaStream {get; private set;}
+        public Stream  IlStream {get; private set;}
+        public Stream PdbStream {get; private set;}
+
+        public DeltaOutputStreams(Stream dmeta, Stream dil, Stream dpdb) {
+            MetaStream = dmeta;
+            IlStream = dil;
+            PdbStream = dpdb;
+        }
+
+        public void Dispose () {
+            MetaStream?.Dispose();
+            IlStream?.Dispose();
+            PdbStream?.Dispose();
+        }
+
+        public async ValueTask DisposeAsync () {
+            if  (MetaStream != null) await MetaStream.DisposeAsync();
+            if  (IlStream != null) await IlStream.DisposeAsync();
+            if  (PdbStream != null) await PdbStream.DisposeAsync();
+        }
+
+    }
+
     /// Drives the creation of deltas from textual changes.
     public class RoslynDeltaProject
     {
@@ -70,9 +95,18 @@ namespace Diffy
         public ProjectId BaseProjectId => _baseProjectId;
         public DocumentId BaseDocumentId => _baseDocumentId;
 
+        private static DeltaOutputStreams MakeFileOutputs (DerivedArtifactInfo dinfo) {
+            var metaStream = File.Create(dinfo.Dmeta);
+            var ilStream = File.Create(dinfo.Dil);
+            var pdbStream = File.Create(dinfo.Dpdb);
+            return new DeltaOutputStreams(metaStream, ilStream, pdbStream);
+        }
         /// Builds a delta for the specified document given a path to its updated contents and a revision count
         /// On failure throws a DiffyException and with exitStatus > 0
-        public async Task<RoslynDeltaProject> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo, bool ignoreUnchanged = false)
+        public async Task<RoslynDeltaProject> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo, bool ignoreUnchanged = false,
+                                                          Func<DerivedArtifactInfo, DeltaOutputStreams>? makeOutputs = default,
+                                                          Action<DeltaOutputStreams>? outputsReady = default,
+                                                          CancellationToken ct = default)
         {
             Console.WriteLine ($"parsing patch #{dinfo.Rev} from {deltaFile} and creating delta");
 
@@ -81,7 +115,7 @@ namespace Diffy
             Document document = project.GetDocument(BaseDocumentId)!;
 
             Document updatedDocument;
-            using (var contents = File.OpenRead (deltaFile)) {
+            await using (var contents = File.OpenRead (deltaFile)) {
                 Solution updatedSolution = Solution.WithDocumentText (BaseDocumentId, SourceText.From (contents, Encoding.UTF8));
                 updatedDocument = updatedSolution.GetDocument(BaseDocumentId)!;
             }
@@ -91,7 +125,7 @@ namespace Diffy
                 throw new Exception ("Unexpectedly, document Id of the delta != base document Id");
             project = updatedDocument.Project;
 
-            var changes = await updatedDocument.GetTextChangesAsync (document);
+            var changes = await updatedDocument.GetTextChangesAsync (document, ct);
             if (!changes.Any()) {
                 Console.WriteLine ("no changes found");
                 if (ignoreUnchanged)
@@ -103,14 +137,14 @@ namespace Diffy
             Console.WriteLine ($"Found changes in {document.Name}");
 
             Task<Compilation> updatedCompilation = Task.Run(async () => {
-                var compilation = await project.GetCompilationAsync ();
+                var compilation = await project.GetCompilationAsync (ct);
                 if (!CheckCompilationDiagnostics(compilation, $"delta {dinfo.Rev}"))
                     throw new DeltaCompilationException(exitStatus: 6);
                 else
                     return compilation;
-            });
+            }, ct);
 
-            var editsCompilation = Task.Run(() => CompileEdits (document, updatedDocument));
+            var editsCompilation = Task.Run(() => CompileEdits (document, updatedDocument, ct), ct);
 
             Compilation updatedCompilationResult = await updatedCompilation;
 
@@ -125,23 +159,20 @@ namespace Diffy
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
             var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
 
-            using var metaStream = File.Create(dinfo.Dmeta);
-            using var ilStream = File.Create(dinfo.Dil);
-            using var pdbStream = File.Create(dinfo.Dpdb);
-            EmitDifferenceResult emitResult = updatedCompilationResult.EmitDifference(baseline, edits, metaStream, ilStream, pdbStream, updatedMethods);
-            CheckEmitResult(emitResult);
-
-            metaStream.Flush();
-            ilStream.Flush();
-            pdbStream.Flush();
+            EmitDifferenceResult emitResult;
+            await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : MakeFileOutputs(dinfo)) {
+                emitResult = updatedCompilationResult.EmitDifference(baseline, edits, output.MetaStream, output.IlStream, output.PdbStream, updatedMethods, ct);
+                CheckEmitResult(emitResult);
+                outputsReady?.Invoke(output);
+            }
             Console.WriteLine($"wrote {dinfo.Dmeta}");
             // return a new deltaproject that can build the next update
             return new RoslynDeltaProject(this, project.Solution, emitResult.Baseline);
         }
 
-        Task<ImmutableArray<SemanticEdit>> CompileEdits (Document document, Document updatedDocument)
+        Task<ImmutableArray<SemanticEdit>> CompileEdits (Document document, Document updatedDocument, CancellationToken ct = default)
         {
-            return _changeMaker.GetChanges(document, updatedDocument);
+            return _changeMaker.GetChanges(document, updatedDocument, ct);
         }
 
 

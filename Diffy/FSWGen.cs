@@ -10,13 +10,14 @@ namespace Diffy
     public class FSWGen : IDisposable {
 
         Channel<System.IO.FileSystemEventArgs>? _channel;
-        System.IO.FileSystemWatcher _fsw;
+        readonly System.IO.FileSystemWatcher _fsw;
 
         public FSWGen (string directoryPath, string filter)
         {
             _channel = Channel.CreateUnbounded<System.IO.FileSystemEventArgs> (new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = true});
-            _fsw = new System.IO.FileSystemWatcher(directoryPath, filter);
-            _fsw.NotifyFilter = System.IO.NotifyFilters.LastWrite; /* FIXME: generalize */
+            _fsw = new System.IO.FileSystemWatcher(directoryPath, filter) {
+                NotifyFilter = System.IO.NotifyFilters.LastWrite /* FIXME: generalize */
+            };
             _fsw.Changed += OnChanged;
             // _fsw.Created += OnChanged;
             // _fsw.Deleted += OnChanged; // FIXME: deletion is interesting, actually
@@ -24,7 +25,7 @@ namespace Diffy
 
         private void OnChanged (object sender, System.IO.FileSystemEventArgs eventArgs)
         {
-            _channel?.Writer.WriteAsync (eventArgs);
+            _channel?.Writer.WriteAsync (eventArgs).AsTask().Wait();
         }
 
         ~FSWGen () => Dispose (false);

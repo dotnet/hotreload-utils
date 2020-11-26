@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -41,9 +42,9 @@ namespace Diffy
             return new RoslynBaselineAdhocProject(solution, projectId, baselineDocumentId, outputAsm, outputPdb);
         }
 
-        public async override Task<BaselineArtifacts> PrepareBaseline () {
+        public async override Task<BaselineArtifacts> PrepareBaseline (CancellationToken ct = default) {
 
-            var baseline = await BuildBaseline ();
+            var baseline = await BuildBaseline (ct);
 
             var artifacts = new BaselineArtifacts() {
                 baselineSolution = solution,
@@ -105,7 +106,7 @@ namespace Diffy
             return (solution, project.Id, baselineDocumentId);
         }
 
-        async Task<EmitBaseline> BuildBaseline ()
+        async Task<EmitBaseline> BuildBaseline (CancellationToken ct = default)
         {
             Console.WriteLine ("Building baseline...");
 
@@ -113,14 +114,14 @@ namespace Diffy
             var outputAsm = _outputAsm;
             var outputPdb = _outputPdb;
 
-            var compilation = await project.GetCompilationAsync();
+            var compilation = await project.GetCompilationAsync(ct);
             if (!RoslynDeltaProject.CheckCompilationDiagnostics (compilation, "base")) {
                 throw new AdhocBaselineException (exitStatus: 3);
             }
 
             var baselineImage = new MemoryStream();
             var baselinePdb = new MemoryStream();
-            EmitResult result = compilation.Emit (baselineImage, baselinePdb);
+            EmitResult result = compilation.Emit (baselineImage, baselinePdb, cancellationToken: ct);
             if (!Diffy.RoslynDeltaProject.CheckEmitResult(result)) {
                 throw new AdhocBaselineException (exitStatus: 4);
             }
@@ -128,13 +129,13 @@ namespace Diffy
             using (var baseLineFile = File.Create(outputAsm))
             {
                 baselineImage.Seek(0, SeekOrigin.Begin);
-                baselineImage.CopyTo(baseLineFile);
+                await baselineImage.CopyToAsync(baseLineFile, ct);
                 baseLineFile.Flush();
             }
             using (var baseLinePdbFile = File.Create(outputPdb))
             {
                 baselinePdb.Seek(0, SeekOrigin.Begin);
-                baselinePdb.CopyTo(baseLinePdbFile);
+                await baselinePdb.CopyToAsync(baseLinePdbFile, ct);
                 baseLinePdbFile.Flush();
             }
 
