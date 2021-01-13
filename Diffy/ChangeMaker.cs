@@ -14,6 +14,22 @@ namespace Diffy
     //
     // Inspired by https://github.com/dotnet/roslyn/issues/8962
     public class ChangeMaker {
+
+
+        /// wrap the string representation of
+        /// Microsoft.CodeAnalysis.EditAndContinue.RudeEditDiagnostic struct
+        /// which is unfortunately internal.
+        public struct RudeEditDiagnosticWrapper {
+            private readonly string _kindWrapper;
+            private readonly TextSpan _span;
+            public string KindWrapper => _kindWrapper;
+            public TextSpan Span => _span;
+
+            public RudeEditDiagnosticWrapper (string kind, TextSpan span) {
+                _kindWrapper = kind;
+                _span = span;
+            }
+        }
         private const string csharpCodeAnalysisAssemblyName = "Microsoft.CodeAnalysis.CSharp.Features";
         private const string codeAnalysisFeaturesAssemblyName = "Microsoft.CodeAnalysis.Features";
         private const string csharpCodeAnalyzerTypeName = "Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer";
@@ -47,7 +63,7 @@ namespace Diffy
             return (codeAnalyzer: ca, activeStatement: actS);
         }
 
-        public Task<ImmutableArray<SemanticEdit>> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default)
+        public Task<(ImmutableArray<SemanticEdit>, ImmutableArray<RudeEditDiagnosticWrapper>)> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default)
         {
             // Effectively
             //
@@ -93,13 +109,33 @@ namespace Diffy
 
             var awaiter = taskResult.GetType().GetMethod("GetAwaiter")!.Invoke(taskResult, Array.Empty<object>())!;
 
-            TaskCompletionSource<ImmutableArray<SemanticEdit>> tcs = new TaskCompletionSource<ImmutableArray<SemanticEdit>>();
+            TaskCompletionSource<(ImmutableArray<SemanticEdit>, ImmutableArray<RudeEditDiagnosticWrapper>)> tcs = new ();
 
             Action onCompleted = delegate {
                 try {
                     var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
                     var edits = (ImmutableArray<SemanticEdit>)result.GetType().GetProperty("SemanticEdits")!.GetValue(result)!;
-                    tcs.TrySetResult(edits);
+
+                    // type is ImmutableArray<RudeEditDiagnostic>
+                    var rudeEditErrors = (System.Collections.IEnumerable)result.GetType().GetProperty("RudeEditErrors")!.GetValue(result)!;
+                    // Type is RudeEditKind (enum)
+                    FieldInfo? kindFieldInfo = null;
+                    // Type is TextSpan
+                    FieldInfo? spanFieldInfo = null;
+                    var rudeEdits = new List<RudeEditDiagnosticWrapper> ();
+                    foreach (var rudeEditError in rudeEditErrors)
+                    {
+                        if (kindFieldInfo == null) {
+                            kindFieldInfo = rudeEditError.GetType().GetField("Kind")!;
+                        }
+                        if (spanFieldInfo == null) {
+                            spanFieldInfo = rudeEditError.GetType().GetField("Span")!;
+                        }
+                        var kind = kindFieldInfo.GetValue(rudeEditError)!.ToString()!;
+                        var span = (TextSpan) spanFieldInfo.GetValue(rudeEditError)!;
+                        rudeEdits.Add(new RudeEditDiagnosticWrapper(kind, span));
+                    }
+                    tcs.TrySetResult((edits, rudeEdits.ToImmutableArray()));
                 } catch (TaskCanceledException e) {
                     tcs.TrySetCanceled(e.CancellationToken);
                 } catch (Exception e) {
