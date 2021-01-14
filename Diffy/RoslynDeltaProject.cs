@@ -149,15 +149,15 @@ namespace Diffy
             Compilation updatedCompilationResult = await updatedCompilation;
 
             var (edits, rudeEdits) = await editsCompilation;
+            if (!rudeEdits.IsDefault && rudeEdits.Any() ) {
+                throw new DeltaRudeEditException($"rude edits in revision {dinfo.Rev}", rudeEdits);
+            }
             if (edits.IsDefault || !edits.Any()) {
                 Console.WriteLine("no semantic changes");
                 if (ignoreUnchanged)
                     return this;
                 else
                     throw new DeltaCompilationException("no semantic changes in revision", exitStatus: 7);
-            }
-            if (!rudeEdits.IsDefault && rudeEdits.Any() ) {
-                throw new DeltaRudeEditException("rude edits!", rudeEdits);
             }
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
             var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
