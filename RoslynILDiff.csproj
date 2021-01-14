@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RoslynPackagesVersion>3.8.0-5.final</RoslynPackagesVersion>
+    <RoslynPackagesVersion>3.9.0-2.final</RoslynPackagesVersion>
   </PropertyGroup>
 
   <ItemGroup>
