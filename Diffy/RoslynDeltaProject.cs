@@ -67,8 +67,6 @@ namespace Diffy
         readonly Solution _solution;
         readonly EmitBaseline _baseline;
         readonly ProjectId _baseProjectId;
-        readonly DocumentId _baseDocumentId;
-
 
 
         public RoslynDeltaProject(BaselineArtifacts artifacts) {
@@ -76,7 +74,6 @@ namespace Diffy
             _solution = artifacts.baselineSolution;
             _baseline = artifacts.emitBaseline;
             _baseProjectId = artifacts.baselineProjectId;
-            _baseDocumentId = artifacts.baselineDocumentId;
         }
 
         internal RoslynDeltaProject (RoslynDeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
@@ -85,7 +82,6 @@ namespace Diffy
             _solution = newSolution;
             _baseline = newBaseline;
             _baseProjectId = prev._baseProjectId;
-            _baseDocumentId = prev._baseDocumentId;
         }
 
         public Solution Solution => _solution;
@@ -93,7 +89,6 @@ namespace Diffy
         public EmitBaseline Baseline => _baseline;
 
         public ProjectId BaseProjectId => _baseProjectId;
-        public DocumentId BaseDocumentId => _baseDocumentId;
 
         private static DeltaOutputStreams MakeFileOutputs (DerivedArtifactInfo dinfo) {
             var metaStream = File.Create(dinfo.Dmeta);
@@ -101,27 +96,30 @@ namespace Diffy
             var pdbStream = File.Create(dinfo.Dpdb);
             return new DeltaOutputStreams(metaStream, ilStream, pdbStream);
         }
+
         /// Builds a delta for the specified document given a path to its updated contents and a revision count
         /// On failure throws a DiffyException and with exitStatus > 0
-        public async Task<RoslynDeltaProject> BuildDelta (string deltaFile, DerivedArtifactInfo dinfo, bool ignoreUnchanged = false,
+        public async Task<RoslynDeltaProject> BuildDelta (Plan.Change<DocumentId,string> delta, DerivedArtifactInfo dinfo, bool ignoreUnchanged = false,
                                                           Func<DerivedArtifactInfo, DeltaOutputStreams>? makeOutputs = default,
                                                           Action<DeltaOutputStreams>? outputsReady = default,
                                                           CancellationToken ct = default)
         {
-            Console.WriteLine ($"parsing patch #{dinfo.Rev} from {deltaFile} and creating delta");
+            Console.WriteLine ($"parsing patch #{dinfo.Rev} from {delta.Update} and creating delta");
 
             Project project = Solution.GetProject(BaseProjectId)!;
 
-            Document document = project.GetDocument(BaseDocumentId)!;
+            DocumentId baseDocumentId = delta.Document;
+
+            Document document = project.GetDocument(baseDocumentId)!;
 
             Document updatedDocument;
-            await using (var contents = File.OpenRead (deltaFile)) {
-                Solution updatedSolution = Solution.WithDocumentText (BaseDocumentId, SourceText.From (contents, Encoding.UTF8));
-                updatedDocument = updatedSolution.GetDocument(BaseDocumentId)!;
+            await using (var contents = File.OpenRead (delta.Update)) {
+                Solution updatedSolution = Solution.WithDocumentText (baseDocumentId, SourceText.From (contents, Encoding.UTF8));
+                updatedDocument = updatedSolution.GetDocument(baseDocumentId)!;
             }
             if (updatedDocument.Project.Id != BaseProjectId)
                 throw new Exception ("Unexpectedly, project Id of the delta != base project Id");
-            if (updatedDocument.Id != BaseDocumentId)
+            if (updatedDocument.Id != baseDocumentId)
                 throw new Exception ("Unexpectedly, document Id of the delta != base document Id");
             project = updatedDocument.Project;
 

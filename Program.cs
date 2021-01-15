@@ -55,32 +55,24 @@ namespace RoslynILDiff
 
 
 
-
+        private static void PrintUsage(){
+            Console.WriteLine("roslynildiff.exe -msbuild:project.csproj [-p:Key=Value ...] [-live|-script:script.json]");
+        }
         static bool ParseArgs (string[] args, [NotNullWhen(true)] out Diffy.Config? config)
         {
             // FIXME: not all these options make sense together
             var builder = Diffy.Config.Builder();
 
+            config = null;
+
             for (int i = 0; i < args.Length; i++) {
                 const string msbuildOptPrefix = "-msbuild:";
+                const string scriptOptPrefix = "-script:";
                 string fn = args [i];
                 if (fn.StartsWith(msbuildOptPrefix)) {
-                    builder.ProjectType = Diffy.ProjectType.Msbuild;
                     builder.ProjectPath = fn[msbuildOptPrefix.Length..];
                 } else if (fn == "-live") {
                     builder.Live = true;
-                } else if (fn == "-mono") {
-                    builder.TfmType = Diffy.TfmType.MonoMono;
-                } else if (fn.StartsWith("-bcl:") || fn.StartsWith("-bcl=")) {
-                    builder.BclBase = fn[5..];
-                } else if (fn == "-empty") {
-                    builder.Barebones = true;
-                } else if (fn.StartsWith ("-l:")) {
-                    builder.Libs.Add (fn[3..]);
-                } else if (fn == "-target:library") {
-                    builder.OutputKind = Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary;
-                } else if (fn.StartsWith("-out:") || fn.StartsWith("-out=")) {
-                    builder.OutputDir = fn[5..];
                 } else if (fn.StartsWith("-p:")) {
                     var s = fn[3..];
                     if (s.IndexOf('=') is int j && j > 0 && j+1 < s.Length) {
@@ -89,24 +81,28 @@ namespace RoslynILDiff
                         // Console.WriteLine ($"got <{k}>=<{v}>");
                         builder.Properties.Add(KeyValuePair.Create(k,v));
                     } else {
-                        throw new ArgumentException ("-p option needs a key=value pair");
+                        PrintUsage ();
+                        Console.WriteLine("\t-p option needs a key=value pair");
+                        return false;
                     }
-                } else if (!File.Exists (fn)) {
-                    Console.WriteLine ($"File {fn} doesn't exist");
-                    config = null;
-                    return false;
+                } else if (fn.StartsWith(scriptOptPrefix)) {
+                    builder.ScriptPath = fn[scriptOptPrefix.Length..];
                 } else {
-                    builder.Files.Add (fn);
+                    PrintUsage();
+                    Console.WriteLine ($"\tUnexpected trailing option {fn}");
+                    return false;
                 }
             }
 
-            if (!builder.Live && builder.Files.Count <= 1) {
-                Console.WriteLine("roslynildiff.exe originalfile.cs patch1.cs [patch2.cs patch3.cs ...]");
-                config = null;
+            if (String.IsNullOrEmpty(builder.ProjectPath)) {
+                PrintUsage();
+                Console.WriteLine ("\tmsbuild project is required");
                 return false;
-            } else if (builder.Live && builder.Files.Count != 1) {
-                Console.WriteLine("roslynildiff.exe -live watchfile.cs");
-                config = null;
+            }
+
+            if (!Xor(builder.Live, !String.IsNullOrEmpty(builder.ScriptPath))) {
+                PrintUsage();
+                Console.WriteLine("\tExactly one of -live or -script:script.json is required");
                 return false;
             }
 
@@ -114,6 +110,9 @@ namespace RoslynILDiff
             return true;
         }
 
+        private static bool Xor (bool a, bool b) {
+            return !(a == b);
+        }
 
     }
 }

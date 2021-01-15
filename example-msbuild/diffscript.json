@@ -1,0 +1,10 @@
+/* The format is
+ * "steps": [step, ...]
+ * and each step is
+ * {"document", "relativePath.cs", "update": "relativePath.delta.cs"}
+ */
+{"changes": [
+    {"document": "TestClass.cs", "update": "TestClass_v1.cs"},
+    {"document": "TestClass.cs", "update": "TestClass_v2.cs"}
+    /*{"document": "TestClass.cs", "update": "TestClass_v3.cs"}*/
+]}

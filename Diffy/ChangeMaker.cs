@@ -73,7 +73,8 @@ namespace Diffy
             //      var textSpans = ImmutableArray.Create<TextSpan>();
             //      var result = await analyzer.AnalyzeDocumentAsync (oldDocument, activeStatements, newDocument, textSpans, cancellationToken);
             //      var edits = result.SemanticEdits;
-            //      return results;
+            //      var rudeEdits = result.RudeEditErrorss;
+            //      return (edits, rudeEdits);
             // }
             //
             var analyzer = Activator.CreateInstance(_codeAnalyzer, new object?[]{null});

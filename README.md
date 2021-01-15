@@ -9,40 +9,62 @@ Install .NET 5, run `dotnet build`
 
 ## How to use it
 
-### Example (bare C# files)
-
 ```console
-dotnet run -- -out:out -target:library example/TestClass.cs example/TestClass_v1.cs
-
-mdv out/TestClass.dll /il- /g:out/TestClass.dll.1.dmeta
+Usage: roslynildiff.exe -msbuild:project.csproj [-p:MSBuildProp=Value ...] [-script:script.json|-live]
 ```
 
-We can use [mdv](https://github.com/dotnet/metadata-tools/tree/master/src/mdv) from [dotnet/metadata-tools](https://github.com/dotnet/metadata-tools) to examine the metadata of a baseline assembly and its delta.
+### Example (scripted)
 
-### Example (msbuild)
+The diff expects that a `.csproj` has already been compiled to generate a baseline, and then
+it reads a script of changes to apply to the baseline to generate deltas.  Additional properties
+may be passed to `msbuild` (for example to identify the build configuration).
+
+```console
+dotnet build example-msbuild/TestClass.csproj /p:Configuration=Debug
+
+dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug -script:example-msbuild/diffscript.json
+
+mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.2.dmeta
+```
+
+Use `msbuild` to build the project first, then run `roslynildiff` to generate
+a delta with respect to the `msbuild`-produced baseline.
+
+The format of the JSON script is
+
+```json
+{"changes":
+    [
+        {"document": "relativePath/to/file.cs", "update": "relativePath/to/file_v1.cs"},
+        {"document": "file2.cs", "update": "file2_v2.cs"},
+        {"document": "relativePath/to/file.cs", "update": "relativePath/to/file_v3.cs"}
+    ]
+}
+```
+
+The update files can have arbitrary names.  The document files should be part of the specified `.csproj`.  Zero or more updates may be included.
+
+The tool will error out if one of the files contains a rude edit or no edits at all.
+
+Each update file `file_vN.cs` must include the complete cumulative code from `file.cs`, too, not just the latest changes.
+
+### Example (live coding)
+
+Pass the `-live` option to start a file system watcher (in the directory of the `.csproj` to watch for changes).  Each time a `.cs` file is saved, the tool will generate a delta
 
 ```console
 pushd example-msbuild
 dotnet build /p:Configuration=Debug
 popd
 
-dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug example-msbuild/TestClass.cs  example-msbuild/TestClass_v1.cs example-msbuild/TestClass_v2.cs
-
-mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.2.dmeta
+dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug -live
+# make a change to TestClass.cs and save
+# tool generates a delta
+# Ctrl-C to terminate
 ```
 
-Use `msbuild` to build the project first, then run `roslyn-ildiff` to generate
-a delta with respect to the `msbuild`-produced baseline.
+The tool will error out if the file contains a rude edit, or but if a file is semantically unchanged (e.g. comments edited) it will ignore the change and wait for the next one.
 
-### Details
+### Output location
 
-```console
-dotnet roslynildiff.dll [-mono] [-out:DIR] [-bcl:PATH] [-l:Lib.dll ...] [-target:library] file.cs file_v1.cs file_v2.cs ...
-
-```
-
-It saves the baseline file to `DIR/file.dll` and `DIR/file.pdb` and saves the deltas to `DIR/file.dll.1.{dmeta,dil,dpdb}`, `DIR/file.dll.2.{dmeta,dil,dpdb}` etc...
-
-The `file_vN.cs` files must include all the unchanged code from `file.cs`, too, not just the changes.
-
-By default it makes .NET 5 assemblies.  To build something for non-netcore Mono, pass `-mono` and `-bcl:PATH` where `PATH` is the directory containing `mscorlib.dll`, `System.dll`, etc.
+If the baseline files are in `DIR/assembly.dll` and `DIR/assembly.pdb`, then `roslynildiff` saves the deltas to `DIR/assembly.dll.1.{dmeta,dil,dpdb}`, `DIR/assembly.dll.2.{dmeta,dil,dpdb}` etc...

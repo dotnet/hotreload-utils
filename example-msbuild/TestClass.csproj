@@ -6,5 +6,6 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="TestClass.cs"/>
+        <None Include="diffscript.json" />
     </ItemGroup>
 </Project>
