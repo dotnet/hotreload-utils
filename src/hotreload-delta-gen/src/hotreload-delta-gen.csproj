@@ -1,11 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>RoslynILDiff</RootNamespace>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
     <PublishDir>$(MSBuildProjectDirectory)\..\..\..\publish\$(MSBuildProjectName)</PublishDir>
+  </PropertyGroup>
+
+  <!-- for nuget pack-->
+  <PropertyGroup>
+    <PackageId>hotreload-delta-gen</PackageId>
+    <Version>0.0.0-alpha.0</Version>
+    <Authors>The hotreload-delta-gen contributors</Authors>
+    <Company>Microsoft</Company>
   </PropertyGroup>
 
   <PropertyGroup>
