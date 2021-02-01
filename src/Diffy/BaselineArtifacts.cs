@@ -16,7 +16,7 @@ namespace Diffy
 
         public EmitBaseline emitBaseline;
 
-        public RoslynDocResolver docResolver;
+        public DocResolver docResolver;
     }
 
 }

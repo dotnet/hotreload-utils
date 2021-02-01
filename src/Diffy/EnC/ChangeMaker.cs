@@ -9,27 +9,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Diffy
+namespace Diffy.EnC
 {
     //
     // Inspired by https://github.com/dotnet/roslyn/issues/8962
     public class ChangeMaker {
 
-
-        /// wrap the string representation of
-        /// Microsoft.CodeAnalysis.EditAndContinue.RudeEditDiagnostic struct
-        /// which is unfortunately internal.
-        public struct RudeEditDiagnosticWrapper {
-            private readonly string _kindWrapper;
-            private readonly TextSpan _span;
-            public string KindWrapper => _kindWrapper;
-            public TextSpan Span => _span;
-
-            public RudeEditDiagnosticWrapper (string kind, TextSpan span) {
-                _kindWrapper = kind;
-                _span = span;
-            }
-        }
         private const string csharpCodeAnalysisAssemblyName = "Microsoft.CodeAnalysis.CSharp.Features";
         private const string codeAnalysisFeaturesAssemblyName = "Microsoft.CodeAnalysis.Features";
         private const string csharpCodeAnalyzerTypeName = "Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer";

@@ -6,7 +6,7 @@ f="${d}/publish/roslynildiff.dll"
 
 if [ ! -f "${f}" ]; then
     echo "The file \"${f}\" does not exist"
-    echo "Did you remember to run 'dotnet publish --self-contained -r <RID>'"
+    echo "Did you remember to run 'dotnet publish src/RoslynILDiff.csproj --self-contained -r <RID>'"
     exit 1
 fi
 

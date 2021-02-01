@@ -9,10 +9,8 @@ namespace Diffy.Plan
     /// For live coding, the collection will be an IAsyncEnumerable<Change<TDoc,TUpdate>>,
     /// for a scripted plan it will be some parsed immutable list of changes.
     ///
-    /// Initially the changes are just Change<string,string>, but then RoslynResolvePlan will
-    /// change it to a Chamge<DocumentId, string>, and when we go to apply the change, we
-    /// will notionally have a Change<DocumentId, FileStream> where the update is a stream of
-    /// the new document content.
+    /// Initially the changes are just Change<string,string>, but then DocResolve will
+    /// change it to a Chamge<DocumentId, string>.
     public struct Change<TDoc, TUpdate> {
         public readonly TDoc Document;
         public readonly TUpdate Update;

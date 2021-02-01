@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Diffy
+namespace Diffy.Util
 {
     public class FSWGen : IDisposable {
 

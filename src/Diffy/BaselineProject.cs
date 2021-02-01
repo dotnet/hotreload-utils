@@ -11,23 +11,23 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace Diffy
 {
-    public class RoslynBaselineProject {
+    public class BaselineProject {
 
         private readonly Solution solution;
 
         private readonly ProjectId projectId;
 
 
-        private RoslynBaselineProject (Solution solution, ProjectId projectId)
+        private BaselineProject (Solution solution, ProjectId projectId)
         {
             this.solution = solution;
             this.projectId = projectId;
         }
 
 
-        public static async Task<RoslynBaselineProject> Make (Config config, CancellationToken ct = default) {
+        public static async Task<BaselineProject> Make (Config config, CancellationToken ct = default) {
             (var solution, var projectId) = await PrepareMSBuildProject(config, ct);
-            return new RoslynBaselineProject(solution, projectId);
+            return new BaselineProject(solution, projectId);
         }
 
         static async Task<(Solution, ProjectId)> PrepareMSBuildProject (Config config, CancellationToken ct = default)
@@ -73,7 +73,7 @@ namespace Diffy
                 baselineProjectId = projectId,
                 baselineOutputAsmPath = outputAsm,
                 emitBaseline = emitBaseline,
-                docResolver = new RoslynDocResolver (project)
+                docResolver = new DocResolver (project)
             };
             await t;
             return artifacts;

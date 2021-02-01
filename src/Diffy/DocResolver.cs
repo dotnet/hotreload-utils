@@ -12,12 +12,12 @@ using Microsoft.CodeAnalysis;
 namespace Diffy {
 
     /// Maps a source file path to a DocumentId in a given Project
-    public class RoslynDocResolver {
+    public class DocResolver {
 
         private readonly Project project;
 
         private readonly ImmutableDictionary<string,DocumentId> docMap;
-        public RoslynDocResolver(Project project) {
+        public DocResolver(Project project) {
             this.project = project;
             this.docMap = BuildDocMap (project.Documents);
         }

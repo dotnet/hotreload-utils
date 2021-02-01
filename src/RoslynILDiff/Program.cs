@@ -11,11 +11,6 @@ using System.Threading.Tasks;
 
 namespace RoslynILDiff
 {
-    /*
-     * Limitations:
-     * - Only works for changes to a single .cs file
-     * - Doesn't understand .csproj
-     */
     class Program
     {
 
@@ -42,13 +37,8 @@ namespace RoslynILDiff
         }
         static async Task Run (Diffy.Config config)
         {
-            var runner = new Diffy.Runner (config);
-            var baselineArtifacts = await runner.SetupBaseline ();
-
-            var deltaProject = new Diffy.RoslynDeltaProject (baselineArtifacts);
-            var derivedInputs = runner.SetupDerivedInputs (baselineArtifacts);
-
-            await runner.GenerateDeltas (deltaProject, derivedInputs);
+            var runner = Diffy.Runner.Make (config);
+            await runner.Run ();
             Console.WriteLine ("done");
         }
 

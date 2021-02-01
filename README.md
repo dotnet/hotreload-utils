@@ -20,11 +20,11 @@ it reads a script of changes to apply to the baseline to generate deltas.  Addit
 may be passed to `msbuild` (for example to identify the build configuration).
 
 ```console
-dotnet build example-msbuild/TestClass.csproj /p:Configuration=Debug
+dotnet build example/TestClass.csproj /p:Configuration=Debug
 
-dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug -script:example-msbuild/diffscript.json
+dotnet run --project src/RoslynILDiff.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -script:example/diffscript.json
 
-mdv example-msbuild/bin/Debug/net5.0/TestClass.dll /il- /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:example-msbuild/bin/Debug/net5.0/TestClass.dll.2.dmeta
+mdv artifacts/TestClass/bin/Debug/net5.0/TestClass.dll /il- /g:artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.2.dmeta
 ```
 
 Use `msbuild` to build the project first, then run `roslynildiff` to generate
@@ -53,11 +53,9 @@ Each update file `file_vN.cs` must include the complete cumulative code from `fi
 Pass the `-live` option to start a file system watcher (in the directory of the `.csproj` to watch for changes).  Each time a `.cs` file is saved, the tool will generate a delta
 
 ```console
-pushd example-msbuild
-dotnet build /p:Configuration=Debug
-popd
+dotnet build example/TestClass.csproj /p:Configuration=Debug
 
-dotnet run -- -msbuild:example-msbuild/TestClass.csproj -p:Configuration=Debug -live
+dotnet run --project src/RoslynILDiff.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -live
 # make a change to TestClass.cs and save
 # tool generates a delta
 # Ctrl-C to terminate

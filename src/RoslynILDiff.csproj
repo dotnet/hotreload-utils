@@ -6,7 +6,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
-    <PublishDir>$(MSBuildProjectDirectory)\publish</PublishDir>
+    <PublishDir>$(MSBuildProjectDirectory)\..\publish</PublishDir>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -37,7 +37,4 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <Compile Remove="example*/**/*.cs" />
-  </ItemGroup>
 </Project>

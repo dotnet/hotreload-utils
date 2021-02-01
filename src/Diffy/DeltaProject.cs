@@ -14,74 +14,32 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Diffy
 {
-
-    /// Stuff about the artifacts for a given revision of a baseline assembly
-    public class DerivedArtifactInfo {
-        readonly string _dmeta;
-        readonly string _dil;
-        readonly string _dpdb;
-        readonly int _rev;
-
-        public DerivedArtifactInfo (string baseAssemblyPath, int rev) {
-            _rev = rev;
-            _dmeta = baseAssemblyPath + "." + rev + ".dmeta";
-            _dil = baseAssemblyPath + "." + rev + ".dil";
-            _dpdb = baseAssemblyPath + "." + rev + ".dpdb";
-        }
-        public string Dmeta => _dmeta;
-        public string Dil => _dil;
-        public string Dpdb => _dpdb;
-        public int Rev => _rev;
-    }
-
-    public sealed class DeltaOutputStreams : IAsyncDisposable {
-        public Stream MetaStream {get; private set;}
-        public Stream  IlStream {get; private set;}
-        public Stream PdbStream {get; private set;}
-
-        public DeltaOutputStreams(Stream dmeta, Stream dil, Stream dpdb) {
-            MetaStream = dmeta;
-            IlStream = dil;
-            PdbStream = dpdb;
-        }
-
-        public void Dispose () {
-            MetaStream?.Dispose();
-            IlStream?.Dispose();
-            PdbStream?.Dispose();
-        }
-
-        public async ValueTask DisposeAsync () {
-            if  (MetaStream != null) await MetaStream.DisposeAsync();
-            if  (IlStream != null) await IlStream.DisposeAsync();
-            if  (PdbStream != null) await PdbStream.DisposeAsync();
-        }
-
-    }
-
     /// Drives the creation of deltas from textual changes.
-    public class RoslynDeltaProject
+    public class DeltaProject
     {
-        readonly ChangeMaker _changeMaker;
+        readonly EnC.ChangeMaker _changeMaker;
 
         readonly Solution _solution;
         readonly EmitBaseline _baseline;
         readonly ProjectId _baseProjectId;
 
+        readonly DeltaNaming _nextName;
 
-        public RoslynDeltaProject(BaselineArtifacts artifacts) {
-            _changeMaker = new ChangeMaker();
+        public DeltaProject(BaselineArtifacts artifacts) {
+            _changeMaker = new EnC.ChangeMaker();
             _solution = artifacts.baselineSolution;
             _baseline = artifacts.emitBaseline;
             _baseProjectId = artifacts.baselineProjectId;
+            _nextName = new DeltaNaming(artifacts.baselineOutputAsmPath, 1);
         }
 
-        internal RoslynDeltaProject (RoslynDeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
+        internal DeltaProject (DeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
         {
             _changeMaker = prev._changeMaker;
             _solution = newSolution;
             _baseline = newBaseline;
             _baseProjectId = prev._baseProjectId;
+            _nextName = prev._nextName.Next ();
         }
 
         public Solution Solution => _solution;
@@ -90,7 +48,7 @@ namespace Diffy
 
         public ProjectId BaseProjectId => _baseProjectId;
 
-        private static DeltaOutputStreams MakeFileOutputs (DerivedArtifactInfo dinfo) {
+        private static DeltaOutputStreams MakeFileOutputs (DeltaNaming dinfo) {
             var metaStream = File.Create(dinfo.Dmeta);
             var ilStream = File.Create(dinfo.Dil);
             var pdbStream = File.Create(dinfo.Dpdb);
@@ -99,21 +57,24 @@ namespace Diffy
 
         /// Builds a delta for the specified document given a path to its updated contents and a revision count
         /// On failure throws a DiffyException and with exitStatus > 0
-        public async Task<RoslynDeltaProject> BuildDelta (Plan.Change<DocumentId,string> delta, DerivedArtifactInfo dinfo, bool ignoreUnchanged = false,
-                                                          Func<DerivedArtifactInfo, DeltaOutputStreams>? makeOutputs = default,
+        public async Task<DeltaProject> BuildDelta (Delta delta, bool ignoreUnchanged = false,
+                                                          Func<DeltaNaming, DeltaOutputStreams>? makeOutputs = default,
                                                           Action<DeltaOutputStreams>? outputsReady = default,
                                                           CancellationToken ct = default)
         {
-            Console.WriteLine ($"parsing patch #{dinfo.Rev} from {delta.Update} and creating delta");
+            var change = delta.Change;
+            var dinfo = _nextName;
+
+            Console.WriteLine ($"parsing patch #{dinfo.Rev} from {change.Update} and creating delta");
 
             Project project = Solution.GetProject(BaseProjectId)!;
 
-            DocumentId baseDocumentId = delta.Document;
+            DocumentId baseDocumentId = change.Document;
 
             Document document = project.GetDocument(baseDocumentId)!;
 
             Document updatedDocument;
-            await using (var contents = File.OpenRead (delta.Update)) {
+            await using (var contents = File.OpenRead (change.Update)) {
                 Solution updatedSolution = Solution.WithDocumentText (baseDocumentId, SourceText.From (contents, Encoding.UTF8));
                 updatedDocument = updatedSolution.GetDocument(baseDocumentId)!;
             }
@@ -168,17 +129,17 @@ namespace Diffy
             }
             Console.WriteLine($"wrote {dinfo.Dmeta}");
             // return a new deltaproject that can build the next update
-            return new RoslynDeltaProject(this, project.Solution, emitResult.Baseline);
+            return new DeltaProject(this, project.Solution, emitResult.Baseline);
         }
 
-        Task<(ImmutableArray<SemanticEdit>, ImmutableArray<ChangeMaker.RudeEditDiagnosticWrapper>)> CompileEdits (Document document, Document updatedDocument, CancellationToken ct = default)
+        Task<(ImmutableArray<SemanticEdit>, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Document document, Document updatedDocument, CancellationToken ct = default)
         {
             return _changeMaker.GetChanges(document, updatedDocument, ct);
         }
 
 
         /// <returns>true if compilation succeeded, or false if there were errors</returns>
-        internal static bool CheckCompilationDiagnostics ([NotNullWhen(true)] Compilation? compilation, string diagnosticPrefix)
+        private static bool CheckCompilationDiagnostics ([NotNullWhen(true)] Compilation? compilation, string diagnosticPrefix)
         {
             if (compilation == null) {
                 Console.WriteLine ($"{diagnosticPrefix} compilation was null");
@@ -196,7 +157,7 @@ namespace Diffy
         }
 
         /// <summary>Check <see cref="EmitResult"/> or <see cref="EmitDifferenceResult"/> for failures</summary>
-        public static bool CheckEmitResult (EmitResult emitResult)
+        private static bool CheckEmitResult (EmitResult emitResult)
         {
             if (!emitResult.Success) {
                 Console.WriteLine ("Emit failed");
