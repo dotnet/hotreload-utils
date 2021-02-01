@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.Build.Traversal/3.0.3">
+  <ItemGroup>
+    <ProjectReference Include="src/hotreload-delta-gen/src/hotreload-delta-gen.csproj" />
+  </ItemGroup>
+</Project>
