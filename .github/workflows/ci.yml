@@ -18,8 +18,8 @@ jobs:
       with:
         dotnet-version: 5.0.102
     - name: Install dependencies
-      run: dotnet restore src/RoslynILDiff.csproj
+      run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore src/RoslynILDiff.csproj
+      run: dotnet build --configuration Release --no-restore
 #    - name: Test
 #      run: dotnet test --no-restore --verbosity normal
