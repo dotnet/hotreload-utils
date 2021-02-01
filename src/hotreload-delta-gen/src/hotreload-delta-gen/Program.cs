@@ -46,7 +46,7 @@ namespace RoslynILDiff
 
 
         private static void PrintUsage(){
-            Console.WriteLine("roslynildiff.exe -msbuild:project.csproj [-p:Key=Value ...] [-live|-script:script.json]");
+            Console.WriteLine("hotreload-delta-gen.exe -msbuild:project.csproj [-p:Key=Value ...] [-live|-script:script.json]");
         }
         static bool ParseArgs (string[] args, [NotNullWhen(true)] out Diffy.Config? config)
         {

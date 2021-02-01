@@ -1,16 +1,27 @@
 
-# Roslyn IL diff generator
+# Roslyn Hot Reload delta generator
 
 Simple roslyn E&C driver.
 
 ## How to build
 
-Install .NET 5, run `dotnet build`
+Install .NET 5, run `dotnet build src/hotreload-delta-gen.csproj`
+
+### Deploying
+
+Running
+
+```
+dotnet publish --self-contained -r <RID> src/hotreload-delta-gen.csproj
+```
+
+will create a folder with a self contained executable `../../publish/hotreload-delta-gen/hotreload-delta-gen` for the specified platform.
+
 
 ## How to use it
 
 ```console
-Usage: roslynildiff.exe -msbuild:project.csproj [-p:MSBuildProp=Value ...] [-script:script.json|-live]
+Usage: hotreload-delta-gen.exe -msbuild:project.csproj [-p:MSBuildProp=Value ...] [-script:script.json|-live]
 ```
 
 ### Example (scripted)
@@ -22,12 +33,12 @@ may be passed to `msbuild` (for example to identify the build configuration).
 ```console
 dotnet build example/TestClass.csproj /p:Configuration=Debug
 
-dotnet run --project src/RoslynILDiff.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -script:example/diffscript.json
+dotnet run --project src/hotreload-delta-gen.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -script:example/diffscript.json
 
-mdv artifacts/TestClass/bin/Debug/net5.0/TestClass.dll /il- /g:artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.2.dmeta
+mdv ../artifacts/TestClass/bin/Debug/net5.0/TestClass.dll /il- /g:../artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:../artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.2.dmeta
 ```
 
-Use `msbuild` to build the project first, then run `roslynildiff` to generate
+Use `msbuild` to build the project first, then run `hotreload-delta-gen` to generate
 a delta with respect to the `msbuild`-produced baseline.
 
 The format of the JSON script is
@@ -55,7 +66,7 @@ Pass the `-live` option to start a file system watcher (in the directory of the 
 ```console
 dotnet build example/TestClass.csproj /p:Configuration=Debug
 
-dotnet run --project src/RoslynILDiff.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -live
+dotnet run --project src/hotreload-delta-gen.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -live
 # make a change to TestClass.cs and save
 # tool generates a delta
 # Ctrl-C to terminate
@@ -66,3 +77,4 @@ The tool will error out if the file contains a rude edit, or but if a file is se
 ### Output location
 
 If the baseline files are in `DIR/assembly.dll` and `DIR/assembly.pdb`, then `roslynildiff` saves the deltas to `DIR/assembly.dll.1.{dmeta,dil,dpdb}`, `DIR/assembly.dll.2.{dmeta,dil,dpdb}` etc...
+

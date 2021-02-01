@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>RoslynILDiff</RootNamespace>
-    <AssemblyName>roslynildiff</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
-    <PublishDir>$(MSBuildProjectDirectory)\..\publish</PublishDir>
+    <PublishDir>$(MSBuildProjectDirectory)\..\..\..\publish\$(MSBuildProjectName)</PublishDir>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,6 +34,5 @@
     <PackageReference Include="Nuget.ProjectModel" Version="5.8.0" />
 
   </ItemGroup>
-
 
 </Project>
