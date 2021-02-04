@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <TargetFrameworkForNETSDK>net5.0</TargetFrameworkForNETSDK>
+  </PropertyGroup>
+
+</Project>
