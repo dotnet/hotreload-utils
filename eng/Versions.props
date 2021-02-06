@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- This repo version -->
+    <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
+    <VersionPrefix>0.0.0</VersionPrefix>
+    <!-- Package pre-release label not including build number or the pre-release iteration-->
+    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
+    <!-- Package pre-release version iteration. Combines with the label to produce a final pre-release suffix. -->
+    <PreReleaseVersionIteration>0</PreReleaseVersionIteration>
+    <!-- Opt-out repo features -->
+    <UsingToolXliff>false</UsingToolXliff>
+    <!-- Libs -->
+    <MicrosoftBuildLocatorVersion>1.2.6</MicrosoftBuildLocatorVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.3.1</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisVersion>3.9.0-2.final</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>3.9.0-2.final</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpFeaturesVersion>3.9.0-2.final</MicrosoftCodeAnalysisCSharpFeaturesVersion>
+    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>3.9.0-2.final</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
+    <MicrosoftCodeAnalysisFeaturesVersion>3.9.0-2.final</MicrosoftCodeAnalysisFeaturesVersion>
+    <MicrosoftCodeAnalysisWorkspacesCommonVersion>3.9.0-2.final</MicrosoftCodeAnalysisWorkspacesCommonVersion>
+    <MicrosoftCodeAnalysisWorkspacesMSBuildVersion>3.9.0-2.final</MicrosoftCodeAnalysisWorkspacesMSBuildVersion>
+    <NugetProjectModelVersion>5.8.0</NugetProjectModelVersion>
+  </PropertyGroup>
+</Project>
