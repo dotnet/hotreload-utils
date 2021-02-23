@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
     public class DiffyException : Exception {
         public int ExitStatus { get; }

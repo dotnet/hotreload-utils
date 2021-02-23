@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
-namespace Diffy.Runners
+namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
 {
     /// Generate deltas by watching for changes to the source files of the project
     public class LiveRunner : Runner {

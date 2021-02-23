@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
     public sealed class DeltaOutputStreams : IAsyncDisposable {
         public Stream MetaStream {get; private set;}

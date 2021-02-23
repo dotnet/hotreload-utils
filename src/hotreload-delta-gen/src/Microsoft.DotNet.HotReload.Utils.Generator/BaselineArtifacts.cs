@@ -2,7 +2,7 @@ using System;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
     /// What we know about the base compilation
     public struct BaselineArtifacts {

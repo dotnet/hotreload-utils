@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
     /// Drives the creation of deltas from textual changes.
     public class DeltaProject

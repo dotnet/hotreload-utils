@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Diffy.EnC
+namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 {
     //
     // Inspired by https://github.com/dotnet/roslyn/issues/8962

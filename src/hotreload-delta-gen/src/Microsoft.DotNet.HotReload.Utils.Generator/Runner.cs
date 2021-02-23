@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 using DocumentId = Microsoft.CodeAnalysis.DocumentId;
 
-namespace Diffy {
+namespace Microsoft.DotNet.HotReload.Utils.Generator {
     public abstract class Runner {
         public static Runner Make (Config config)
         {
@@ -34,7 +34,7 @@ namespace Diffy {
         public async Task<BaselineArtifacts> SetupBaseline (CancellationToken ct = default) {
             BaselineProject? baselineProject;
             InitMSBuild();
-            baselineProject = await Diffy.BaselineProject.Make (config, ct);
+            baselineProject = await Microsoft.DotNet.HotReload.Utils.Generator.BaselineProject.Make (config, ct);
 
             var baselineArtifacts = await baselineProject.PrepareBaseline(ct);
 

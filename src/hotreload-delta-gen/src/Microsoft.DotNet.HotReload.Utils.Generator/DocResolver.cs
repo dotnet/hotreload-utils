@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 
-namespace Diffy {
+namespace Microsoft.DotNet.HotReload.Utils.Generator {
 
     /// Maps a source file path to a DocumentId in a given Project
     public class DocResolver {
