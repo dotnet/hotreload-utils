@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Diffy.EnC
+namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 {
     // wrap the string representation of
     /// Microsoft.CodeAnalysis.EditAndContinue.RudeEditDiagnostic struct

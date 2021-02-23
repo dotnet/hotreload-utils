@@ -1,4 +1,4 @@
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
     /// Properties describing names of the artifacts for a given revision of a baseline assembly
     public class DeltaNaming {

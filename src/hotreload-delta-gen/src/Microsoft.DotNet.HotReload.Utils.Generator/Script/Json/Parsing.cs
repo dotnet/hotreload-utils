@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using CancellationToken = System.Threading.CancellationToken;
 
-namespace Diffy.Script.Json {
+namespace Microsoft.DotNet.HotReload.Utils.Generator.Script.Json {
     public class Script {
         public Change[]? Changes {get; init;}
 

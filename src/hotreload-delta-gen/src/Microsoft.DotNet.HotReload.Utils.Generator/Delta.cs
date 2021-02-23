@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
 
     /// A Delta represents an input that is used to produce the metadata, IL and PDB emitted differences.

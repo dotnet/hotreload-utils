@@ -23,21 +23,21 @@ namespace RoslynILDiff
 
         }
 
-        static async Task<int> RunWithExitStatus(Diffy.Config config)
+        static async Task<int> RunWithExitStatus(Microsoft.DotNet.HotReload.Utils.Generator.Config config)
         {
             try {
                 await Run(config);
                 return 0;
-            } catch (Diffy.DiffyException exn) {
+            } catch (Microsoft.DotNet.HotReload.Utils.Generator.DiffyException exn) {
                 Console.Error.WriteLine ($"failed: {exn.Message}");
                 if (exn.ExitStatus == 0)
                     return 1; /* really shouldn't happen, but just in case */
                 return exn.ExitStatus;
             }
         }
-        static async Task Run (Diffy.Config config)
+        static async Task Run (Microsoft.DotNet.HotReload.Utils.Generator.Config config)
         {
-            var runner = Diffy.Runner.Make (config);
+            var runner = Microsoft.DotNet.HotReload.Utils.Generator.Runner.Make (config);
             await runner.Run ();
             Console.WriteLine ("done");
         }
@@ -48,10 +48,10 @@ namespace RoslynILDiff
         private static void PrintUsage(){
             Console.WriteLine("hotreload-delta-gen.exe -msbuild:project.csproj [-p:Key=Value ...] [-live|-script:script.json]");
         }
-        static bool ParseArgs (string[] args, [NotNullWhen(true)] out Diffy.Config? config)
+        static bool ParseArgs (string[] args, [NotNullWhen(true)] out Microsoft.DotNet.HotReload.Utils.Generator.Config? config)
         {
             // FIXME: not all these options make sense together
-            var builder = Diffy.Config.Builder();
+            var builder = Microsoft.DotNet.HotReload.Utils.Generator.Config.Builder();
 
             config = null;
 

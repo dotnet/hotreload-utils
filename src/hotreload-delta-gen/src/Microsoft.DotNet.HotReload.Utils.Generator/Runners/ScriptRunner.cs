@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.CodeAnalysis;
 
-namespace Diffy.Runners
+namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
 {
 
     /// Generate deltas by reading a script from a configuration file
@@ -23,7 +23,7 @@ namespace Diffy.Runners
         private static async IAsyncEnumerable<Delta> ScriptedPlanInputs (Config config, BaselineArtifacts baselineArtifacts, [EnumeratorCancellation] CancellationToken ct = default)
         {
             var scriptPath = config.ScriptPath;
-            var parser = new Diffy.Script.Json.Parser(scriptPath);
+            var parser = new Microsoft.DotNet.HotReload.Utils.Generator.Script.Json.Parser(scriptPath);
             IReadOnlyCollection<Plan.Change<string,string>> parsed;
             using (var scriptStream = new FileStream(scriptPath, FileMode.Open)) {
                 parsed = await parser.ReadAsync (scriptStream, ct);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
 
     public class Config

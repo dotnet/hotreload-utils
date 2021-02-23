@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Diffy.Util
+namespace Microsoft.DotNet.HotReload.Utils.Generator.Util
 {
     public class FSWGen : IDisposable {
 

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 
-namespace Diffy
+namespace Microsoft.DotNet.HotReload.Utils.Generator
 {
     public class BaselineProject {
 

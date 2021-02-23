@@ -1,5 +1,5 @@
 
-namespace Diffy.Plan
+namespace Microsoft.DotNet.HotReload.Utils.Generator.Plan
 {
 
     /// A plan is just a collection of changes
