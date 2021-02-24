@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
 
         public async Task GenerateDeltas (DeltaProject deltaProject, IAsyncEnumerable<Delta> deltas,
                                           Func<DeltaNaming,DeltaOutputStreams>? makeOutputs = null,
-                                          Action<DeltaOutputStreams>? outputsReady = null,
+                                          Action<DeltaNaming, DeltaOutputStreams>? outputsReady = null,
                                           CancellationToken ct =  default)
         {
             await foreach (var delta in deltas.WithCancellation(ct)) {

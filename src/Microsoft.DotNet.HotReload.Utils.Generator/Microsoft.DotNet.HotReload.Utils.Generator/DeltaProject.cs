@@ -48,7 +48,9 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         public ProjectId BaseProjectId => _baseProjectId;
 
-        private static DeltaOutputStreams MakeFileOutputs (DeltaNaming dinfo) {
+        /// The default output function
+        ///  Creates files with the specified DeltaNaming without any other side-effects
+        public static DeltaOutputStreams DefaultMakeFileOutputs (DeltaNaming dinfo) {
             var metaStream = File.Create(dinfo.Dmeta);
             var ilStream = File.Create(dinfo.Dil);
             var pdbStream = File.Create(dinfo.Dpdb);
@@ -59,7 +61,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         /// On failure throws a DiffyException and with exitStatus > 0
         public async Task<DeltaProject> BuildDelta (Delta delta, bool ignoreUnchanged = false,
                                                           Func<DeltaNaming, DeltaOutputStreams>? makeOutputs = default,
-                                                          Action<DeltaOutputStreams>? outputsReady = default,
+                                                          Action<DeltaNaming, DeltaOutputStreams>? outputsReady = default,
                                                           CancellationToken ct = default)
         {
             var change = delta.Change;
@@ -122,10 +124,10 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
 
             EmitDifferenceResult emitResult;
-            await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : MakeFileOutputs(dinfo)) {
+            await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
                 emitResult = updatedCompilationResult.EmitDifference(baseline, edits, output.MetaStream, output.IlStream, output.PdbStream, updatedMethods, ct);
                 CheckEmitResult(emitResult);
-                outputsReady?.Invoke(output);
+                outputsReady?.Invoke(dinfo, output);
             }
             Console.WriteLine($"wrote {dinfo.Dmeta}");
             // return a new deltaproject that can build the next update
