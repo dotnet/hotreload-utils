@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             public string ProjectPath {get; set; } = "";
 
             public string ScriptPath {get; set; } = "";
+
+            public string OutputSummaryPath {get; set; } = "";
             public Config Bake () {
                 return new MsbuildConfig(this);
             }
@@ -30,6 +32,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             Properties = builder.Properties;
             ProjectPath = builder.ProjectPath;
             ScriptPath = builder.ScriptPath;
+            OutputSummaryPath = builder.OutputSummaryPath;
         }
 
         public bool Live { get; }
@@ -47,7 +50,11 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         /// the directory to watch for live changes
         public string LiveCodingWatchDir { get => Path.GetDirectoryName(ProjectPath) ?? "."; }
 
+        /// the path of a JSON script to drive the delta generation
         public string ScriptPath { get; }
+
+        /// A path for a JSON file to collect the produced artifacts
+        public string OutputSummaryPath { get; }
     }
 
     internal class MsbuildConfig : Config {

@@ -45,8 +45,8 @@ namespace RoslynILDiff
 
 
 
-        private static void PrintUsage(){
-            Console.WriteLine("hotreload-delta-gen.exe -msbuild:project.csproj [-p:Key=Value ...] [-live|-script:script.json]");
+        private static void PrintUsage() {
+            Console.WriteLine("hotreload-delta-gen.exe -msbuild:project.csproj [-p:Key=Value ...] [-live|-script:script.json [-outputSummary:results.json]]");
         }
         static bool ParseArgs (string[] args, [NotNullWhen(true)] out Microsoft.DotNet.HotReload.Utils.Generator.Config? config)
         {
@@ -58,6 +58,7 @@ namespace RoslynILDiff
             for (int i = 0; i < args.Length; i++) {
                 const string msbuildOptPrefix = "-msbuild:";
                 const string scriptOptPrefix = "-script:";
+                const string outputSummaryPrefix = "-outputSummary:";
                 string fn = args [i];
                 if (fn.StartsWith(msbuildOptPrefix)) {
                     builder.ProjectPath = fn[msbuildOptPrefix.Length..];
@@ -77,6 +78,8 @@ namespace RoslynILDiff
                     }
                 } else if (fn.StartsWith(scriptOptPrefix)) {
                     builder.ScriptPath = fn[scriptOptPrefix.Length..];
+                } else if (fn.StartsWith(outputSummaryPrefix)) {
+                    builder.OutputSummaryPath = fn[outputSummaryPrefix.Length..];
                 } else {
                     PrintUsage();
                     Console.WriteLine ($"\tUnexpected trailing option {fn}");
@@ -94,6 +97,11 @@ namespace RoslynILDiff
                 PrintUsage();
                 Console.WriteLine("\tExactly one of -live or -script:script.json is required");
                 return false;
+            }
+
+            if (builder.Live && !String.IsNullOrEmpty(builder.OutputSummaryPath)) {
+                PrintUsage();
+                Console.WriteLine ("-outputSummary and -live cannot be used at the same time");
             }
 
             config = builder.Bake();

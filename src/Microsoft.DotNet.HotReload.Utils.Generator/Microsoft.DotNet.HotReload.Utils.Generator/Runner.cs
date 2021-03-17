@@ -17,13 +17,16 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
             else
                 return new Runners.ScriptRunner (config);
         }
-        public async Task Run () {
+        public async Task Run (CancellationToken ct = default(CancellationToken)) {
             var baselineArtifacts = await SetupBaseline ();
 
             var deltaProject = new DeltaProject (baselineArtifacts);
-            var derivedInputs = SetupDeltas (baselineArtifacts);
+            var derivedInputs = SetupDeltas (baselineArtifacts, ct);
 
-            await GenerateDeltas (deltaProject, derivedInputs, makeOutputs: MakeOutputs, outputsReady: OutputsReady, ct: default(CancellationToken));
+            await GenerateDeltas (deltaProject, derivedInputs, makeOutputs: MakeOutputs, outputsReady: OutputsReady, ct: ct);
+            // FIXME: do something for LiveRunner
+            if (OutputsDone != null)
+                await OutputsDone (ct);
         }
 
         readonly protected Config config;
@@ -33,11 +36,14 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
 
         /// Delegate that is called to create the delta output streams.
         /// If not set, a default is used that writes the deltas to files.
-        protected  Func<DeltaNaming,DeltaOutputStreams>? MakeOutputs {get; } = null;
+        protected  Func<DeltaNaming,DeltaOutputStreams>? MakeOutputs {get; set; } = null;
 
         /// Delegate that is called after the outputs have been emitted.
         /// If not set, a default is used that does nothing.
-        protected  Action<DeltaNaming,DeltaOutputStreams>? OutputsReady {get; } = null;
+        protected  Action<DeltaNaming,DeltaOutputStreams>? OutputsReady {get; set; } = null;
+
+        /// Called when all the outputs have been emitted.
+        protected Func<CancellationToken,Task>? OutputsDone {get; set;} = null;
 
         public async Task<BaselineArtifacts> SetupBaseline (CancellationToken ct = default) {
             BaselineProject? baselineProject;
