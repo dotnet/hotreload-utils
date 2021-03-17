@@ -1,11 +1,38 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <OutputType>library</OutputType>
         <EnableDefaultItems>false</EnableDefaultItems>
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="TestClass.cs"/>
         <None Include="diffscript.json" />
+        <ProjectReference Include="..\..\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
     </ItemGroup>
+
+    <UsingTask TaskName="DeltaGeneratorTask"
+        AssemblyFile="$(OutputPath)\..\..\..\Microsoft.DotNEt.HotReload.Utils.DeltaGeneratorTask\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask.dll"
+    />
+
+    <Target Name="RunDiff" AfterTargets="Build">
+        <Message Importance="High" Text="Hi" />
+        <ItemGroup>
+          <ChildProps Include="Configuration=$(Configuration)" />
+        </ItemGroup>
+        <PropertyGroup>
+            <ToolRid>osx-x64</ToolRid>
+        </PropertyGroup>
+        <DeltaGeneratorTask
+            ToolPath="$(OutputPath)\..\..\..\hotreload-delta-gen\$(Configuration)\$(TargetFramework)\$(ToolRid)\publish"
+            ScriptPath="$(MSBuildProjectDirectory)\diffscript.json"
+            ProjectFile="$(MSBuildProjectFullPath)"
+            BuildProperties="@(ChildProps)"
+            OutputSummaryPath="$(OutputPath)\result.json" >
+            <Output TaskParameter="GeneratedDeltas" ItemName="GeneratedDeltas"/>
+        </DeltaGeneratorTask>
+        <Message Importance="High" Text="Generated Deltas: @(GeneratedDeltas)" />
+    </Target>
+
 </Project>

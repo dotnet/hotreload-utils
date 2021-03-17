@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
 
         private class JsonSummaryWriter {
             private string OutputPath {get; }
-            private List<OutputSummary.Delta> deltas;
+            private readonly List<OutputSummary.Delta> deltas;
             public JsonSummaryWriter(string outputPath) {
                 OutputPath = outputPath;
                 deltas = new List<OutputSummary.Delta>();
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
                 deltas.Add(new OutputSummary.Delta("", names.Dmeta, names.Dil, names.Dpdb));
             }
 
-            internal async Task OutputsDone(CancellationToken ct = default(CancellationToken)) {
+            internal async Task OutputsDone(CancellationToken ct = default) {
                 using var s = File.OpenWrite(OutputPath);
                 var summary = new OutputSummary.OutputSummary(deltas.ToArray());
                 await System.Text.Json.JsonSerializer.SerializeAsync(s, summary, cancellationToken: ct);
