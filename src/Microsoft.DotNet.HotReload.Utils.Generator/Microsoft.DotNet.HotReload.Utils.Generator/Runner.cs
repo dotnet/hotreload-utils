@@ -23,13 +23,21 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
             var deltaProject = new DeltaProject (baselineArtifacts);
             var derivedInputs = SetupDeltas (baselineArtifacts);
 
-            await GenerateDeltas (deltaProject, derivedInputs);
+            await GenerateDeltas (deltaProject, derivedInputs, makeOutputs: MakeOutputs, outputsReady: OutputsReady, ct: default(CancellationToken));
         }
 
         readonly protected Config config;
         protected Runner (Config config) {
             this.config = config;
         }
+
+        /// Delegate that is called to create the delta output streams.
+        /// If not set, a default is used that writes the deltas to files.
+        protected  Func<DeltaNaming,DeltaOutputStreams>? MakeOutputs {get; } = null;
+
+        /// Delegate that is called after the outputs have been emitted.
+        /// If not set, a default is used that does nothing.
+        protected  Action<DeltaNaming,DeltaOutputStreams>? OutputsReady {get; } = null;
 
         public async Task<BaselineArtifacts> SetupBaseline (CancellationToken ct = default) {
             BaselineProject? baselineProject;
