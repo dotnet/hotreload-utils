@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <OutputType>library</OutputType>
         <EnableDefaultItems>false</EnableDefaultItems>
     </PropertyGroup>
@@ -8,4 +8,32 @@
         <Compile Include="TestClass.cs"/>
         <None Include="diffscript.json" />
     </ItemGroup>
+
+    <!-- find the hot reload artifacts from this repo -->
+    <PropertyGroup>
+        <ToolConfiguration Condition="'$(ToolConfiguration)'==''">$(Configuration)</ToolConfiguration>
+        <ToolTargetFramework Condition="'$(ToolTargetFramework)'==''">$(TargetFramework)</ToolTargetFramework>
+        <ToolRid Condition="'$(ToolRid)' == ''">osx-x64</ToolRid>
+        <HotReloadToolPath>$(OutputPath)\..\..\hotreload-delta-gen\$(ToolConfiguration)\$(ToolTargetFramework)\$(ToolRid)\publish</HotReloadToolPath>
+        <HotReloadTaskPath>$(OutputPath)\..\..\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask\$(ToolConfiguration)\$(ToolTargetFramework)\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask.dll</HotReloadTaskPath>
+    </PropertyGroup>
+
+    <UsingTask TaskName="DeltaGeneratorTask" AssemblyFile="$(HotReloadTaskPath)"/>
+
+    <Target Name="RunDiff" AfterTargets="Build">
+        <Message Importance="High" Text="Hi" />
+        <ItemGroup>
+          <ChildProps Include="Configuration=$(Configuration)" />
+        </ItemGroup>
+        <DeltaGeneratorTask
+            ToolPath="$(HotReloadToolPath)"
+            ScriptPath="$(MSBuildProjectDirectory)\diffscript.json"
+            ProjectFile="$(MSBuildProjectFullPath)"
+            BuildProperties="@(ChildProps)"
+            OutputSummaryPath="$(OutputPath)\result.json" >
+            <Output TaskParameter="GeneratedDeltas" ItemName="GeneratedDeltas"/>
+        </DeltaGeneratorTask>
+        <Message Importance="High" Text="Generated Deltas: @(GeneratedDeltas)" />
+    </Target>
+
 </Project>

@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
     public class Config
     {
 
-        public static ConfigBuilder Builder () => new ConfigBuilder ();
+        public static ConfigBuilder Builder () => new ();
 
         public class ConfigBuilder {
             internal ConfigBuilder () {}
