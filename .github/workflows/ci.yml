@@ -20,6 +20,8 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
-#    - name: Test
-#      run: dotnet test --no-restore --verbosity normal
+      run: dotnet build -c Release --no-restore
+    - name: Build(publish) standalone binary
+      run: dotnet publish -c Release --self-contained -r linux-x64
+    - name: Test example
+      run: cd src/hotreload-delta-gen/example && dotnet build -c Debug -p:ToolConfiguration=Release -p:ToolRid=linux-x64
