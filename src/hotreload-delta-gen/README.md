@@ -21,7 +21,7 @@ will create a folder with a self contained executable `../../publish/hotreload-d
 ## How to use it
 
 ```console
-Usage: hotreload-delta-gen.exe -msbuild:project.csproj [-p:MSBuildProp=Value ...] [-script:script.json|-live]
+Usage: hotreload-delta-gen.exe -msbuild:project.csproj [-p:MSBuildProp=Value ...] [-live|-script:script.json [-outputSummary:result.json]]
 ```
 
 ### Example (scripted)
@@ -33,7 +33,7 @@ may be passed to `msbuild` (for example to identify the build configuration).
 ```console
 dotnet build example/TestClass.csproj /p:Configuration=Debug
 
-dotnet run --project src/hotreload-delta-gen.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -script:example/diffscript.json
+dotnet run --project src/hotreload-delta-gen.csproj -- -msbuild:example/TestClass.csproj -p:Configuration=Debug -script:example/diffscript.json -outputSummary:result.json
 
 mdv ../artifacts/TestClass/bin/Debug/net5.0/TestClass.dll /il- /g:../artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.1.dmeta /g:../artifacts/TestClass/bin/Debug/net5.0/TestClass.dll.2.dmeta
 ```
@@ -58,6 +58,16 @@ The update files can have arbitrary names.  The document files should be part of
 The tool will error out if one of the files contains a rude edit or no edits at all.
 
 Each update file `file_vN.cs` must include the complete cumulative code from `file.cs`, too, not just the latest changes.
+
+The output summary file will be of the form:
+
+```json
+{"deltas": [
+    {"assembly": "TestClass.dll", "metadata": ".../TestClass.dll.1.dmeta", "il": ".../TestClass.dll.1.dil", "pdb": ".../TestClass.dll.1.dpdb"},
+    {"assembly": "TestClass.dll", "metadata": ".../TestClass.dll.2.dmeta", "il": ".../TestClass.dll.2.dil", "pdb": ".../TestClass.dll.2.dpdb"},
+]}
+```
+
 
 ### Example (live coding)
 
