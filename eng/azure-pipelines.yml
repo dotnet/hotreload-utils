@@ -1,0 +1,78 @@
+variables:
+  - name: Build.Repository.Clean
+    value: true
+  - name: _TeamName
+    value: DotNetCore
+  - name: _RunAsPublic
+    value: True
+  - name: _RunAsInternal
+    value: False
+  - name: _InternalBuildArgs
+    value: ''
+  - name: _InternalPublishArg
+    value: ''
+
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - name: _RunAsPublic
+      value: False
+    - name: _RunAsInternal
+      value: True
+    - name: _SignType
+      value: real
+    # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
+    # DotNet-HelixApi-Access provides: HelixApiAccessToken
+    - group: Publish-Build-Assets
+    - group: DotNet-HelixApi-Access
+    - group: SDL_Settings
+    - name: _InternalPublishArg
+      value: -publish
+    - name: _InternalBuildArgs
+      value: /p:DotNetSignType=$(_SignType) 
+        /p:TeamName=$(_TeamName)
+        /p:DotNetPublishUsingPipelines=true
+        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - release/*
+
+pr:
+  branches:
+    include:
+    - main
+    - release/*
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enablePublishBuildArtifacts: true
+      enablePublishBuildAssets: true
+      enablePublishUsingPipelines: true
+      variables:
+        - _BuildConfig: Release
+      jobs:
+        - job: Build_Linux
+          displayName: Linux
+          timeoutInMinutes: 30
+          pool:
+            vmImage: ubuntu-20.04
+          steps:
+          - bash: |
+              eng/common/cibuild.sh -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=linux-x64 $(_InternalBuildArgs)
+            displayName: Build and Publish
+
+############ POST BUILD ARCADE LOGIC ############
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      publishingInfraVersion: 3
+      enableSourceLinkValidation: true
+      enableSigningValidation: true
+      enableSymbolValidation: false
+      enableNugetValidation: true
