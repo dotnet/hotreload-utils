@@ -73,6 +73,6 @@ stages:
     parameters:
       publishingInfraVersion: 3
       enableSourceLinkValidation: true
-      enableSigningValidation: true
+      enableSigningValidation: false
       enableSymbolValidation: false
       enableNugetValidation: true
