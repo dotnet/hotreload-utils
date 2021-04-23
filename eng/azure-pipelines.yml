@@ -25,7 +25,7 @@ variables:
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalPublishArg
-      value: -publish
+      value: -publish -sign
     - name: _InternalBuildArgs
       value: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
@@ -73,6 +73,6 @@ stages:
     parameters:
       publishingInfraVersion: 3
       enableSourceLinkValidation: true
-      enableSigningValidation: false
-      enableSymbolValidation: false
+      enableSigningValidation: true
+      enableSymbolValidation: true
       enableNugetValidation: true
