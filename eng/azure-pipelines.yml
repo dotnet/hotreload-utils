@@ -25,9 +25,9 @@ variables:
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalPublishArg
-      value: -publish -sign
+      value: -publish
     - name: _InternalBuildArgs
-      value: /p:DotNetSignType=$(_SignType) 
+      value: /p:DotNetSignType=$(_SignType)
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
@@ -57,14 +57,14 @@ stages:
       variables:
         - _BuildConfig: Release
       jobs:
-        - job: Build_Linux
-          displayName: Linux
+        - job: Build_Windows
+          displayName: Windows
           timeoutInMinutes: 30
           pool:
-            vmImage: ubuntu-20.04
+            vmImage: windows-2019
           steps:
-          - bash: |
-              eng/common/cibuild.sh -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=linux-x64 $(_InternalBuildArgs)
+          - script: |
+              eng\common\CIBuild.cmd -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=win-x64 $(_InternalBuildArgs)
             displayName: Build and Publish
 
 ############ POST BUILD ARCADE LOGIC ############
