@@ -9,6 +9,8 @@ variables:
     value: False
   - name: _InternalBuildArgs
     value: ''
+  - name: _InternalPublishArg
+    value: ''
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _RunAsPublic
@@ -22,6 +24,8 @@ variables:
     - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
+    - name: _InternalPublishArg
+      value: -publish
     - name: _InternalBuildArgs
       value: /p:DotNetSignType=$(_SignType)
         /p:TeamName=$(_TeamName)
@@ -53,14 +57,14 @@ stages:
       variables:
         - _BuildConfig: Release
       jobs:
-        - job: Build_Windows
-          displayName: Windows
+        - job: Build_Linux
+          displayName: Linux
           timeoutInMinutes: 30
           pool:
-            vmImage: windows-2019
+            vmImage: ubuntu-20.04
           steps:
-          - script: |
-              eng\common\CIBuild.cmd -configuration $(_BuildConfig) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=win-x64 $(_InternalBuildArgs)
+          - bash: |
+              eng/common/cibuild.sh -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=linux-x64 $(_InternalBuildArgs)
             displayName: Build and Publish
 
 ############ POST BUILD ARCADE LOGIC ############
@@ -69,6 +73,6 @@ stages:
     parameters:
       publishingInfraVersion: 3
       enableSourceLinkValidation: true
-      enableSigningValidation: true
-      enableSymbolValidation: true
+      enableSigningValidation: false
+      enableSymbolValidation: false
       enableNugetValidation: true
