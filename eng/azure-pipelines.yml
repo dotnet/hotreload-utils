@@ -9,8 +9,6 @@ variables:
     value: False
   - name: _InternalBuildArgs
     value: ''
-  - name: _InternalPublishArg
-    value: ''
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _RunAsPublic
@@ -24,8 +22,6 @@ variables:
     - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
-    - name: _InternalPublishArg
-      value: -publish
     - name: _InternalBuildArgs
       value: /p:DotNetSignType=$(_SignType)
         /p:TeamName=$(_TeamName)
@@ -64,7 +60,7 @@ stages:
             vmImage: windows-2019
           steps:
           - script: |
-              eng\common\CIBuild.cmd -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=win-x64 $(_InternalBuildArgs)
+              eng\common\CIBuild.cmd -configuration $(_BuildConfig) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=win-x64 $(_InternalBuildArgs)
             displayName: Build and Publish
 
 ############ POST BUILD ARCADE LOGIC ############
