@@ -12,7 +12,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_HotReloadDeltaGeneratorShouldRun Condition="'$(_HotReloadDeltaGeneratorShouldRun)' == '' and Exists('$(DeltaScript)')">false</_HotReloadDeltaGeneratorShouldRun>
+    <_HotReloadDeltaGeneratorDeltaScript Condition="'$(DeltaScript)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), '$(DeltaScript)'))</_HotReloadDeltaGeneratorDeltaScript>
+    <_HotReloadDeltaGeneratorShouldRun Condition="'$(_HotReloadDeltaGeneratorShouldRun)' == '' and Exists('$(_HotReloadDeltaGeneratorDeltaScript)')">true</_HotReloadDeltaGeneratorShouldRun>
   </PropertyGroup>
 
   <!-- Invoke hotreload-delta-gen to apply the DeltaScript to the output assembly to
@@ -20,9 +21,8 @@
   <!-- Have to be careful about AfterTargets. If we happen to go after a design-time target, we could get into an infinite loop. -->
   <Target Name="HotReloadDeltaGeneratorGenerateDeltas" AfterTargets="Build" Condition="$(_HotReloadDeltaGeneratorShouldRun)">
     <PropertyGroup>
-      <_HotReloadDeltaGeneratorDiffScript>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), '$(DeltaScript)'))</_HotReloadDeltaGeneratorDiffScript>
       <_HotReloadDeltaGeneratorArgs>-msbuild:$(MSBuildProjectFullPath)</_HotReloadDeltaGeneratorArgs>
-      <_HotReloadDeltaGeneratorArgs>$(_HotReloadDeltaGeneratorArgs) -script:$(_HotReloadDeltaGeneratorDiffScript)</_HotReloadDeltaGeneratorArgs>
+      <_HotReloadDeltaGeneratorArgs>$(_HotReloadDeltaGeneratorArgs) -script:$(_HotReloadDeltaGeneratorDeltaScript)</_HotReloadDeltaGeneratorArgs>
 
       <!-- HACK: have to pass config and RID  so that this target works for a 'dotnet publish' run.
            What other properties do  I need to pass? Maybe hotreload-delta-gen should just expose an MSBuild task so we can pass everything -->
