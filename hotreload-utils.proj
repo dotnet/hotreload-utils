@@ -3,5 +3,6 @@
     <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.Generator/Microsoft.DotNet.HotReload.Utils.Generator.csproj" />
     <ProjectReference Include="src/hotreload-delta-gen/src/hotreload-delta-gen.csproj" />
     <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask/Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask.csproj" />
+    <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.csproj" />
   </ItemGroup>
 </Project>

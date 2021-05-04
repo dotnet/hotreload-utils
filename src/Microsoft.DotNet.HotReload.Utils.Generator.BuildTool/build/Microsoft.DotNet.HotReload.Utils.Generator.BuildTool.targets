@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project DefaultTargets="Build">
+
+  <PropertyGroup>
+    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
+    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
+
+    <_HotReloadDeltaGeneratorPath>$(MSBuildThisFileDirectory)\..\tools\net6.0\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
+
+    <_HotReloadDeltaGeneratorCommand>$(DotNetTool) $(_HotReloadDeltaGeneratorPath)</_HotReloadDeltaGeneratorCommand>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_HotReloadDeltaGeneratorShouldRun Condition='$(HotReloadDeltaGeneratorShouldRun)' != ''>false</_HotReloadDeltaGeneratorShouldRun>
+  </PropertyGroup>
+
+  <Target Name="HotReloadDeltaGeneratorGenerateDeltas" AfterTargets="Build" Condition="$(_HotReloadDeltaGeneratorShouldRun)">
+    <Exec Command="$(_HotReloadDeltaGeneratorCommand) --help" />
+  </Target>
+
+
+</Project>
