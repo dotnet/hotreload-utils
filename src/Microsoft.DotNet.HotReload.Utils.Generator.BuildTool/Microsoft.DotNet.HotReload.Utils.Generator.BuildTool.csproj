@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator\Microsoft.DotNet.HotReload.Utils.Generator.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator.Frontend\Microsoft.DotNet.HotReload.Utils.Generator.Frontend.csproj" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
