@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_HotReloadDeltaGeneratorShouldRun Condition='$(HotReloadDeltaGeneratorShouldRun)' != ''>false</_HotReloadDeltaGeneratorShouldRun>
+    <_HotReloadDeltaGeneratorShouldRun Condition="'$(_HotReloadDeltaGeneratorShouldRun)' == ''">false</_HotReloadDeltaGeneratorShouldRun>
   </PropertyGroup>
 
   <Target Name="HotReloadDeltaGeneratorGenerateDeltas" AfterTargets="Build" Condition="$(_HotReloadDeltaGeneratorShouldRun)">
