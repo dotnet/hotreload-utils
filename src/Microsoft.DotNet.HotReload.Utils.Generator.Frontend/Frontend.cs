@@ -1,4 +1,7 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -7,14 +10,12 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-
-
-namespace RoslynILDiff
+namespace Microsoft.DotNet.HotReload.Utils.Generator.Frontend
 {
-    class Program
+    public static class Frontend
     {
 
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             if (!ParseArgs (args, out var config))
                 return 2;

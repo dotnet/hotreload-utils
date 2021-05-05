@@ -1,0 +1,36 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project>
+
+  <PropertyGroup>
+    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
+    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
+
+    <_HotReloadDeltaGeneratorPath>$(MSBuildThisFileDirectory)\..\tools\net6.0\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
+
+    <_HotReloadDeltaGeneratorCommand>$(DotNetTool) $(_HotReloadDeltaGeneratorPath)</_HotReloadDeltaGeneratorCommand>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_HotReloadDeltaGeneratorDeltaScript Condition="'$(DeltaScript)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), '$(DeltaScript)'))</_HotReloadDeltaGeneratorDeltaScript>
+    <_HotReloadDeltaGeneratorShouldRun Condition="'$(_HotReloadDeltaGeneratorShouldRun)' == '' and Exists('$(_HotReloadDeltaGeneratorDeltaScript)')">true</_HotReloadDeltaGeneratorShouldRun>
+  </PropertyGroup>
+
+  <!-- Invoke hotreload-delta-gen to apply the DeltaScript to the output assembly to
+       create the .dmeta, .dil and .dpdb files on the OutputPath -->
+  <!-- Have to be careful about AfterTargets. If we happen to go after a design-time target, we could get into an infinite loop. -->
+  <Target Name="HotReloadDeltaGeneratorGenerateDeltas" AfterTargets="Build" Condition="$(_HotReloadDeltaGeneratorShouldRun)">
+    <PropertyGroup>
+      <_HotReloadDeltaGeneratorArgs>-msbuild:$(MSBuildProjectFullPath)</_HotReloadDeltaGeneratorArgs>
+      <_HotReloadDeltaGeneratorArgs>$(_HotReloadDeltaGeneratorArgs) -script:$(_HotReloadDeltaGeneratorDeltaScript)</_HotReloadDeltaGeneratorArgs>
+
+      <!-- HACK: have to pass config and RID  so that this target works for a 'dotnet publish' run.
+           What other properties do  I need to pass? Maybe hotreload-delta-gen should just expose an MSBuild task so we can pass everything -->
+      <_HotReloadDeltaGeneratorArgs Condition="'$(Configuration)' != ''">$(_HotReloadDeltaGeneratorArgs) -p:Configuration=$(Configuration)</_HotReloadDeltaGeneratorArgs>
+      <_HotReloadDeltaGeneratorArgs Condition="'$(RuntimeIdentifier)' != ''">$(_HotReloadDeltaGeneratorArgs) -p:RuntimeIdentifier=$(RuntimeIdentifier)</_HotReloadDeltaGeneratorArgs>
+      <_HotReloadDeltaGeneratorArgs Condition="'$(BuiltRuntimeConfiguration)' != ''">$(_HotReloadDeltaGeneratorArgs) -p:BuiltRuntimeConfiguration=$(BuiltRuntimeConfiguration)</_HotReloadDeltaGeneratorArgs>
+    </PropertyGroup>
+    <Exec Command="$(_HotReloadDeltaGeneratorCommand) $(_HotReloadDeltaGeneratorArgs)" />
+  </Target>
+
+
+</Project>
