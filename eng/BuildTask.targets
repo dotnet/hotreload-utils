@@ -1,3 +1,5 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<!-- Copied from https://github.com/dotnet/arcade/blob/main/eng/BuildTask.targets -->
 <Project>
   <PropertyGroup>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -50,7 +52,7 @@
       <Pack>false</Pack>
     </Reference>
 
-    <!-- 
+    <!--
       Do not include assemblies that MSBuild ships with in the package.
     -->
     <PackageReference Update="Microsoft.Build" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
@@ -66,11 +68,11 @@
   <PropertyGroup Condition="'$(PackTasks)' == 'true'">
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackageCore;_AddBuildOutputToPackageDesktop</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
-  
+
   <Target Name="_AddBuildOutputToPackageCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
     <ItemGroup>
       <!-- Publish .NET Core assets and include them in the package under tools directory. -->
-      <TfmSpecificPackageFile Include="$(PublishDir)**" 
+      <TfmSpecificPackageFile Include="$(PublishDir)**"
                               PackagePath="tools/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>

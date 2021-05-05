@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
     <Nullable>enable</Nullable>
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
