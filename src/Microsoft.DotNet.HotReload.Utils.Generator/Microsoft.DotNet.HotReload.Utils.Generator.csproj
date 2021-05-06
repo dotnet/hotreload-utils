@@ -25,7 +25,7 @@
         "ProcessFrameworkReferences" task failed unexpectedly.
         System.IO.FileNotFoundException: Could not load file or assembly 'NuGet.Frameworks' ...
     -->
-    <PackageReference Include="Nuget.ProjectModel" Version="$(NugetProjectModelVersion)">
+    <PackageReference Include="Nuget.ProjectModel" Version="$(RefOnlyNugetProjectModelVersion)">
       <IncludeAssets>build; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
