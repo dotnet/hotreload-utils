@@ -3,37 +3,33 @@
         <TargetFramework>net6.0</TargetFramework>
         <OutputType>library</OutputType>
         <EnableDefaultItems>false</EnableDefaultItems>
+        <DeltaScript>diffscript.json</DeltaScript>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="TestClass.cs"/>
-        <None Include="diffscript.json" />
+      <Compile Include="TestClass.cs"/>
+      <ProjectReference Include="..\src\hotreload-delta-gen.csproj" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
-    <!-- find the hot reload artifacts from this repo -->
+    <!-- find the built hotreload-delta-gen.dll from this repo -->
     <PropertyGroup>
-        <ToolConfiguration Condition="'$(ToolConfiguration)'==''">$(Configuration)</ToolConfiguration>
-        <ToolTargetFramework Condition="'$(ToolTargetFramework)'==''">$(TargetFramework)</ToolTargetFramework>
-        <ToolRid Condition="'$(ToolRid)' == ''">osx-x64</ToolRid>
-        <HotReloadToolPath>$(OutputPath)\..\..\hotreload-delta-gen\$(ToolConfiguration)\$(ToolTargetFramework)\$(ToolRid)\publish</HotReloadToolPath>
-        <HotReloadTaskPath>$(OutputPath)\..\..\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask\$(ToolConfiguration)\$(ToolTargetFramework)\Microsoft.DotNet.HotReload.Utils.DeltaGeneratorTask.dll</HotReloadTaskPath>
+      <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
+      <ToolConfiguration Condition="'$(ToolConfiguration)'==''">$(Configuration)</ToolConfiguration>
+      <ToolTargetFramework Condition="'$(ToolTargetFramework)'==''">$(TargetFramework)</ToolTargetFramework>
+      <HotReloadToolPath>$(OutputPath)\..\..\hotreload-delta-gen\$(ToolConfiguration)\$(ToolTargetFramework)\hotreload-delta-gen.dll</HotReloadToolPath>
+      <HotReloadToolCommand>$(DotNetTool) $(HotReloadToolPath)</HotReloadToolCommand>
     </PropertyGroup>
 
-    <UsingTask TaskName="DeltaGeneratorTask" AssemblyFile="$(HotReloadTaskPath)"/>
-
+    <!-- run the tool after this assembly is built -->
     <Target Name="RunDiff" AfterTargets="Build">
-        <Message Importance="High" Text="Hi" />
-        <ItemGroup>
-          <ChildProps Include="Configuration=$(Configuration)" />
-        </ItemGroup>
-        <DeltaGeneratorTask
-            ToolPath="$(HotReloadToolPath)"
-            ScriptPath="$(MSBuildProjectDirectory)\diffscript.json"
-            ProjectFile="$(MSBuildProjectFullPath)"
-            BuildProperties="@(ChildProps)"
-            OutputSummaryPath="$(OutputPath)\result.json" >
-            <Output TaskParameter="GeneratedDeltas" ItemName="GeneratedDeltas"/>
-        </DeltaGeneratorTask>
-        <Message Importance="High" Text="Generated Deltas: @(GeneratedDeltas)" />
+      <PropertyGroup>
+        <HotReloadGeneratorArgs>-msbuild:$(MSBuildProjectFullPath)</HotReloadGeneratorArgs>
+        <HotReloadGeneratorArgs>$(HotReloadGeneratorArgs) -script:$(DeltaScript)</HotReloadGeneratorArgs>
+        <HotReloadGeneratorArgs Condition="'$(Configuration)' != ''">$(HotReloadGeneratorArgs) -p:Configuration=$(Configuration)</HotReloadGeneratorArgs>
+        <HotReloadGeneratorArgs Condition="'$(RuntimeIdentifier)' != ''">$(HotReloadGeneratorArgs) -p:RuntimeIdentifier=$(RuntimeIdentifier)</HotReloadGeneratorArgs>
+        <HotReloadGeneratorArgs Condition="'$(BuiltRuntimeConfiguration)' != ''">$(HotReloadGeneratorArgs) -p:BuiltRuntimeConfiguration=$(BuiltRuntimeConfiguration)</HotReloadGeneratorArgs>
+        <HotReloadGeneratorArgs>$(HotReloadGeneratorArgs) -outputSummary:$(OutputPath)\hotreload-delta-gen-summary.json</HotReloadGeneratorArgs>
+      </PropertyGroup>
+      <Exec Command="$(HotReloadToolCommand) $(HotReloadGeneratorArgs)" />
     </Target>
 
 </Project>

@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator.Frontend\Microsoft.DotNet.HotReload.Utils.Generator.Frontend.csproj" />
+    <!-- the Generator.Tasks aren't used by the BuildTool, but they are used by some of the targets -->
+    <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.csproj" ExcludeAssets="runtime"  />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

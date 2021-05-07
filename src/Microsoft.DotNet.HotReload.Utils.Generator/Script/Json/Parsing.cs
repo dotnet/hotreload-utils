@@ -11,26 +11,6 @@ using System.Threading.Tasks;
 using CancellationToken = System.Threading.CancellationToken;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator.Script.Json {
-    public class Script {
-        public Change[]? Changes {get; init;}
-
-        [System.Text.Json.Serialization.JsonConstructor]
-        public Script (Change[]? changes) {
-            Changes = changes;
-        }
-    }
-
-    public class Change {
-        public string Document {get; init;}
-        public string Update {get; init;}
-
-        [System.Text.Json.Serialization.JsonConstructor]
-        public Change (string document, string update) {
-            Document = document;
-            Update = update;
-        }
-    }
-
     /// Read a diff script from a json file
     public class Parser {
 
