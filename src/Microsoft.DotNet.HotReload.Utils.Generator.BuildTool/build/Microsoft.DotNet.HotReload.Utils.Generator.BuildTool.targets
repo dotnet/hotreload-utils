@@ -23,9 +23,10 @@
   <!-- Doesn't actually run the delta geneator, but just analyzes the script and figures out what output items it would produce.
     Used for computing incremental inputs/outputs of HotReloadDeltaGeneratorGenerateDeltas, and for ContentForDeltaFileOutputNames
   -->
-  <Target Name="HotReloadDeltaGeneratorComputeScriptOutputs" Condition="$(_HotReloadDeltaGeneratorShouldRun)">
+  <Target Name="HotReloadDeltaGeneratorComputeScriptInputsOutputs" Condition="$(_HotReloadDeltaGeneratorShouldRun)">
     <HotReloadDeltaGeneratorComputeScriptOutputs BaseAssemblyName="$(TargetPath)" DeltaScript="$(DeltaScript)">
       <Output TaskParameter="DeltaOutputs" ItemName="_HotReloadDeltaGeneratorOutputs" />
+      <Output TaskParameter="DeltaSources" ItemName="_HotReloadDeltaGeneratorInputs" />
     </HotReloadDeltaGeneratorComputeScriptOutputs>
   </Target>
 
@@ -34,9 +35,9 @@
   <!-- Have to be careful about AfterTargets. If we happen to go after a design-time target, we could get into an infinite loop. -->
   <Target Name="HotReloadDeltaGeneratorGenerateDeltas"
       AfterTargets="Build"
-      DependsOnTargets="HotReloadDeltaGeneratorComputeScriptOutputs"
+      DependsOnTargets="HotReloadDeltaGeneratorComputeScriptInputsOutputs"
       Condition="$(_HotReloadDeltaGeneratorShouldRun)"
-      Inputs="$(TargetPath)"
+      Inputs="$(TargetPath); @(_HotReloadDeltaGeneratorInputs)"
       Outputs="@(_HotReloadDeltaGeneratorOutputs)"
       >
     <PropertyGroup>
@@ -56,7 +57,7 @@
 
   <Target Name="HotReloadDeltaGeneratorContentForOutputs"
       BeforeTargets="AssignTargetPaths"
-      DependsOnTargets="HotReloadDeltaGeneratorComputeScriptOutputs"
+      DependsOnTargets="HotReloadDeltaGeneratorComputeScriptInputsOutputs"
       Condition="$(_HotReloadDeltaGeneratorShouldRun) and '$(DesignTimeBuild)' != 'true'">
     <ItemGroup>
       <Content Include="@(_HotReloadDeltaGeneratorOutputs)">

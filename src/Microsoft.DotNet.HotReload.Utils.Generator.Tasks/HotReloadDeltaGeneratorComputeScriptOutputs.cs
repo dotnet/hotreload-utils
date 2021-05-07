@@ -26,14 +26,23 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Tasks
         public string DeltaScript {get; set; }
 
 
+        /// The generated delta outputs
+        ///  Each item has a DeltaOutputType metadata with a value of "dmeta", "dil", or "dpdb"
+        ///    indicating what kind of delta output it is.
         [Output]
         public ITaskItem[] DeltaOutputs { get; set; }
+
+        /// The (relative to the script file) sources that comprise the changes.
+        ///  Each item has a DeltaForBaseline metadata that has the name of the baseline source file
+        [Output]
+        public ITaskItem[] DeltaSources { get; set; }
 
         public HotReloadDeltaGeneratorComputeScriptOutputs()
         {
             BaseAssemblyName = string.Empty;
             DeltaScript = string.Empty;
             DeltaOutputs = Array.Empty<ITaskItem>();
+            DeltaSources = Array.Empty<ITaskItem>();
         }
 
         enum DeltaOutputType {
@@ -50,21 +59,28 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Tasks
                 return false;
             }
             string baseAssemblyName = BaseAssemblyName;
-            int count;
+            Script.Json.Script? json;
             try
             {
-                var json = Parse(DeltaScript).Result;
+                json = Parse(DeltaScript).Result;
                 if (json?.Changes == null) {
                     Log.LogError("Hot reload delta script had no 'changes' array");
                     return false;
                 }
-                count = json.Changes.Length;
             }
             catch (JsonException exn)
             {
                 Log.LogErrorFromException(exn, showStackTrace: true);
                 return false;
             }
+
+            DeltaOutputs = ComputeOutputs (baseAssemblyName, json.Changes.Length);
+            DeltaSources = ComputeSources (json.Changes);
+            return true;
+        }
+
+        private static ITaskItem[] ComputeOutputs (string baseAssemblyName, int count)
+        {
             const string deltaOutputTypeMetadata = "DeltaOutputType";
             ITaskItem[] result = new TaskItem[3*count];
             for (int i = 0; i < count; ++i)
@@ -77,8 +93,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Tasks
                 result[3*i+1] = new TaskItem(dil, new Dictionary<string,string> { { deltaOutputTypeMetadata, nameof(DeltaOutputType.dil)}});
                 result[3*i+2] = new TaskItem(dpdb, new Dictionary<string,string> { { deltaOutputTypeMetadata, nameof(DeltaOutputType.dpdb)}});
             }
-            DeltaOutputs = result;
-            return true;
+            return result;
         }
 
         private static string NameForOutput(string baseName, int rev, DeltaOutputType t)
@@ -90,6 +105,18 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Tasks
                 _ => throw new Exception("unexpected")
             };
             return $"{baseName}.{rev}.{ext}";
+        }
+
+        private static ITaskItem[] ComputeSources (Script.Json.Change[] changes)
+        {
+            var count = changes.Length;
+            ITaskItem[] result = new TaskItem[changes.Length];
+            for (int i = 0; i < count; ++i)
+            {
+                // Just return the "update" documents.  The baseline document should already be a <Compile> item in the project
+                result[i] = new TaskItem(changes[i].Update, new Dictionary<string,string> {  { "DeltaForBaseline", changes[i].Document} });
+            }
+            return result;
         }
 
         public static async Task<Script.Json.Script?> Parse(string scriptPath, CancellationToken ct = default)
