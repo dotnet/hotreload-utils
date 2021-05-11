@@ -1,0 +1,12 @@
+using System;
+
+namespace ImportExplicitly.Tests
+{
+    public static class TargetClass
+    {
+        public static string TargetMethod ()
+        {
+            return "OLD";
+        }
+    }
+}

@@ -6,5 +6,7 @@
     <ProjectReference Include="src/hotreload-delta-gen/src/hotreload-delta-gen.csproj" />
     <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.Generator.Tasks/Microsoft.DotNet.HotReload.Utils.Generator.Tasks.csproj" />
     <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.csproj" />
+
+    <ProjectReference Include="tests\**\*.*proj" />
   </ItemGroup>
 </Project>

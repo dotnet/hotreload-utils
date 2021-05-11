@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <!-- NOTE: no DeltaScript property - importing the BuildTool.targets should have no effect -->
+  </PropertyGroup>
+
+  <Import Project="..\ImportExplicitly.props" />
+
+  <Import Project="$(InTreeGeneratorBuildToolTargetsPath)" />
+</Project>
