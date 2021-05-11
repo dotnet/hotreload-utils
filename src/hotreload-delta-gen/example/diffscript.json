@@ -1,6 +1,6 @@
 /* The format is
- * "steps": [step, ...]
- * and each step is
+ * "changes": [changes, ...]
+ * and each change is
  * {"document", "relativePath.cs", "update": "relativePath.delta.cs"}
  */
 {"changes": [
