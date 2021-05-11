@@ -5,16 +5,7 @@
     <!-- NOTE: no DeltaScript property - importing the BuildTool.targets should have no effect -->
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\..\src\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.csproj" ReferenceOutputAssembly="false" />
-  </ItemGroup>
+  <Import Project="..\ImportExplicitly.props" />
 
-  <!-- explicitly set tool path -->
-  <PropertyGroup>
-    <_HotReloadDeltaGeneratorPath>$(BaseOutputPath)..\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
-    <_HotReloadDeltaGeneratorTasksPath>$(BaseOutputPath)..\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.dll</_HotReloadDeltaGeneratorTasksPath>
-  </PropertyGroup>
-
-  <Import Project="..\..\..\src\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\build\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets" />
+  <Import Project="$(InTreeGeneratorBuildToolTargetsPath)" />
 </Project>
