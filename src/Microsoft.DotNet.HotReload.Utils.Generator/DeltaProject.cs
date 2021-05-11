@@ -87,6 +87,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                 throw new Exception ("Unexpectedly, project Id of the delta != base project Id");
             if (updatedDocument.Id != baseDocumentId)
                 throw new Exception ("Unexpectedly, document Id of the delta != base document Id");
+            Project oldProject = project;
+            Task<Compilation?> oldCompilation = Task.Run (async() => await oldProject.GetCompilationAsync(ct), ct);
             project = updatedDocument.Project;
 
             var changes = await updatedDocument.GetTextChangesAsync (document, ct);
@@ -108,14 +110,23 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                     return compilation;
             }, ct);
 
-            var editsCompilation = Task.Run(() => CompileEdits (document, updatedDocument, ct), ct);
+            var editsCompilation = Task.Run(() => CompileEdits (oldProject, updatedDocument, ct), ct);
 
             Compilation updatedCompilationResult = await updatedCompilation;
+
 
             var (edits, rudeEdits) = await editsCompilation;
             if (!rudeEdits.IsDefault && rudeEdits.Any() ) {
                 throw new DeltaRudeEditException($"rude edits in revision {dinfo.Rev}", rudeEdits);
             }
+
+            var oldCompilationResult = await oldCompilation;
+            /* FIXME: "edits" should be DocumentAnalysisResults */
+            // Call
+            // Microsoft.CodeAnalysis.EditAndContinue.EditSession.GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, ImmutableArray<DocumentAnalysisResults> changedDocumentAnalyses, CancellationToken ct)
+            var projectChanges = await GetProjectChanges (oldCompilationResult, updatedCompilationResult, edits, ct);
+            var edits = Get
+
             if (edits.IsDefault || !edits.Any()) {
                 Console.WriteLine("no semantic changes");
                 if (ignoreUnchanged)
@@ -134,14 +145,18 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             }
             Console.WriteLine($"wrote {dinfo.Dmeta}");
             // return a new deltaproject that can build the next update
-            return new DeltaProject(this, project.Solution, emitResult.Baseline);
+            return new DeltaProject(this, project.Solution, emitResult.Baseline!);
         }
 
-        Task<(ImmutableArray<SemanticEdit>, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Document document, Document updatedDocument, CancellationToken ct = default)
+        Task<(ImmutableArray<SemanticEdit>, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)
         {
-            return _changeMaker.GetChanges(document, updatedDocument, ct);
+            return _changeMaker.GetChanges(project, updatedDocument, ct);
         }
 
+        ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, DocumentAnalysisResultWrapper results, CancellationToken ct = default)
+        {
+            return _changeMaker.GetProjectChanges (oldCompilation, newCompilation, results, ct);
+        }
 
         /// <returns>true if compilation succeeded, or false if there were errors</returns>
         private static bool CheckCompilationDiagnostics ([NotNullWhen(true)] Compilation? compilation, string diagnosticPrefix)
