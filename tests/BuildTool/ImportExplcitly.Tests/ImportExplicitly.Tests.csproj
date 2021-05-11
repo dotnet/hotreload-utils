@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <!-- to call AsssemblyExtensions.ApplyUpdate we need Optimize=false, EmitDebugInformation=true in all configurations -->
+    <Optimize>false</Optimize>
+    <EmitDebugInformation>true</EmitDebugInformation>
+    <DeltaScript>delta.json</DeltaScript>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.RemoteExecutor" Version="$(MicrosoftDotNetRemoteExecutorVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\src\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- explicitly set tool path -->
+  <PropertyGroup>
+    <_HotReloadDeltaGeneratorPath>$(BaseOutputPath)..\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
+    <_HotReloadDeltaGeneratorTasksPath>$(BaseOutputPath)..\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.dll</_HotReloadDeltaGeneratorTasksPath>
+  </PropertyGroup>
+
+  <Target Name="PrintConfig" BeforeTargets="CoreCompile">
+    <Message Importance="High" Text="Hot Reload Generator Path is $(_HotReloadDeltaGeneratorPath)" />
+  </Target>
+
+  <Import Project="..\..\..\src\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\build\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets" />
+</Project>
