@@ -3,19 +3,31 @@
 
 Simple roslyn E&C driver.
 
-## How to build
+## Is this the right tool?
 
-Install .NET 5, run `dotnet build src/hotreload-delta-gen.csproj`
+For integration into MS Build projects, see [../Microsoft.DotNet.HotReload.Utils.Generator.BuildTool README.md](../Microsoft.DotNet.HotReload.Utils.Generator.BuildTool/README.md)
 
-### Deploying
+The standalone `hotreload-delta-gen` tool is more useful for one-off experiments in which case it is best to install it as a global dotnet tool.
 
-Running
+## How to install from the dotnet6-transport NuGet feed
 
+Preview versions are published to the `dotnet6-transport` feed.
+
+```console
+dotnet tool install --global --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json hotreload-delta-gen --version [LATEST_VER]
 ```
-dotnet publish --self-contained -r <RID> src/hotreload-delta-gen.csproj
-```
 
-will create a folder with a self contained executable `../../publish/hotreload-delta-gen/hotreload-delta-gen` for the specified platform.
+Where `[LATEST_VER]` is the latest published version (`dotnet tool install` will tell you the latest available if you omit the `--version` argument)
+
+Then run the tool as `hotreload-delta-gen` assuming that `${HOME}/.dotnet/tools` is in your PATH.
+
+## How to build manually
+
+Install .NET 6
+
+Run `build.sh -restore -build -publish -pack -c Release` from the repo root.
+
+That will create the executable `artifacts/bin/hotreload-delta-gen/Release/net6.0/publish/hotreload-delta-gen`.
 
 
 ## How to use it
@@ -68,6 +80,7 @@ The output summary file will be of the form:
 ]}
 ```
 
+A runnable example is in [example/](example/).  Build it with `dotnet build` and it will invoke `hotreload-delta-gen` to generate deltas.
 
 ### Example (live coding)
 
@@ -87,4 +100,3 @@ The tool will error out if the file contains a rude edit, or but if a file is se
 ### Output location
 
 If the baseline files are in `DIR/assembly.dll` and `DIR/assembly.pdb`, then `roslynildiff` saves the deltas to `DIR/assembly.dll.1.{dmeta,dil,dpdb}`, `DIR/assembly.dll.2.{dmeta,dil,dpdb}` etc...
-
