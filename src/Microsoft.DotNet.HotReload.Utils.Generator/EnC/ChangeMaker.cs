@@ -23,16 +23,26 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
         private const string csharpCodeAnalyzerTypeName = "Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer";
         private const string activeStatementTypeName = "Microsoft.CodeAnalysis.EditAndContinue.ActiveStatement";
 
-        private readonly Type _codeAnalyzer;
-        private readonly Type _activeStatement;
+        private const string capabilitiesTypeName = "Microsoft.CodeAnalysis.EditAndContinue.EditAndContinueCapabilities";
+
+        private const string editSessionTypeName = "Microsoft.CodeAnalysis.EditAndContinue.EditSession";
+
+        struct Reflected {
+            internal Type _codeAnalyzer {get; init;}
+            internal readonly Type _activeStatement {get; init;}
+
+            internal readonly Type _capabilities {get; init;}
+
+            internal readonly Type _editSession {get; init;}
+        }
+
+        private readonly Reflected _reflected;
 
         public ChangeMaker () {
-            var (codeAnalyzer, activeStatement) = ReflectionInit();
-            _codeAnalyzer = codeAnalyzer;
-            _activeStatement = activeStatement;
+            _reflected = ReflectionInit();
         }
         // Get all the Roslyn stuff we need
-        private static (Type codeAnalyzer, Type activeStatement) ReflectionInit ()
+        private static Reflected ReflectionInit ()
         {
             var an = new AssemblyName (csharpCodeAnalysisAssemblyName);
             var assm = AssemblyLoadContext.Default.LoadFromAssemblyName(an)!;
@@ -48,10 +58,43 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             if (actS == null) {
                 throw new Exception ("Coudln't find ActiveStatement type");
             }
-            return (codeAnalyzer: ca, activeStatement: actS);
+
+            var caps = assm.GetType (capabilitiesTypeName);
+
+            if (caps == null) {
+                throw new Exception ("Couldn't find EditAndContinueCapabilities type");
+            }
+
+            var editSess = assm.GetType (editSessionTypeName);
+
+            if (editSess == null) {
+                throw new Exception ("Couldn't find EditSession type");
+            }
+
+            return new Reflected() { _codeAnalyzer =  ca,
+                                    _activeStatement =  actS,
+                                    _capabilities =  caps,
+                                    _editSession = editSess
+                                    };
         }
 
-        public Task<(ImmutableArray<SemanticEdit>, ImmutableArray<RudeEditDiagnosticWrapper>)> GetChanges(Document oldDocument, Document newDocument, CancellationToken cancellationToken = default)
+        /// Convert my EditAndContinueCapabilities enum value to
+        ///  [Microsoft.CodeAnalysis.Features]Microsoft.CodeAnalysis.EditAndContinue.EditAndContinueCapabilities
+        private object ConvertCapabilities (EditAndContinueCapabilities myCaps)
+        {
+            int i = (int)myCaps;
+            object theirCaps = Enum.ToObject(_reflected._capabilities, i);
+            return theirCaps;
+        }
+
+        private object DefaultEditAndContinueCapabilities()
+        {
+            var myCaps = EditAndContinueCapabilities.Baseline | EditAndContinueCapabilities.AddMethodToExistingType
+                | EditAndContinueCapabilities.AddStaticFieldToExistingType | EditAndContinueCapabilities.AddInstanceFieldToExistingType
+                | EditAndContinueCapabilities.NewTypeDefinition;
+            return ConvertCapabilities(myCaps);
+        }
+        public Task<(DocumentAnalysisResultsWrapper, ImmutableArray<RudeEditDiagnosticWrapper>)> GetChanges(Project oldProject, Document newDocument, CancellationToken cancellationToken = default)
         {
             // Effectively
             //
@@ -59,29 +102,32 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             //      var analyzer = new CSharpEditAndContinueAnalyzer (null);
             //      var activeStatements = ImmutableArray.Create<ActiveStatement>();
             //      var textSpans = ImmutableArray.Create<TextSpan>();
-            //      var result = await analyzer.AnalyzeDocumentAsync (oldDocument, activeStatements, newDocument, textSpans, cancellationToken);
+            //      var capabilities = DefaultEditAndContinueCapabilities ();
+            //      var result = await analyzer.AnalyzeDocumentAsync (oldDocument, activeStatements, newDocument, textSpans, capabilities, cancellationToken);
             //      var edits = result.SemanticEdits;
-            //      var rudeEdits = result.RudeEditErrorss;
+            //      var rudeEdits = result.RudeEditErrors;
             //      return (edits, rudeEdits);
             // }
             //
-            var analyzer = Activator.CreateInstance(_codeAnalyzer, new object?[]{null});
+            var analyzer = Activator.CreateInstance(_reflected._codeAnalyzer, new object?[]{null});
 
-            var makeEmptyImmutableArray = typeof(ImmutableArray).GetMethod("Create", 1, Array.Empty<Type>())!.MakeGenericMethod(new Type[] {_activeStatement});
+            var makeEmptyImmutableArray = typeof(ImmutableArray).GetMethod("Create", 1, Array.Empty<Type>())!.MakeGenericMethod(new Type[] {_reflected._activeStatement});
             var activeStatements = makeEmptyImmutableArray.Invoke(null, Array.Empty<object>())!;
-            var mi = _codeAnalyzer.GetMethod("AnalyzeDocumentAsync")!;
+            var mi = _reflected._codeAnalyzer.GetMethod("AnalyzeDocumentAsync")!;
 
             var textSpans = ImmutableArray.Create<TextSpan>();
 
-            var taskResult = mi.Invoke (analyzer, new object[] {oldDocument, activeStatements, newDocument, textSpans, cancellationToken});
+            var capabilities = DefaultEditAndContinueCapabilities();
+
+            var taskResult = mi.Invoke (analyzer, new object[] {oldProject, activeStatements, newDocument, textSpans, capabilities, cancellationToken});
 
             if (taskResult == null) {
                 throw new Exception("taskResult was null");
             }
 
             // We just want
-            //   taskResult.ContinueWith ((t) => t.Result.SemanticEdits);
-            // but then we'd need to make a Func<DocumentAnalysisResults, IEnumerable<SemanticEdit>>
+            //   taskResult.ContinueWith ((t) => (t.Result, t.Result.RudeEdits);
+            // but then we'd need to make a Func<DocumentAnalysisResults, IEnumerable<RudeEditErrors>>
             // and that's really annoying to do if you can't say the type name DocumentAnalysisResults
             //
             // So instead we do:
@@ -90,7 +136,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             //
             //  var awaiter = taskResult.GetAwaiter();
             //  awaiter.OnCompleted(delegate {
-            //     tcs.SetResult (awaiter.GetResult().SemanticEdits); // and exn handling
+            //     tcs.SetResult (awaiter.GetResult().RudeEdits); // and exn handling
             //   });
             //  return tcs.Task;
             //
@@ -98,12 +144,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 
             var awaiter = taskResult.GetType().GetMethod("GetAwaiter")!.Invoke(taskResult, Array.Empty<object>())!;
 
-            TaskCompletionSource<(ImmutableArray<SemanticEdit>, ImmutableArray<RudeEditDiagnosticWrapper>)> tcs = new ();
+            TaskCompletionSource<(DocumentAnalysisResultsWrapper, ImmutableArray<RudeEditDiagnosticWrapper>)> tcs = new ();
 
             Action onCompleted = delegate {
                 try {
                     var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
-                    var edits = (ImmutableArray<SemanticEdit>)result.GetType().GetProperty("SemanticEdits")!.GetValue(result)!;
+                    var wrappedResult = new DocumentAnalysisResultsWrapper(result);
 
                     // type is ImmutableArray<RudeEditDiagnostic>
                     var rudeEditErrors = (System.Collections.IEnumerable)result.GetType().GetProperty("RudeEditErrors")!.GetValue(result)!;
@@ -124,7 +170,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
                         var span = (TextSpan) spanFieldInfo.GetValue(rudeEditError)!;
                         rudeEdits.Add(new RudeEditDiagnosticWrapper(kind, span));
                     }
-                    tcs.TrySetResult((edits, rudeEdits.ToImmutableArray()));
+                    tcs.TrySetResult((wrappedResult, rudeEdits.ToImmutableArray()));
                 } catch (TaskCanceledException e) {
                     tcs.TrySetCanceled(e.CancellationToken);
                 } catch (Exception e) {
@@ -135,6 +181,63 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             awaiter.GetType().GetMethod("OnCompleted")!.Invoke (awaiter, new object[] {onCompleted});
 
             return tcs.Task;
+        }
+
+
+        private static MethodInfo GetImmutableArrayCreateSingletonMethod () {
+            foreach (var mi in typeof(ImmutableArray).GetMethods(BindingFlags.Static|BindingFlags.Public)) {
+                if (mi.Name != "Create")
+                    continue;
+                if (mi.GetGenericArguments().Length != 1)
+                    continue;
+                var pars = mi.GetParameters();
+                if (pars.Length != 1)
+                    continue;
+                if (pars[0].ParameterType.IsArray)
+                    continue;
+                if (!pars[0].ParameterType.IsGenericParameter)
+                    continue;
+                return mi;
+            }
+            throw new Exception ("Could not find ImmutableArray.Create<T>(T arg)");
+        }
+
+        public object MakeSingleImmutableArrayDocumentAnalysisResults (DocumentAnalysisResultsWrapper w)
+        {
+            // ImmutableArray.Create<DocumentAnalsysisResult> (w.Underlying)
+            MethodInfo mi = GetImmutableArrayCreateSingletonMethod ();
+
+            var dar = w.Underlying;
+
+            MethodInfo inst = mi.MakeGenericMethod(dar.GetType());
+
+            var res = inst.Invoke(null, new object[] {dar});
+            if (res == null)
+                throw new NullReferenceException ("ImmutableArray.Create<DocumentAnalysisResults>(DocumentAnalysisResults single) returned null");
+            return res;
+        }
+
+        public ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, DocumentAnalysisResultsWrapper documentAnalysisResultsWrapper, CancellationToken ct = default)
+        {
+                var getProjectChangesMethod = _reflected._editSession.GetMethod("GetProjectChanges", BindingFlags.NonPublic | BindingFlags.Static);
+
+                object results = MakeSingleImmutableArrayDocumentAnalysisResults (documentAnalysisResultsWrapper);
+
+                var projectChanges = getProjectChangesMethod?.Invoke (null, new object[] {oldCompilation, newCompilation, results, ct});
+
+                if (projectChanges == null)
+                    return ImmutableArray.Create<SemanticEdit>();
+
+                var projectChangesType = projectChanges.GetType();
+
+                var fi = projectChangesType.GetField("SemanticEdits");
+
+                var edits = fi?.GetValue(projectChanges);
+
+                if (edits == null)
+                    return ImmutableArray.Create<SemanticEdit>();
+
+                return (ImmutableArray<SemanticEdit>)edits;
         }
     }
 }
