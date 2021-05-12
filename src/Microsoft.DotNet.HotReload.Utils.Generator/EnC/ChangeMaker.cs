@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             //
             //  var awaiter = taskResult.GetAwaiter();
             //  awaiter.OnCompleted(delegate {
-            //     tcs.SetResult (awaiter.GetResult().SemanticEdits); // and exn handling
+            //     tcs.SetResult (awaiter.GetResult().RudeEdits); // and exn handling
             //   });
             //  return tcs.Task;
             //
@@ -148,8 +148,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 
             Action onCompleted = delegate {
                 try {
-                    // Unable to cast object of type 'System.Collections.Immutable.ImmutableArray`1[Microsoft.CodeAnalysis.EditAndContinue.SemanticEditInfo]'
-                    // to type 'System.Collections.Immutable.ImmutableArray`1[Microsoft.CodeAnalysis.Emit.SemanticEdit]'
                     var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
                     var wrappedResult = new DocumentAnalysisResultsWrapper(result);
 
@@ -211,7 +209,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 
             var dar = w.Underlying;
 
-            return mi.MakeGenericMethod(dar.GetType()).Invoke(null, new object[] {dar});
+            MethodInfo inst = mi.MakeGenericMethod(dar.GetType());
+
+            var res = inst.Invoke(null, new object[] {dar});
+            if (res == null)
+                throw new NullReferenceException ("ImmutableArray.Create<DocumentAnalysisResults>(DocumentAnalysisResults single) returned null");
+            return res;
         }
 
         public ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, DocumentAnalysisResultsWrapper documentAnalysisResultsWrapper, CancellationToken ct = default)

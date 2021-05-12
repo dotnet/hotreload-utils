@@ -115,17 +115,16 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             Compilation updatedCompilationResult = await updatedCompilation;
 
 
-            var (edits, rudeEdits) = await editsCompilation;
+            var (documentAnalysisResults, rudeEdits) = await editsCompilation;
             if (!rudeEdits.IsDefault && rudeEdits.Any() ) {
                 throw new DeltaRudeEditException($"rude edits in revision {dinfo.Rev}", rudeEdits);
             }
 
             var oldCompilationResult = await oldCompilation;
-            /* FIXME: "edits" should be DocumentAnalysisResults */
-            // Call
-            // Microsoft.CodeAnalysis.EditAndContinue.EditSession.GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, ImmutableArray<DocumentAnalysisResults> changedDocumentAnalyses, CancellationToken ct)
-            var projectChanges = await GetProjectChanges (oldCompilationResult, updatedCompilationResult, edits, ct);
-            var edits = Get
+            if (oldCompilationResult == null)
+                throw new DeltaCompilationException("couldn't get old compilation");
+
+            var edits = GetProjectChanges (oldCompilationResult, updatedCompilationResult, documentAnalysisResults, ct);
 
             if (edits.IsDefault || !edits.Any()) {
                 Console.WriteLine("no semantic changes");
@@ -148,12 +147,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             return new DeltaProject(this, project.Solution, emitResult.Baseline!);
         }
 
-        Task<(ImmutableArray<SemanticEdit>, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)
+        Task<(EnC.DocumentAnalysisResultsWrapper, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)
         {
             return _changeMaker.GetChanges(project, updatedDocument, ct);
         }
 
-        ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, DocumentAnalysisResultWrapper results, CancellationToken ct = default)
+        ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, EnC.DocumentAnalysisResultsWrapper results, CancellationToken ct = default)
         {
             return _changeMaker.GetProjectChanges (oldCompilation, newCompilation, results, ct);
         }
