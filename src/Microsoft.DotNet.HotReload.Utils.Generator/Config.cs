@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                 return new MsbuildConfig(this);
             }
 
-            public string[] EditAndContinueCapabilities {get; set; } = Array.Empty<string>();
+            public List<string> EditAndContinueCapabilities {get; set; } = new List<string>();
 
             public bool NoWarnUnknownCapabilities {get; set;} = false;
         }
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             ProjectPath = builder.ProjectPath;
             ScriptPath = builder.ScriptPath;
             OutputSummaryPath = builder.OutputSummaryPath;
-            EditAndContinueCapabilities = builder.EditAndContinueCapabilities;
+            EditAndContinueCapabilities = builder.EditAndContinueCapabilities.ToArray();
             NoWarnUnknownCapabilities = builder.NoWarnUnknownCapabilities;
         }
 
