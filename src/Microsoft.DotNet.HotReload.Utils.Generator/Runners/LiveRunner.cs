@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
             return Livecoding (baselineArtifacts, config.LiveCodingWatchDir, config.LiveCodingWatchPattern, ct);
         }
 
+        protected override EnC.EditAndContinueCapabilities PrepareCapabilitiesCore () => EnC.EditAndContinueCapabilities.None;
 
         private static async IAsyncEnumerable<Delta> Livecoding (BaselineArtifacts baselineArtifacts, string watchDir, string pattern, [EnumeratorCancellation] CancellationToken cancellationToken= default) {
             var last = DateTime.UtcNow;

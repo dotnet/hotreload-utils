@@ -89,14 +89,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             return theirCaps;
         }
 
-        private object DefaultEditAndContinueCapabilities()
-        {
-            var myCaps = EditAndContinueCapabilities.Baseline | EditAndContinueCapabilities.AddMethodToExistingType
-                | EditAndContinueCapabilities.AddStaticFieldToExistingType | EditAndContinueCapabilities.AddInstanceFieldToExistingType
-                | EditAndContinueCapabilities.NewTypeDefinition;
-            return ConvertCapabilities(myCaps);
-        }
-        public Task<(DocumentAnalysisResultsWrapper, ImmutableArray<RudeEditDiagnosticWrapper>)> GetChanges(Project oldProject, Document newDocument, CancellationToken cancellationToken = default)
+                public Task<(DocumentAnalysisResultsWrapper, ImmutableArray<RudeEditDiagnosticWrapper>)> GetChanges(EditAndContinueCapabilities capabilities, Project oldProject, Document newDocument, CancellationToken cancellationToken = default)
         {
             // Effectively
             //
@@ -119,7 +112,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 
             var textSpans = ImmutableArray.Create<TextSpan>();
 
-            var capabilities = DefaultEditAndContinueCapabilities();
+            var roslynCapabilities = ConvertCapabilities (capabilities);
 
             var taskResult = mi.Invoke (analyzer, new object[] {oldProject, activeStatements, newDocument, textSpans, capabilities, cancellationToken});
 

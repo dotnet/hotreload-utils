@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
     public class DeltaProject
     {
         readonly EnC.ChangeMaker _changeMaker;
+        readonly EnC.EditAndContinueCapabilities _capabilities;
 
         readonly Solution _solution;
         readonly EmitBaseline _baseline;
@@ -28,17 +29,19 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         readonly DeltaNaming _nextName;
 
-        public DeltaProject(BaselineArtifacts artifacts) {
+        public DeltaProject(BaselineArtifacts artifacts, EnC.EditAndContinueCapabilities capabilities) {
             _changeMaker = new EnC.ChangeMaker();
             _solution = artifacts.baselineSolution;
             _baseline = artifacts.emitBaseline;
             _baseProjectId = artifacts.baselineProjectId;
             _nextName = new DeltaNaming(artifacts.baselineOutputAsmPath, 1);
+            _capabilities = capabilities;
         }
 
         internal DeltaProject (DeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
         {
             _changeMaker = prev._changeMaker;
+            _capabilities = prev._capabilities;
             _solution = newSolution;
             _baseline = newBaseline;
             _baseProjectId = prev._baseProjectId;
@@ -50,6 +53,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         public EmitBaseline Baseline => _baseline;
 
         public ProjectId BaseProjectId => _baseProjectId;
+
+        public EnC.EditAndContinueCapabilities EditAndContinueCapabilities => _capabilities;
 
         /// The default output function
         ///  Creates files with the specified DeltaNaming without any other side-effects
@@ -149,7 +154,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         Task<(EnC.DocumentAnalysisResultsWrapper, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)
         {
-            return _changeMaker.GetChanges(project, updatedDocument, ct);
+            return _changeMaker.GetChanges(_capabilities, project, updatedDocument, ct);
         }
 
         ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, EnC.DocumentAnalysisResultsWrapper results, CancellationToken ct = default)

@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -26,6 +27,10 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             public Config Bake () {
                 return new MsbuildConfig(this);
             }
+
+            public string[] EditAndContinueCapabilities {get; set; } = Array.Empty<string>();
+
+            public bool NoWarnUnknownCapabilities {get; set;} = false;
         }
 
         protected Config (ConfigBuilder builder) {
@@ -34,6 +39,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             ProjectPath = builder.ProjectPath;
             ScriptPath = builder.ScriptPath;
             OutputSummaryPath = builder.OutputSummaryPath;
+            EditAndContinueCapabilities = builder.EditAndContinueCapabilities;
+            NoWarnUnknownCapabilities = builder.NoWarnUnknownCapabilities;
         }
 
         public bool Live { get; }
@@ -56,6 +63,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         /// A path for a JSON file to collect the produced artifacts
         public string OutputSummaryPath { get; }
+
+        /// A set of strings specifying edit and continue capabilities to pass to Roslyn
+        public string[] EditAndContinueCapabilities { get; }
+
+        /// If 'true' don't print a warning if a capability is not known.
+        public bool NoWarnUnknownCapabilities {get; }
     }
 
     internal class MsbuildConfig : Config {
