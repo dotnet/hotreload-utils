@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
     /// The capabilities that the runtime has with respect to edit and continue
     /// </summary>
     [Flags]
-    internal enum EditAndContinueCapabilities
+    public enum EditAndContinueCapabilities
     {
         None = 0,
 
