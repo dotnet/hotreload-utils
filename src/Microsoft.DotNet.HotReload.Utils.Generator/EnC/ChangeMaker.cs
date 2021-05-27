@@ -38,6 +38,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 
         private readonly Reflected _reflected;
 
+        public Type EditAncContinueCapabilitiesType => _reflected._capabilities;
+
         public ChangeMaker () {
             _reflected = ReflectionInit();
         }
