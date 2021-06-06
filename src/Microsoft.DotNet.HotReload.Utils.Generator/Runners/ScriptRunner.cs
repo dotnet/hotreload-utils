@@ -44,6 +44,9 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
 
         }
 
+        // TODO: read capabilities from JSON
+        protected override EnC.EditAndContinueCapabilities PrepareCapabilitiesCore () => EnC.EditAndContinueCapabilities.None;
+
         public override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
         {
             return ScriptedPlanInputs (config, baselineArtifacts, ct);

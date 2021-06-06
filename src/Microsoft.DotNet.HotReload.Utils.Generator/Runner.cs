@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator {
     public abstract class Runner {
+
         public static Runner Make (Config config)
         {
             if (config.Live)
@@ -19,7 +20,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
         public async Task Run (CancellationToken ct = default) {
             var baselineArtifacts = await SetupBaseline (ct);
 
-            var deltaProject = new DeltaProject (baselineArtifacts);
+            var deltaProject = new DeltaProject (baselineArtifacts, PrepareCapabilities());
             var derivedInputs = SetupDeltas (baselineArtifacts, ct);
 
             await GenerateDeltas (deltaProject, derivedInputs, makeOutputs: MakeOutputs, outputsReady: OutputsReady, ct: ct);
@@ -55,7 +56,33 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
             return baselineArtifacts;
         }
 
+        protected abstract EnC.EditAndContinueCapabilities PrepareCapabilitiesCore ();
 
+        protected EnC.EditAndContinueCapabilities PrepareCapabilities() {
+            EnC.EditAndContinueCapabilities caps = EnC.EditAndContinueCapabilities.None;
+            (var configuredCaps, var unknowns) = EditAndContinueCapabilitiesParser.Parse (config.EditAndContinueCapabilities);
+            foreach (var c in configuredCaps) {
+                caps |= c;
+            }
+            var runnerCaps = PrepareCapabilitiesCore ();
+            caps |= runnerCaps;
+            if (caps == EnC.EditAndContinueCapabilities.None)
+                caps = DefaultCapabilities ();
+            if (!config.NoWarnUnknownCapabilities) {
+                foreach (var unk in unknowns) {
+                    Console.WriteLine ("Warning: Unknown EnC capability '{0}', ignored.", unk);
+                }
+            }
+            return caps;
+        }
+
+        protected EnC.EditAndContinueCapabilities DefaultCapabilities ()
+        {
+            var allCaps = EnC.EditAndContinueCapabilities.Baseline | EnC.EditAndContinueCapabilities.AddMethodToExistingType
+                | EnC.EditAndContinueCapabilities.AddStaticFieldToExistingType | EnC.EditAndContinueCapabilities.AddInstanceFieldToExistingType
+                | EnC.EditAndContinueCapabilities.NewTypeDefinition;
+            return allCaps;
+        }
         public abstract IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default);
 
         public async Task GenerateDeltas (DeltaProject deltaProject, IAsyncEnumerable<Delta> deltas,

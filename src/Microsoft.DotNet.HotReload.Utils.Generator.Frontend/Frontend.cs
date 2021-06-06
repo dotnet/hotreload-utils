@@ -56,6 +56,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Frontend
                 const string msbuildOptPrefix = "-msbuild:";
                 const string scriptOptPrefix = "-script:";
                 const string outputSummaryPrefix = "-outputSummary:";
+                const string capabilitiesPrefix = "-capabilities:";
                 string fn = args [i];
                 if (fn.StartsWith(msbuildOptPrefix)) {
                     builder.ProjectPath = fn[msbuildOptPrefix.Length..];
@@ -77,6 +78,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Frontend
                     builder.ScriptPath = fn[scriptOptPrefix.Length..];
                 } else if (fn.StartsWith(outputSummaryPrefix)) {
                     builder.OutputSummaryPath = fn[outputSummaryPrefix.Length..];
+                } else if (fn.StartsWith(capabilitiesPrefix)) {
+                    builder.EditAndContinueCapabilities.Add (fn[capabilitiesPrefix.Length..]);
                 } else {
                     PrintUsage();
                     Console.WriteLine ($"\tUnexpected trailing option {fn}");
