@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
         {
             var allCaps = EnC.EditAndContinueCapabilities.Baseline | EnC.EditAndContinueCapabilities.AddMethodToExistingType
                 | EnC.EditAndContinueCapabilities.AddStaticFieldToExistingType | EnC.EditAndContinueCapabilities.AddInstanceFieldToExistingType
-                | EnC.EditAndContinueCapabilities.NewTypeDefinition;
+                | EnC.EditAndContinueCapabilities.NewTypeDefinition | EnC.EditAndContinueCapabilities.ChangeCustomAttributes;
             return allCaps;
         }
         public abstract IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default);
