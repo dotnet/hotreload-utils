@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
         private const string codeAnalysisFeaturesAssemblyName = "Microsoft.CodeAnalysis.Features";
         private const string csharpCodeAnalyzerTypeName = "Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer";
         private const string activeStatementTypeName = "Microsoft.CodeAnalysis.EditAndContinue.ActiveStatement";
+        private const string activeStatementsMapTypeName = "Microsoft.CodeAnalysis.EditAndContinue.ActiveStatementsMap";
 
         private const string capabilitiesTypeName = "Microsoft.CodeAnalysis.EditAndContinue.EditAndContinueCapabilities";
 
@@ -31,9 +32,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             internal Type _codeAnalyzer {get; init;}
             internal readonly Type _activeStatement {get; init;}
 
+            internal readonly Type _activeStatementsMap {get; init;}
+
             internal readonly Type _capabilities {get; init;}
 
             internal readonly Type _editSession {get; init;}
+
         }
 
         private readonly Reflected _reflected;
@@ -61,6 +65,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
                 throw new Exception ("Coudln't find ActiveStatement type");
             }
 
+            var actSM = assm.GetType(activeStatementsMapTypeName);
+
+            if (actSM == null) {
+                throw new Exception ("Couldn't find ActiveStatementsMap");
+            }
+
             var caps = assm.GetType (capabilitiesTypeName);
 
             if (caps == null) {
@@ -75,6 +85,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
 
             return new Reflected() { _codeAnalyzer =  ca,
                                     _activeStatement =  actS,
+                                    _activeStatementsMap = actSM,
                                     _capabilities =  caps,
                                     _editSession = editSess
                                     };
@@ -89,14 +100,22 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             return theirCaps;
         }
 
+        private object? makeEmptyActiveStatementsMap()
+        {
+            // return ActiveStatementsMap.Empty;
+            var fi = _reflected._activeStatementsMap.GetField ("Empty", BindingFlags.Static | BindingFlags.Public)!;
+            return fi.GetValue(null);
+        }
+
                 public Task<(DocumentAnalysisResultsWrapper, ImmutableArray<RudeEditDiagnosticWrapper>)> GetChanges(EditAndContinueCapabilities capabilities, Project oldProject, Document newDocument, CancellationToken cancellationToken = default)
         {
             // Effectively
             //
             // async Task<IEnumerable<SemanticEdit>> GetChanges (...) {
             //      var analyzer = new CSharpEditAndContinueAnalyzer (null);
-            //      var activeStatements = ImmutableArray.Create<ActiveStatement>();
-            //      var textSpans = ImmutableArray.Create<TextSpan>();
+            //      //var activeStatements = ImmutableArray.Create<ActiveStatement>();
+            //      var activeStatementsMap = new ActiveStatementsMap (); // XXX
+            //      var newActiveStatementSpans = ImmutableArray.Create<LinePositionSpans>();
             //      var capabilities = DefaultEditAndContinueCapabilities ();
             //      var result = await analyzer.AnalyzeDocumentAsync (oldDocument, activeStatements, newDocument, textSpans, capabilities, cancellationToken);
             //      var edits = result.SemanticEdits;
@@ -107,14 +126,14 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             var analyzer = Activator.CreateInstance(_reflected._codeAnalyzer, new object?[]{null});
 
             var makeEmptyImmutableArray = typeof(ImmutableArray).GetMethod("Create", 1, Array.Empty<Type>())!.MakeGenericMethod(new Type[] {_reflected._activeStatement});
-            var activeStatements = makeEmptyImmutableArray.Invoke(null, Array.Empty<object>())!;
+            var activeStatementsMap = makeEmptyActiveStatementsMap();
             var mi = _reflected._codeAnalyzer.GetMethod("AnalyzeDocumentAsync")!;
 
-            var textSpans = ImmutableArray.Create<TextSpan>();
+            var newActiveStatementSpans = ImmutableArray.Create<LinePositionSpan>();
 
             var roslynCapabilities = ConvertCapabilities (capabilities);
 
-            var taskResult = mi.Invoke (analyzer, new object[] {oldProject, activeStatements, newDocument, textSpans, capabilities, cancellationToken});
+            var taskResult = mi.Invoke (analyzer, new object?[] {oldProject, activeStatementsMap, newDocument, newActiveStatementSpans, capabilities, cancellationToken});
 
             if (taskResult == null) {
                 throw new Exception("taskResult was null");

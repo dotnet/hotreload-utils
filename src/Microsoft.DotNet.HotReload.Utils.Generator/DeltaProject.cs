@@ -139,11 +139,10 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                     throw new DeltaCompilationException("no semantic changes in revision", exitStatus: 7);
             }
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
-            var updatedMethods = new List<System.Reflection.Metadata.MethodDefinitionHandle> ();
 
             EmitDifferenceResult emitResult;
             await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-                emitResult = updatedCompilationResult.EmitDifference(baseline, edits, output.MetaStream, output.IlStream, output.PdbStream, updatedMethods, ct);
+                emitResult = updatedCompilationResult.EmitDifference(baseline, edits, s=> false, output.MetaStream, output.IlStream, output.PdbStream, ct);
                 CheckEmitResult(emitResult);
                 outputsReady?.Invoke(dinfo, output);
             }
