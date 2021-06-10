@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             if (oldCompilationResult == null)
                 throw new DeltaCompilationException("couldn't get old compilation");
 
-            var edits = GetProjectChanges (oldCompilationResult, updatedCompilationResult, documentAnalysisResults, ct);
+            var edits = await GetProjectChangesAsync (oldCompilationResult, updatedCompilationResult, oldProject, project, documentAnalysisResults, ct);
 
             if (edits.IsDefault || !edits.Any()) {
                 Console.WriteLine("no semantic changes");
@@ -156,9 +156,9 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             return _changeMaker.GetChanges(_capabilities, project, updatedDocument, ct);
         }
 
-        ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, EnC.DocumentAnalysisResultsWrapper results, CancellationToken ct = default)
+        Task<ImmutableArray<SemanticEdit>> GetProjectChangesAsync (Compilation oldCompilation, Compilation newCompilation, Project oldProject, Project newProject, EnC.DocumentAnalysisResultsWrapper results, CancellationToken ct = default)
         {
-            return _changeMaker.GetProjectChanges (oldCompilation, newCompilation, results, ct);
+            return _changeMaker.GetProjectChangesAsync (oldCompilation, newCompilation, oldProject, newProject, results, ct);
         }
 
         /// <returns>true if compilation succeeded, or false if there were errors</returns>

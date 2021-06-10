@@ -231,27 +231,45 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
             return res;
         }
 
-        public ImmutableArray<SemanticEdit> GetProjectChanges (Compilation oldCompilation, Compilation newCompilation, DocumentAnalysisResultsWrapper documentAnalysisResultsWrapper, CancellationToken ct = default)
+        public Task<ImmutableArray<SemanticEdit>> GetProjectChangesAsync (Compilation oldCompilation, Compilation newCompilation, Project oldProject, Project newProject, DocumentAnalysisResultsWrapper documentAnalysisResultsWrapper, CancellationToken ct = default)
         {
-                var getProjectChangesMethod = _reflected._editSession.GetMethod("GetProjectChanges", BindingFlags.NonPublic | BindingFlags.Static);
+                // var projectChanges = EditSession.GetProjectChangesAsync (baseActiveStatementsMap, oldCompilation, newCompilation, oldProject, newProject)
+                var getProjectChangesAsyncMethod = _reflected._editSession.GetMethod("GetProjectChangesAsync", BindingFlags.NonPublic | BindingFlags.Static);
+                if (getProjectChangesAsyncMethod == null)
+                    throw new Exception ("EditSession.GetProjectChangesAsync method not found in Roslyn.");
+
+                var baseActiveStatementsMap = makeEmptyActiveStatementsMap();
 
                 object results = MakeSingleImmutableArrayDocumentAnalysisResults (documentAnalysisResultsWrapper);
 
-                var projectChanges = getProjectChangesMethod?.Invoke (null, new object[] {oldCompilation, newCompilation, results, ct});
+                var projectChangesValueTask = getProjectChangesAsyncMethod.Invoke (null, new object?[] {baseActiveStatementsMap, oldCompilation, newCompilation, oldProject, newProject, results, ct});
 
-                if (projectChanges == null)
-                    return ImmutableArray.Create<SemanticEdit>();
+                if (projectChangesValueTask == null)
+                    throw new Exception ("Did not expect GetProjectChangesAsync boxed ValueTask to be null");
 
-                var projectChangesType = projectChanges.GetType();
+                var t = projectChangesValueTask.GetType().GetMethod("AsTask")!.Invoke(projectChangesValueTask, Array.Empty<object>())!;
 
-                var fi = projectChangesType.GetField("SemanticEdits");
+                var tcs = new TaskCompletionSource<ImmutableArray<SemanticEdit>>();
+                object awaiter = t.GetType().GetMethod("GetAwaiter")!.Invoke(t, Array.Empty<object>())!;
 
-                var edits = fi?.GetValue(projectChanges);
-
-                if (edits == null)
-                    return ImmutableArray.Create<SemanticEdit>();
-
-                return (ImmutableArray<SemanticEdit>)edits;
+                Action onCompleted = delegate {
+                    try {
+                        object? projectChanges = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>());
+                        ImmutableArray<SemanticEdit> edits;
+                        if (projectChanges == null)
+                            edits = ImmutableArray.Create<SemanticEdit>();
+                        else {
+                            edits = (ImmutableArray<SemanticEdit>) projectChanges.GetType().GetField("SemanticEdits")!.GetValue(projectChanges)!;
+                        }
+                        tcs.TrySetResult (edits);
+                    } catch (TaskCanceledException e) {
+                        tcs.TrySetCanceled(e.CancellationToken);
+                    } catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                };
+                awaiter.GetType().GetMethod("OnCompleted")!.Invoke (awaiter, new object[] {onCompleted});
+                return tcs.Task;
         }
     }
 }
