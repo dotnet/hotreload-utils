@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
             capabilities = parsedScript.Capabilities.Value;
             if (!config.NoWarnUnknownCapabilities) {
                 foreach (var unk in parsedScript.UnknownCapabilities) {
-                    Console.WriteLine ($"Warning: Unknown EnC capability '{unk}' in '{config.ScriptPath}', ignored.");
+                    Console.WriteLine ($"Unknown EnC capability '{unk}' in '{config.ScriptPath}', ignored.");
                 }
             }
             return true;

@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
                 totalCaps = DefaultCapabilities ();
             if (!config.NoWarnUnknownCapabilities) {
                 foreach (var unk in unknowns) {
-                    Console.WriteLine ("Warning: Unknown EnC capability '{0}', ignored.", unk);
+                    Console.WriteLine ("Unknown EnC capability '{0}', ignored.", unk);
                 }
             }
             return totalCaps;
