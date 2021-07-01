@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         public readonly struct Token {
             public readonly string Value {get; init;}
         }
-        static public Regex capabilitiesTokenizer = new Regex(@"^\s*(?:(\S+)\s+)*(\S+)?$", RegexOptions.CultureInvariant);
+        static public readonly Regex capabilitiesTokenizer = new (@"^\s*(?:(\S+)\s+)*(\S+)?$", RegexOptions.CultureInvariant);
         public static IEnumerable<Token> Tokenize (string capabilities)
         {
             Match match = capabilitiesTokenizer.Match (capabilities);
@@ -56,10 +56,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             return Parse(Tokenize(capabilities));
         }
 
-        internal static bool ParseToken (Token token, out EnC.EditAndContinueCapabilities res) {
-            res = EnC.EditAndContinueCapabilities.None;
-            return Enum.TryParse<EnC.EditAndContinueCapabilities>(token.Value, ignoreCase: true, out res);
-        }
+        internal static bool ParseToken (Token token, out EnC.EditAndContinueCapabilities res) =>
+            Enum.TryParse<EnC.EditAndContinueCapabilities>(token.Value, ignoreCase: true, out res);
 
     }
 }
