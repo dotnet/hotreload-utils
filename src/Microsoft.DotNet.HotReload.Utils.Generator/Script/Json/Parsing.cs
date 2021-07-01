@@ -38,13 +38,28 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Script.Json {
         private string AbsPath (string relativePath) {
             return System.IO.Path.GetFullPath(relativePath, _absDir);
         }
-        public async ValueTask<IReadOnlyCollection<Plan.Change<string,string>>> ReadAsync (Stream stream, CancellationToken ct = default) {
+        public async ValueTask<ParsedScript> ReadAsync (Stream stream, CancellationToken ct = default) {
             var script = await ReadRawAsync(stream, ct);
-            var changes = script?.Changes;
-            if (changes == null)
-                return Array.Empty<Plan.Change<string,string>>();
-            var result = changes.Select(c => Plan.Change.Create(AbsPath(c.Document), AbsPath(c.Update))).ToArray();
-            return result;
+            if (script == null)
+                return ParsedScript.Empty;
+
+            Plan.Change<string,string>[] changes;
+            if (script.Changes == null)
+                changes = Array.Empty<Plan.Change<string,string>>();
+            else
+                changes = script.Changes.Select(c => Plan.Change.Create(AbsPath(c.Document), AbsPath(c.Update))).ToArray();
+            EnC.EditAndContinueCapabilities? caps = null;
+            IEnumerable<string> unknowns = Array.Empty<string>();
+            if (script.Capabilities != null) {
+                IEnumerable<EnC.EditAndContinueCapabilities> goodCaps;
+                (goodCaps, unknowns) = EditAndContinueCapabilitiesParser.Parse(script.Capabilities);
+                var totalCaps = EnC.EditAndContinueCapabilities.None;
+                foreach (var cap in goodCaps) {
+                    totalCaps |= cap;
+                }
+                caps = totalCaps;
+            }
+            return ParsedScript.Make(changes, caps, unknowns);
         }
     }
 }

@@ -14,13 +14,16 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
     public class LiveRunner : Runner {
         public LiveRunner (Config config) : base (config) { }
 
+        protected override Task PrepareToRun (CancellationToken ct = default) => Task.CompletedTask;
         public override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
         {
             return Livecoding (baselineArtifacts, config.LiveCodingWatchDir, config.LiveCodingWatchPattern, ct);
         }
 
-        protected override EnC.EditAndContinueCapabilities PrepareCapabilitiesCore () => EnC.EditAndContinueCapabilities.None;
-
+        protected override bool PrepareCapabilitiesCore (out EnC.EditAndContinueCapabilities caps) {
+            caps = EnC.EditAndContinueCapabilities.None;
+            return false;
+        }
         private static async IAsyncEnumerable<Delta> Livecoding (BaselineArtifacts baselineArtifacts, string watchDir, string pattern, [EnumeratorCancellation] CancellationToken cancellationToken= default) {
             var last = DateTime.UtcNow;
             var interval = TimeSpan.FromMilliseconds(250); /* FIXME: make this configurable */

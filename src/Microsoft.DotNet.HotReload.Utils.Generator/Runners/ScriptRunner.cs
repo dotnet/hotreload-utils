@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
     /// Generate deltas by reading a script from a configuration file
     /// listing the changed versions of the project source files.
     public class ScriptRunner : Runner {
+
+        Script.ParsedScript? parsedScript;
         public ScriptRunner (Config config) : base (config) {
             if (!string.IsNullOrEmpty(config.OutputSummaryPath)) {
                 var writer = new JsonSummaryWriter(config.OutputSummaryPath);
@@ -44,24 +47,42 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
 
         }
 
-        // TODO: read capabilities from JSON
-        protected override EnC.EditAndContinueCapabilities PrepareCapabilitiesCore () => EnC.EditAndContinueCapabilities.None;
-
-        public override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
-        {
-            return ScriptedPlanInputs (config, baselineArtifacts, ct);
-        }
-
-        private static async IAsyncEnumerable<Delta> ScriptedPlanInputs (Config config, BaselineArtifacts baselineArtifacts, [EnumeratorCancellation] CancellationToken ct = default)
+        protected override async Task PrepareToRun(CancellationToken ct = default)
         {
             var scriptPath = config.ScriptPath;
             var parser = new Microsoft.DotNet.HotReload.Utils.Generator.Script.Json.Parser(scriptPath);
-            IReadOnlyCollection<Plan.Change<string,string>> parsed;
+            Script.ParsedScript parsed;
             using (var scriptStream = new FileStream(scriptPath, FileMode.Open)) {
                 parsed = await parser.ReadAsync (scriptStream, ct);
             }
+            parsedScript = parsed;
+        }
+
+        // TODO: read capabilities from JSON
+        protected override bool PrepareCapabilitiesCore (out EnC.EditAndContinueCapabilities capabilities) {
+            capabilities = EnC.EditAndContinueCapabilities.None;
+            if (parsedScript == null || parsedScript.Capabilities == null)
+                return false;
+            capabilities = parsedScript.Capabilities.Value;
+            if (!config.NoWarnUnknownCapabilities) {
+                foreach (var unk in parsedScript.UnknownCapabilities) {
+                    Console.WriteLine ($"Warning: Unknown EnC capability '{unk}' in '{config.ScriptPath}', ignored.");
+                }
+            }
+            return true;
+        }
+        public override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
+        {
+            if (parsedScript == null)
+                return Util.AsyncEnumerableExtras.Empty<Delta>();
+            return ScriptedPlanInputs (parsedScript, baselineArtifacts, ct);
+        }
+
+        private static async IAsyncEnumerable<Delta> ScriptedPlanInputs (Script.ParsedScript parsedScript, BaselineArtifacts baselineArtifacts, [EnumeratorCancellation] CancellationToken ct = default)
+        {
+            await Task.CompletedTask; // to make compiler happy
             var resolver = baselineArtifacts.docResolver;
-            var artifacts = parsed.Select(c => new Delta(Plan.Change.Create(ResolveForScript(resolver, c.Document), c.Update)));
+            var artifacts = parsedScript.Changes.Select(c => new Delta(Plan.Change.Create(ResolveForScript(resolver, c.Document), c.Update)));
             foreach (var a in artifacts) {
                 yield return a;
                 if (ct.IsCancellationRequested)
