@@ -20,41 +20,30 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
     /// Drives the creation of deltas from textual changes.
     public class DeltaProject
     {
-        readonly EnC.ChangeMaker _changeMaker;
-        readonly EnC.EditAndContinueCapabilities _capabilities;
+        readonly EnC.ChangeMakerService _changeMakerService;
 
         readonly Solution _solution;
-        readonly EmitBaseline _baseline;
         readonly ProjectId _baseProjectId;
-
         readonly DeltaNaming _nextName;
 
-        public DeltaProject(BaselineArtifacts artifacts, EnC.EditAndContinueCapabilities capabilities) {
-            _changeMaker = new EnC.ChangeMaker();
+        public DeltaProject(BaselineArtifacts artifacts) {
+            _changeMakerService = artifacts.changeMakerService;
             _solution = artifacts.baselineSolution;
-            _baseline = artifacts.emitBaseline;
             _baseProjectId = artifacts.baselineProjectId;
             _nextName = new DeltaNaming(artifacts.baselineOutputAsmPath, 1);
-            _capabilities = capabilities;
         }
 
-        internal DeltaProject (DeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
+        internal DeltaProject (DeltaProject prev, Solution newSolution)
         {
-            _changeMaker = prev._changeMaker;
-            _capabilities = prev._capabilities;
+            _changeMakerService = prev._changeMakerService;
             _solution = newSolution;
-            _baseline = newBaseline;
             _baseProjectId = prev._baseProjectId;
             _nextName = prev._nextName.Next ();
         }
 
         public Solution Solution => _solution;
 
-        public EmitBaseline Baseline => _baseline;
-
         public ProjectId BaseProjectId => _baseProjectId;
-
-        public EnC.EditAndContinueCapabilities EditAndContinueCapabilities => _capabilities;
 
         /// The default output function
         ///  Creates files with the specified DeltaNaming without any other side-effects
@@ -77,26 +66,24 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
             Console.WriteLine ($"parsing patch #{dinfo.Rev} from {change.Update} and creating delta");
 
-            Project project = Solution.GetProject(BaseProjectId)!;
+            Project oldProject = Solution.GetProject(BaseProjectId)!;
 
             DocumentId baseDocumentId = change.Document;
 
-            Document document = project.GetDocument(baseDocumentId)!;
+            Document oldDocument = oldProject.GetDocument(baseDocumentId)!;
 
             Document updatedDocument;
+            Solution updatedSolution;
             await using (var contents = File.OpenRead (change.Update)) {
-                Solution updatedSolution = Solution.WithDocumentText (baseDocumentId, SourceText.From (contents, Encoding.UTF8));
+                updatedSolution = Solution.WithDocumentText (baseDocumentId, SourceText.From (contents, Encoding.UTF8));
                 updatedDocument = updatedSolution.GetDocument(baseDocumentId)!;
             }
             if (updatedDocument.Project.Id != BaseProjectId)
                 throw new Exception ("Unexpectedly, project Id of the delta != base project Id");
             if (updatedDocument.Id != baseDocumentId)
                 throw new Exception ("Unexpectedly, document Id of the delta != base document Id");
-            Project oldProject = project;
-            Task<Compilation?> oldCompilation = Task.Run (async() => await oldProject.GetCompilationAsync(ct), ct);
-            project = updatedDocument.Project;
 
-            var changes = await updatedDocument.GetTextChangesAsync (document, ct);
+            var changes = await updatedDocument.GetTextChangesAsync (oldDocument, ct);
             if (!changes.Any()) {
                 Console.WriteLine ("no changes found");
                 if (ignoreUnchanged)
@@ -105,89 +92,35 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                 throw new DiffyException ($"no changes in revision {dinfo.Rev}", exitStatus: 5);
             }
 
-            Console.WriteLine ($"Found changes in {document.Name}");
+            Console.WriteLine ($"Found changes in {oldDocument.Name}");
 
-            Task<Compilation> updatedCompilation = Task.Run(async () => {
-                var compilation = await project.GetCompilationAsync (ct);
-                if (!CheckCompilationDiagnostics(compilation, $"delta {dinfo.Rev}"))
-                    throw new DeltaCompilationException(exitStatus: 6);
-                else
-                    return compilation;
-            }, ct);
+            (var fancyChanges, var diagnostics) = await _changeMakerService.EmitSolutionUpdateAsync (updatedSolution, ct);
 
-            var editsCompilation = Task.Run(() => CompileEdits (oldProject, updatedDocument, ct), ct);
-
-            Compilation updatedCompilationResult = await updatedCompilation;
-
-
-            var (documentAnalysisResults, rudeEdits) = await editsCompilation;
-            if (!rudeEdits.IsDefault && rudeEdits.Any() ) {
-                throw new DeltaRudeEditException($"rude edits in revision {dinfo.Rev}", rudeEdits);
+            if (diagnostics.Any()) {
+                var sb = new StringBuilder();
+                foreach (var diag in diagnostics) {
+                    sb.AppendLine (diag.ToString ());
+                }
+                throw new DiffyException ($"Failed to emit delta for {oldDocument.Name}: {sb.ToString()}", exitStatus: 8);
+            }
+            foreach (var fancyChange in fancyChanges)
+            {
+                Console.WriteLine("change service made {0}", fancyChange.ModuleId);
             }
 
-            var oldCompilationResult = await oldCompilation;
-            if (oldCompilationResult == null)
-                throw new DeltaCompilationException("couldn't get old compilation");
-
-            var edits = await GetProjectChangesAsync (oldCompilationResult, updatedCompilationResult, oldProject, project, documentAnalysisResults, ct);
-
-            if (edits.IsDefault || !edits.Any()) {
-                Console.WriteLine("no semantic changes");
-                if (ignoreUnchanged)
-                    return this;
-                else
-                    throw new DeltaCompilationException("no semantic changes in revision", exitStatus: 7);
-            }
-            var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
-
-            EmitDifferenceResult emitResult;
             await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-                emitResult = updatedCompilationResult.EmitDifference(baseline, edits, s=> false, output.MetaStream, output.IlStream, output.PdbStream, ct);
-                CheckEmitResult(emitResult);
+                if (fancyChanges.Count() != 1) {
+                    throw new DiffyException($"Expected only one module in the delta, got {fancyChanges.Count()}", exitStatus: 10);
+                }
+                var update = fancyChanges.First();
+                output.MetaStream.Write(update.MetadataDelta.AsSpan());
+                output.IlStream.Write(update.ILDelta.AsSpan());
+                output.PdbStream.Write(update.PdbDelta.AsSpan());
                 outputsReady?.Invoke(dinfo, output);
             }
             Console.WriteLine($"wrote {dinfo.Dmeta}");
             // return a new deltaproject that can build the next update
-            return new DeltaProject(this, project.Solution, emitResult.Baseline!);
-        }
-
-        Task<(EnC.DocumentAnalysisResultsWrapper, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)
-        {
-            return _changeMaker.GetChanges(_capabilities, project, updatedDocument, ct);
-        }
-
-        Task<ImmutableArray<SemanticEdit>> GetProjectChangesAsync (Compilation oldCompilation, Compilation newCompilation, Project oldProject, Project newProject, EnC.DocumentAnalysisResultsWrapper results, CancellationToken ct = default)
-        {
-            return _changeMaker.GetProjectChangesAsync (oldCompilation, newCompilation, oldProject, newProject, results, ct);
-        }
-
-        /// <returns>true if compilation succeeded, or false if there were errors</returns>
-        private static bool CheckCompilationDiagnostics ([NotNullWhen(true)] Compilation? compilation, string diagnosticPrefix)
-        {
-            if (compilation == null) {
-                Console.WriteLine ($"{diagnosticPrefix} compilation was null");
-                return false;
-            } else {
-                bool failed = false;
-                foreach (var diag in compilation.GetDiagnostics ().Where (d => d.Severity == DiagnosticSeverity.Error)) {
-                    Console.WriteLine ($"{diagnosticPrefix} --- {diag}");
-                    failed = true;
-                }
-
-                return !failed;
-            }
-
-        }
-
-        /// <summary>Check <see cref="EmitResult"/> or <see cref="EmitDifferenceResult"/> for failures</summary>
-        private static bool CheckEmitResult (EmitResult emitResult)
-        {
-            if (!emitResult.Success) {
-                Console.WriteLine ("Emit failed");
-                foreach (var diag in emitResult.Diagnostics.Where (d => d.Severity == DiagnosticSeverity.Error))
-                    Console.WriteLine (diag);
-            }
-            return emitResult.Success;
+            return new DeltaProject(this, updatedSolution);
         }
 
     }

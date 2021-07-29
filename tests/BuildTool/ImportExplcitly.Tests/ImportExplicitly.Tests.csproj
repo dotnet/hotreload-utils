@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="ContinuousIntegrationBuild;Optimize;EmitDebugInformation">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
@@ -6,6 +6,10 @@
     <Optimize>false</Optimize>
     <EmitDebugInformation>true</EmitDebugInformation>
     <DeltaScript>delta.json</DeltaScript>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <HotReloadDeltaGeneratorExtraArgs>$(HotReloadDeltaGeneratorExtraArgs) -capabilities:Baseline</HotReloadDeltaGeneratorExtraArgs>
   </PropertyGroup>
 
   <ItemGroup>

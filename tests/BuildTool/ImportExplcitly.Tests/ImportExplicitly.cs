@@ -31,13 +31,13 @@ namespace ImportExplicitly.Tests
             {
                 string s = TargetClass.TargetMethod();
 
-                Assert.Equal("OLD", s);
+                Assert.Equal("OLD!", s);
 
                 ApplyUpdate();
 
                 s = TargetClass.TargetMethod ();
 
-                Assert.Equal("NEW", s);
+                Assert.Equal("NEW!", s);
             }, options).Dispose();
         }
 

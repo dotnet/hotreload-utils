@@ -6,7 +6,8 @@ namespace ImportExplicitly.Tests
     {
         public static string TargetMethod ()
         {
-            return "OLD";
+            Func<string,string> fn = static (s) => s;
+            return fn ("OLD!");
         }
     }
 }
