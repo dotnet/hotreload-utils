@@ -16,10 +16,9 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         /// absolute path of the baseline assembly
         public string baselineOutputAsmPath;
 
-        public EmitBaseline emitBaseline;
-
         public DocResolver docResolver;
 
+        /// A stateful encapsulation of the series of changes that have been made to the baseline
         public EnC.ChangeMakerService changeMakerService;
     }
 

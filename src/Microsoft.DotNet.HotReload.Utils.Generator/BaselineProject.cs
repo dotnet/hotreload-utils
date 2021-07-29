@@ -73,13 +73,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                         break;
                 }
             }, ct);
-            if (!ConsumeBaseline (project, out string? outputAsm, out EmitBaseline? emitBaseline))
+            if (!ConsumeBaseline (project, out string? outputAsm))
                     throw new Exception ("could not consume baseline");
             var artifacts = new BaselineArtifacts() {
                 baselineSolution = solution,
                 baselineProjectId = projectId,
                 baselineOutputAsmPath = outputAsm,
-                emitBaseline = emitBaseline,
                 docResolver = new DocResolver (project),
                 changeMakerService = changeMakerService
             };
@@ -88,9 +87,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         }
 
-        static bool ConsumeBaseline (Project project, [NotNullWhen(true)] out string? outputAsm, [NotNullWhen(true)] out EmitBaseline? baseline)
+        static bool ConsumeBaseline (Project project, [NotNullWhen(true)] out string? outputAsm)
         {
-            baseline = null;
             outputAsm = project.OutputFilePath;
             if (outputAsm == null) {
                 Console.Error.WriteLine ("msbuild project doesn't have an output path");
@@ -100,11 +98,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                 Console.Error.WriteLine ("msbuild project output assembly {0} doesn't exist.  Build the project first", outputAsm);
                 return false;
             }
-
-            var baselineMetadata = ModuleMetadata.CreateFromFile(outputAsm);
-
-            //var debugInformationProvider = DebugInformationReaderProvider.CreateFromStream(pdbStream);
-            baseline = EmitBaseline.CreateInitialBaseline(baselineMetadata, (handle) => default);
             return true;
         }
     }
