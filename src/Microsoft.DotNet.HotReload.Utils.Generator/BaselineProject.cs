@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
@@ -19,20 +20,22 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         private readonly ProjectId projectId;
 
+        private readonly EnC.ChangeMakerService changeMakerService;
 
-        private BaselineProject (Solution solution, ProjectId projectId)
+        private BaselineProject (EnC.ChangeMakerService changeMakerService, Solution solution, ProjectId projectId)
         {
             this.solution = solution;
             this.projectId = projectId;
+            this.changeMakerService = changeMakerService;
         }
 
 
         public static async Task<BaselineProject> Make (Config config, CancellationToken ct = default) {
-            (var solution, var projectId) = await PrepareMSBuildProject(config, ct);
-            return new BaselineProject(solution, projectId);
+            (var changeMakerService, var solution, var projectId) = await PrepareMSBuildProject(config, ct);
+            return new BaselineProject(changeMakerService, solution, projectId);
         }
 
-        static async Task<(Solution, ProjectId)> PrepareMSBuildProject (Config config, CancellationToken ct = default)
+        static async Task<(EnC.ChangeMakerService, Solution, ProjectId)> PrepareMSBuildProject (Config config, CancellationToken ct = default)
         {
                     Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
                     // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
@@ -50,11 +53,13 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                     };
                     var project = await msw.OpenProjectAsync (config.ProjectPath, null, ct);
 
-                    return (msw.CurrentSolution, project.Id);
+                    // FIXME: more than just baseline capabilities
+                    return (new EnC.ChangeMakerService(msw.Services, ImmutableArray.Create("Baseline")), msw.CurrentSolution, project.Id);
         }
 
 
         public async Task<BaselineArtifacts> PrepareBaseline (CancellationToken ct = default) {
+            await changeMakerService.StartSessionAsync(solution, ct);
             var project = solution.GetProject(projectId)!;
 
             // gets a snapshot of the text of the baseline document in memory
@@ -75,7 +80,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                 baselineProjectId = projectId,
                 baselineOutputAsmPath = outputAsm,
                 emitBaseline = emitBaseline,
-                docResolver = new DocResolver (project)
+                docResolver = new DocResolver (project),
+                changeMakerService = changeMakerService
             };
             await t;
             return artifacts;
@@ -96,6 +102,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             }
 
             var baselineMetadata = ModuleMetadata.CreateFromFile(outputAsm);
+
+            //var debugInformationProvider = DebugInformationReaderProvider.CreateFromStream(pdbStream);
             baseline = EmitBaseline.CreateInitialBaseline(baselineMetadata, (handle) => default);
             return true;
         }

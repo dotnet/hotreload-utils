@@ -19,6 +19,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         public EmitBaseline emitBaseline;
 
         public DocResolver docResolver;
+
+        public EnC.ChangeMakerService changeMakerService;
     }
 
 }

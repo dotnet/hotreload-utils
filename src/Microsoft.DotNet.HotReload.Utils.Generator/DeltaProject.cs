@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
     public class DeltaProject
     {
         readonly EnC.ChangeMaker _changeMaker;
+        readonly EnC.ChangeMakerService _changeMakerService;
         readonly EnC.EditAndContinueCapabilities _capabilities;
 
         readonly Solution _solution;
@@ -31,6 +32,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         public DeltaProject(BaselineArtifacts artifacts, EnC.EditAndContinueCapabilities capabilities) {
             _changeMaker = new EnC.ChangeMaker();
+            _changeMakerService = artifacts.changeMakerService;
             _solution = artifacts.baselineSolution;
             _baseline = artifacts.emitBaseline;
             _baseProjectId = artifacts.baselineProjectId;
@@ -41,6 +43,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         internal DeltaProject (DeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
         {
             _changeMaker = prev._changeMaker;
+            _changeMakerService = prev._changeMakerService;
             _capabilities = prev._capabilities;
             _solution = newSolution;
             _baseline = newBaseline;
@@ -107,6 +110,21 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
             Console.WriteLine ($"Found changes in {document.Name}");
 
+            (var fancyChanges, var diagnostics) = await _changeMakerService.EmitSolutionUpdateAsync (updatedDocument.Project.Solution, ct);
+
+            if (diagnostics.Any()) {
+                var sb = new StringBuilder();
+                foreach (var diag in diagnostics) {
+                    sb.AppendLine (diag.ToString ());
+                }
+                throw new DiffyException ($"Failed to emit delta for {document.Name}: {sb.ToString()}", exitStatus: 8);
+            }
+            foreach (var fancyChange in fancyChanges)
+            {
+                Console.WriteLine("change service made {0}", fancyChange.ModuleId);
+            }
+
+#if false
             Task<Compilation> updatedCompilation = Task.Run(async () => {
                 var compilation = await project.GetCompilationAsync (ct);
                 if (!CheckCompilationDiagnostics(compilation, $"delta {dinfo.Rev}"))
@@ -141,14 +159,24 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
 
             EmitDifferenceResult emitResult;
+#endif
+
             await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-                emitResult = updatedCompilationResult.EmitDifference(baseline, edits, s=> false, output.MetaStream, output.IlStream, output.PdbStream, ct);
-                CheckEmitResult(emitResult);
+                // emitResult = updatedCompilationResult.EmitDifference(baseline, edits, s=> false, output.MetaStream, output.IlStream, output.PdbStream, ct);
+                // CheckEmitResult(emitResult);
+                if (fancyChanges.Count() > 1) {
+                    throw new DiffyException($"Expected only one module in the delta, got {fancyChanges.Count()}", exitStatus: 10);
+                }
+                var update = fancyChanges.First();
+                output.MetaStream.Write(update.MetadataDelta.AsSpan());
+                output.IlStream.Write(update.ILDelta.AsSpan());
+                output.PdbStream.Write(update.PdbDelta.AsSpan());
                 outputsReady?.Invoke(dinfo, output);
             }
             Console.WriteLine($"wrote {dinfo.Dmeta}");
             // return a new deltaproject that can build the next update
-            return new DeltaProject(this, project.Solution, emitResult.Baseline!);
+            // FIXME: the baseline is probably not needed for the changeMakerService now
+            return new DeltaProject(this, project.Solution, /*emitResult.Baseline*/ null!);
         }
 
         Task<(EnC.DocumentAnalysisResultsWrapper, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.HotReload.Utils.Generator {
     public abstract class Runner {
 
+
         public static Runner Make (Config config)
         {
             if (config.Live)
