@@ -21,12 +21,4 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             ExitStatus = exitStatus;
         }
     }
-
-    class DeltaCompilationException : DiffyException {
-        public DeltaCompilationException(int exitStatus = 1) : base (exitStatus) {}
-
-        public DeltaCompilationException(string message, int exitStatus = 1) : base (message, exitStatus) {}
-        public DeltaCompilationException(string message, Exception innerException, int exitStatus = 1) : base (message, innerException, exitStatus) {}
-    }
-
 }
