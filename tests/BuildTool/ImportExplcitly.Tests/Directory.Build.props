@@ -1,0 +1,7 @@
+<Project>
+  <!-- For some reason if we build this test assembly with ContinuousIntegrationBuild=true, the WatchHotReloadService refuses to generate deltas for it - and doesn't return and diagnostics. -->
+  <PropertyGroup>
+    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  <Import Project="..\..\..\Directory.Build.props" />
+</Project>
