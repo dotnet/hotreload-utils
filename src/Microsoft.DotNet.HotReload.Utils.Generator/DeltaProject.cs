@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         readonly ProjectId _baseProjectId;
         readonly DeltaNaming _nextName;
 
-        public DeltaProject(BaselineArtifacts artifacts, EnC.EditAndContinueCapabilities capabilities) {
+        public DeltaProject(BaselineArtifacts artifacts) {
             _changeMakerService = artifacts.changeMakerService;
             _solution = artifacts.baselineSolution;
             _baseProjectId = artifacts.baselineProjectId;

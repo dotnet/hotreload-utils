@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
         private const string watchServiceName = "Microsoft.CodeAnalysis.ExternalAccess.Watch.Api.WatchHotReloadService";
         private Type _watchServiceType;
         private object _watchHotReloadService;
-        public ChangeMakerService(HostWorkspaceServices hostWorkspaceServices, ImmutableArray<string> capabilities) {
-            (_watchServiceType, _watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, capabilities);
+        public ChangeMakerService(HostWorkspaceServices hostWorkspaceServices, EditAndContinueCapabilities capabilities) {
+            (_watchServiceType, _watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, CapabilitiesToStrings(capabilities));
         }
 
         public struct Update
@@ -38,6 +38,24 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
                 PdbDelta = pdbDelta;
                 UpdatedTypes = updatedTypes;
             }
+        }
+
+        private static ImmutableArray<string> CapabilitiesToStrings(EditAndContinueCapabilities capabilities)
+        {
+            var builder = ImmutableArray.CreateBuilder<string>();
+            var names = Enum.GetNames(typeof(EditAndContinueCapabilities));
+            Console.Write ("initializing with capabilities ");
+            foreach (var name in names) {
+                var val = Enum.Parse<EditAndContinueCapabilities>(name);
+                if (val == EditAndContinueCapabilities.None)
+                    continue;
+                if (capabilities.HasFlag(val)) {
+                    builder.Add(name);
+                    Console.Write($"{name} ");
+                }
+            }
+            Console.WriteLine();
+            return builder.ToImmutable();
         }
 
         private Update WrapUpdate (object update)

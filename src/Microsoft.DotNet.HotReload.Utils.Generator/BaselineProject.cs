@@ -30,12 +30,12 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         }
 
 
-        public static async Task<BaselineProject> Make (Config config, CancellationToken ct = default) {
-            (var changeMakerService, var solution, var projectId) = await PrepareMSBuildProject(config, ct);
+        public static async Task<BaselineProject> Make (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
+            (var changeMakerService, var solution, var projectId) = await PrepareMSBuildProject(config, capabilities, ct);
             return new BaselineProject(changeMakerService, solution, projectId);
         }
 
-        static async Task<(EnC.ChangeMakerService, Solution, ProjectId)> PrepareMSBuildProject (Config config, CancellationToken ct = default)
+        static async Task<(EnC.ChangeMakerService, Solution, ProjectId)> PrepareMSBuildProject (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default)
         {
                     Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
                     // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
@@ -53,8 +53,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                     };
                     var project = await msw.OpenProjectAsync (config.ProjectPath, null, ct);
 
-                    // FIXME: more than just baseline capabilities
-                    return (new EnC.ChangeMakerService(msw.Services, ImmutableArray.Create("Baseline")), msw.CurrentSolution, project.Id);
+                    return (new EnC.ChangeMakerService(msw.Services, capabilities), msw.CurrentSolution, project.Id);
         }
 
 

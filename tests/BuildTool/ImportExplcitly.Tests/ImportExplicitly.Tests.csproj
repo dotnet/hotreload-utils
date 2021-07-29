@@ -8,6 +8,10 @@
     <DeltaScript>delta.json</DeltaScript>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <HotReloadDeltaGeneratorExtraArgs>$(HotReloadDeltaGeneratorExtraArgs) -capabilities:Baseline</HotReloadDeltaGeneratorExtraArgs>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.RemoteExecutor" Version="$(MicrosoftDotNetRemoteExecutorVersion)" />
   </ItemGroup>
