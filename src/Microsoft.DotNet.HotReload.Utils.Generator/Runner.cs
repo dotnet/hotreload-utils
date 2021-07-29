@@ -48,9 +48,8 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
         protected Func<CancellationToken,Task>? OutputsDone {get; set;} = null;
 
         public async Task<BaselineArtifacts> SetupBaseline (EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
-            BaselineProject? baselineProject;
             InitMSBuild();
-            baselineProject = await Microsoft.DotNet.HotReload.Utils.Generator.BaselineProject.Make (config, capabilities, ct);
+            BaselineProject baselineProject = await Microsoft.DotNet.HotReload.Utils.Generator.BaselineProject.Make (config, capabilities, ct);
 
             var baselineArtifacts = await baselineProject.PrepareBaseline(ct);
 
