@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             }
 
             await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-                if (fancyChanges.Count() > 1) {
+                if (fancyChanges.Count() != 1) {
                     throw new DiffyException($"Expected only one module in the delta, got {fancyChanges.Count()}", exitStatus: 10);
                 }
                 var update = fancyChanges.First();
