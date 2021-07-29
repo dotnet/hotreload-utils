@@ -107,17 +107,45 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
                 throw new Exception($"could not find method {watchServiceName}.EmitSolutionUpdateAsync");
             }
             object resultTask = mi.Invoke(_watchHotReloadService, new object[] { solution, cancellationToken })!;
+
+            // The task returns (ImmutableArray<Update>, ImmutableArray<Diagnostic>), except that
+            // the Update is the nested class in WatchHotReloadService, so we can't write the type directly.
+            // Instead we take apart the tuple and convert the first component to an array of our own Update type.
+            //
+            // We basically want to do
+            //   resultTask.ContinueWith ((t) => (WrapUpdate(t.Result.Item1), t.Result.Item2);
+            // but then we need to make a Func<T> that again mentions the internal Update type.
+            //
+            // So instead we do:
+            //
+            //  var tcs = new TaskCompletionSource<...>();
+            //  var awaiter = resultTask.GetAwaiter();
+            //  awaiter.OnCompleted(delegate {
+            //     object result = awaiter.GetResult();
+            //     tcs.SetResult(Wrap (result));
+            //   });
+            //  return tcs.Task;
+            //
+            //  because OnCompleted only needs an Action and we can use reflection to take the result apart
+
+
             var tcs = new TaskCompletionSource<(ImmutableArray<Update>, ImmutableArray<Diagnostic>)>();
 
             var awaiter = resultTask.GetType().GetMethod("GetAwaiter")!.Invoke(resultTask, Array.Empty<object>())!;
 
             Action continuation = delegate {
-                var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
-                var resultType = result.GetType();
+                try {
+                    var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
+                    var resultType = result.GetType();
 
-                var updates = resultType.GetField("Item1")!.GetValue(result)!;
-                var diagnostics = (ImmutableArray<Diagnostic>)resultType.GetField("Item2")!.GetValue(result)!;
-                tcs.SetResult ((WrapUpdates (updates), diagnostics));
+                    var updates = resultType.GetField("Item1")!.GetValue(result)!;
+                    var diagnostics = (ImmutableArray<Diagnostic>)resultType.GetField("Item2")!.GetValue(result)!;
+                    tcs.SetResult ((WrapUpdates (updates), diagnostics));
+                } catch (TaskCanceledException e) {
+                    tcs.TrySetCanceled(e.CancellationToken);
+                } catch (Exception e) {
+                    tcs.TrySetException (e);
+                }
             };
 
             awaiter.GetType().GetMethod("OnCompleted")!.Invoke(awaiter, new object[] { continuation });
