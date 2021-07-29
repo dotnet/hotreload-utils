@@ -20,7 +20,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
     /// Drives the creation of deltas from textual changes.
     public class DeltaProject
     {
-        readonly EnC.ChangeMaker _changeMaker;
         readonly EnC.ChangeMakerService _changeMakerService;
         readonly EnC.EditAndContinueCapabilities _capabilities;
 
@@ -31,7 +30,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
         readonly DeltaNaming _nextName;
 
         public DeltaProject(BaselineArtifacts artifacts, EnC.EditAndContinueCapabilities capabilities) {
-            _changeMaker = new EnC.ChangeMaker();
             _changeMakerService = artifacts.changeMakerService;
             _solution = artifacts.baselineSolution;
             _baseline = artifacts.emitBaseline;
@@ -42,7 +40,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
 
         internal DeltaProject (DeltaProject prev, Solution newSolution, EmitBaseline newBaseline)
         {
-            _changeMaker = prev._changeMaker;
             _changeMakerService = prev._changeMakerService;
             _capabilities = prev._capabilities;
             _solution = newSolution;
@@ -124,43 +121,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                 Console.WriteLine("change service made {0}", fancyChange.ModuleId);
             }
 
-#if false
-            Task<Compilation> updatedCompilation = Task.Run(async () => {
-                var compilation = await project.GetCompilationAsync (ct);
-                if (!CheckCompilationDiagnostics(compilation, $"delta {dinfo.Rev}"))
-                    throw new DeltaCompilationException(exitStatus: 6);
-                else
-                    return compilation;
-            }, ct);
-
-            var editsCompilation = Task.Run(() => CompileEdits (oldProject, updatedDocument, ct), ct);
-
-            Compilation updatedCompilationResult = await updatedCompilation;
-
-
-            var (documentAnalysisResults, rudeEdits) = await editsCompilation;
-            if (!rudeEdits.IsDefault && rudeEdits.Any() ) {
-                throw new DeltaRudeEditException($"rude edits in revision {dinfo.Rev}", rudeEdits);
-            }
-
-            var oldCompilationResult = await oldCompilation;
-            if (oldCompilationResult == null)
-                throw new DeltaCompilationException("couldn't get old compilation");
-
-            var edits = await GetProjectChangesAsync (oldCompilationResult, updatedCompilationResult, oldProject, project, documentAnalysisResults, ct);
-
-            if (edits.IsDefault || !edits.Any()) {
-                Console.WriteLine("no semantic changes");
-                if (ignoreUnchanged)
-                    return this;
-                else
-                    throw new DeltaCompilationException("no semantic changes in revision", exitStatus: 7);
-            }
-            var baseline = Baseline ?? throw new NullReferenceException ($"got a null baseline for revision {dinfo.Rev}");
-
-            EmitDifferenceResult emitResult;
-#endif
-
             await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
                 // emitResult = updatedCompilationResult.EmitDifference(baseline, edits, s=> false, output.MetaStream, output.IlStream, output.PdbStream, ct);
                 // CheckEmitResult(emitResult);
@@ -177,16 +137,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
             // return a new deltaproject that can build the next update
             // FIXME: the baseline is probably not needed for the changeMakerService now
             return new DeltaProject(this, project.Solution, /*emitResult.Baseline*/ null!);
-        }
-
-        Task<(EnC.DocumentAnalysisResultsWrapper, ImmutableArray<EnC.RudeEditDiagnosticWrapper>)> CompileEdits (Project project, Document updatedDocument, CancellationToken ct = default)
-        {
-            return _changeMaker.GetChanges(_capabilities, project, updatedDocument, ct);
-        }
-
-        Task<ImmutableArray<SemanticEdit>> GetProjectChangesAsync (Compilation oldCompilation, Compilation newCompilation, Project oldProject, Project newProject, EnC.DocumentAnalysisResultsWrapper results, CancellationToken ct = default)
-        {
-            return _changeMaker.GetProjectChangesAsync (oldCompilation, newCompilation, oldProject, newProject, results, ct);
         }
 
         /// <returns>true if compilation succeeded, or false if there were errors</returns>
