@@ -19,7 +19,9 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
         private Type _watchServiceType;
         private object _watchHotReloadService;
         public ChangeMakerService(HostWorkspaceServices hostWorkspaceServices, EditAndContinueCapabilities capabilities) {
-            (_watchServiceType, _watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, CapabilitiesToStrings(capabilities));
+            ImmutableArray<string> caps = CapabilitiesToStrings(capabilities);
+            Console.WriteLine("initializing ChangeMakerService with capabilities: " + string.Join(", ", caps));
+            (_watchServiceType, _watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, caps);
         }
 
         public struct Update
@@ -44,17 +46,14 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
         {
             var builder = ImmutableArray.CreateBuilder<string>();
             var names = Enum.GetNames(typeof(EditAndContinueCapabilities));
-            Console.Write ("initializing with capabilities ");
             foreach (var name in names) {
                 var val = Enum.Parse<EditAndContinueCapabilities>(name);
                 if (val == EditAndContinueCapabilities.None)
                     continue;
                 if (capabilities.HasFlag(val)) {
                     builder.Add(name);
-                    Console.Write($"{name} ");
                 }
             }
-            Console.WriteLine();
             return builder.ToImmutable();
         }
 
