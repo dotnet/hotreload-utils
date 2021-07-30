@@ -58,7 +58,6 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners
             parsedScript = parsed;
         }
 
-        // TODO: read capabilities from JSON
         protected override bool PrepareCapabilitiesCore (out EnC.EditAndContinueCapabilities capabilities) {
             capabilities = EnC.EditAndContinueCapabilities.None;
             if (parsedScript == null || parsedScript.Capabilities == null)
