@@ -51,7 +51,13 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator
                         if (!warning)
                             throw new DiffyException ("failed workspace", 1);
                     };
-                    var project = await msw.OpenProjectAsync (config.ProjectPath, null, ct);
+                    Microsoft.Build.Framework.ILogger? logger = null;
+#if false
+                    logger = new Microsoft.Build.Logging.BinaryLogger () {
+                        Parameters = "/tmp/enc.binlog"
+                    };
+#endif
+                    var project = await msw.OpenProjectAsync (config.ProjectPath, logger, null, ct);
 
                     return (new EnC.ChangeMakerService(msw.Services, capabilities), msw.CurrentSolution, project.Id);
         }
