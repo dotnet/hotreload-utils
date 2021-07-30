@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
                 return new Runners.ScriptRunner (config);
         }
         public async Task Run (CancellationToken ct = default) {
+            await PrepareToRun(ct);
             var capabilities = PrepareCapabilities();
             var baselineArtifacts = await SetupBaseline (capabilities, ct);
 
@@ -57,24 +58,29 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator {
             return baselineArtifacts;
         }
 
-        protected abstract EnC.EditAndContinueCapabilities PrepareCapabilitiesCore ();
+        /// Called just before we start generating deltas.
+        protected abstract Task PrepareToRun(CancellationToken ct = default);
+
+        /// Returns true if the runner has capabilities for the project, or false to use the config defaults.
+        protected abstract bool PrepareCapabilitiesCore (out EnC.EditAndContinueCapabilities capabilities);
 
         protected EnC.EditAndContinueCapabilities PrepareCapabilities() {
-            EnC.EditAndContinueCapabilities caps = EnC.EditAndContinueCapabilities.None;
+            EnC.EditAndContinueCapabilities configCaps = EnC.EditAndContinueCapabilities.None;
             (var configuredCaps, var unknowns) = EditAndContinueCapabilitiesParser.Parse (config.EditAndContinueCapabilities);
             foreach (var c in configuredCaps) {
-                caps |= c;
+                configCaps |= c;
             }
-            var runnerCaps = PrepareCapabilitiesCore ();
-            caps |= runnerCaps;
-            if (caps == EnC.EditAndContinueCapabilities.None)
-                caps = DefaultCapabilities ();
+            bool projectHasCaps = PrepareCapabilitiesCore (out var runnerCaps);
+            var totalCaps = configCaps | runnerCaps;
+            // If the project explicitly sets no capabilities, use None
+            if (totalCaps == EnC.EditAndContinueCapabilities.None && !projectHasCaps)
+                totalCaps = DefaultCapabilities ();
             if (!config.NoWarnUnknownCapabilities) {
                 foreach (var unk in unknowns) {
-                    Console.WriteLine ("Warning: Unknown EnC capability '{0}', ignored.", unk);
+                    Console.WriteLine ("Unknown EnC capability '{0}', ignored.", unk);
                 }
             }
-            return caps;
+            return totalCaps;
         }
 
         protected EnC.EditAndContinueCapabilities DefaultCapabilities ()

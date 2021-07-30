@@ -6,16 +6,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator.Script.Json {
     public class Script {
-        public Change[]? Changes {get; init;}
+
+        [JsonConverter(typeof(ScriptCapabilitiesConverter))]
+        public string? Capabilities {get; init;}
+         public Change[]? Changes {get; init;}
 
         [System.Text.Json.Serialization.JsonConstructor]
-        public Script (Change[]? changes) {
+        public Script (string? capabilities, Change[]? changes) {
+            Capabilities = capabilities;
             Changes = changes;
         }
+
     }
 
     public class Change {

@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Frontend
                 await Run(config);
                 return 0;
             } catch (Microsoft.DotNet.HotReload.Utils.Generator.DiffyException exn) {
-                Console.Error.WriteLine ($"failed: {exn.Message}");
+                Console.Error.WriteLine ($"Error: {exn.Message}");
                 if (exn.ExitStatus == 0)
                     return 1; /* really shouldn't happen, but just in case */
                 return exn.ExitStatus;

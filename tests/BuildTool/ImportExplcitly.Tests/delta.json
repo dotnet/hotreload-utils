@@ -1,4 +1,5 @@
 {
+    "capabilities": ["Baseline"],
     "changes": [
         { "document": "TargetClass.cs", "update": "TargetClass.cs.v1" }
     ]
