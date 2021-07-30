@@ -6,6 +6,8 @@
     <Optimize>false</Optimize>
     <EmitDebugInformation>true</EmitDebugInformation>
     <DeltaScript>delta.json</DeltaScript>
+    <!-- CI sets this to true, but it breaks the EnC service's ability to understand the debug info.  Must be false for editable assemblies. -->
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
   </PropertyGroup>
 
   <PropertyGroup>
