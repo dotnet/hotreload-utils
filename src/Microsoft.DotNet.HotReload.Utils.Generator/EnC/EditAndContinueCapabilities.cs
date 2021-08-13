@@ -41,6 +41,11 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC
         /// Adding, updating and deleting of custom attributes (as distinct from pseudo-custom attributes)
         /// </summary>
         ChangeCustomAttributes = 1 << 5,
+
+        /// <summary>
+        /// Whether the runtime supports updating the Param table, and hence related edits (eg parameter renames)
+        /// </summary>
+        UpdateParameters = 1 << 6,
     }
 
 }
