@@ -46,7 +46,7 @@ namespace ImportExplicitly.Tests
             var path = typeof(ImportExplicitly).Assembly.Location;
             var dmeta = File.ReadAllBytes(path + ".1.dmeta");
             var dil = File.ReadAllBytes(path + ".1.dil");
-            AssemblyExtensions.ApplyUpdate (typeof(ImportExplicitly).Assembly, dmeta, dil, ReadOnlySpan<byte>.Empty);
+            System.Reflection.Metadata.MetadataUpdater.ApplyUpdate (typeof(ImportExplicitly).Assembly, dmeta, dil, ReadOnlySpan<byte>.Empty);
         }
     }
 }
