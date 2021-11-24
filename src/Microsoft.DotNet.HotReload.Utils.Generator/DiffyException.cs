@@ -2,23 +2,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Immutable;
 
-namespace Microsoft.DotNet.HotReload.Utils.Generator
-{
-    public class DiffyException : Exception {
-        public int ExitStatus { get; }
+namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
-        public DiffyException(int exitStatus) : base () {
-            ExitStatus = exitStatus;
-        }
+public class DiffyException : Exception {
+    public int ExitStatus { get; }
 
-        public DiffyException (string message, int exitStatus) : base (message) {
-            ExitStatus = exitStatus;
-        }
+    public DiffyException(int exitStatus) : base () {
+        ExitStatus = exitStatus;
+    }
 
-        public DiffyException (string message, Exception innerException, int exitStatus) : base (message, innerException) {
-            ExitStatus = exitStatus;
-        }
+    public DiffyException (string message, int exitStatus) : base (message) {
+        ExitStatus = exitStatus;
+    }
+
+    public DiffyException (string message, Exception innerException, int exitStatus) : base (message, innerException) {
+        ExitStatus = exitStatus;
     }
 }
+
