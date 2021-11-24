@@ -17,10 +17,17 @@ public class ChangeMakerService
     private const string watchServiceName = "Microsoft.CodeAnalysis.ExternalAccess.Watch.Api.WatchHotReloadService";
     private readonly Type _watchServiceType;
     private readonly object _watchHotReloadService;
-    public ChangeMakerService(HostWorkspaceServices hostWorkspaceServices, EditAndContinueCapabilities capabilities) {
+    private ChangeMakerService(Type watchServiceType, object watchHotReloadService)
+    {
+        _watchServiceType = watchServiceType;
+        _watchHotReloadService = watchHotReloadService;
+    }
+
+    public static ChangeMakerService Make (HostWorkspaceServices hostWorkspaceServices, EditAndContinueCapabilities capabilities) {
         ImmutableArray<string> caps = CapabilitiesToStrings(capabilities);
         Console.WriteLine("initializing ChangeMakerService with capabilities: " + string.Join(", ", caps));
-        (_watchServiceType, _watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, caps);
+        (var watchServiceType, var watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, caps);
+        return new ChangeMakerService(watchServiceType, watchHotReloadService);
     }
 
     public readonly record struct Update (Guid ModuleId, ImmutableArray<byte> ILDelta, ImmutableArray<byte> MetadataDelta, ImmutableArray<byte> PdbDelta, ImmutableArray<int> UpdatedTypes);
@@ -52,7 +59,7 @@ public class ChangeMakerService
 
     }
 
-    private ImmutableArray<Update> WrapUpdates (object updates)
+    private static ImmutableArray<Update> WrapUpdates (object updates)
     {
         IEnumerable updatesEnumerable = (IEnumerable)updates;
         var builder = ImmutableArray.CreateBuilder<Update>();

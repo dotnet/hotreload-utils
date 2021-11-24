@@ -44,7 +44,7 @@ public record BaselineProject (Solution Solution, ProjectId ProjectId, EnC.Chang
 #endif
                 var project = await msw.OpenProjectAsync (config.ProjectPath, logger, null, ct);
 
-                return (new EnC.ChangeMakerService(msw.Services, capabilities), msw.CurrentSolution, project.Id);
+                return (EnC.ChangeMakerService.Make (msw.Services, capabilities), msw.CurrentSolution, project.Id);
     }
 
 
