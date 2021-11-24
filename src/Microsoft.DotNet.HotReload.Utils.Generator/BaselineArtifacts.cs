@@ -2,24 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Emit;
 
-namespace Microsoft.DotNet.HotReload.Utils.Generator
-{
-    /// What we know about the base compilation
-    public struct BaselineArtifacts {
-        public Solution baselineSolution;
-        /// the project we are working on
-        /// FIXME: need to be more clever when there are project references
-        public ProjectId baselineProjectId;
+namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
-        /// absolute path of the baseline assembly
-        public string baselineOutputAsmPath;
-
-        public DocResolver docResolver;
-
-        /// A stateful encapsulation of the series of changes that have been made to the baseline
-        public EnC.ChangeMakerService changeMakerService;
-    }
-
-}
+/// What we know about the base compilation
+///
+/// baselineSolution: the solution we're working on
+/// baselineProjectId: the project we're working on; FIXME: need to be more clever when there are project references
+/// baselineOutputAsmPath: absolute path of the baseline assembly
+/// docResolver: a map from document ids to documents
+/// changeMakerService: A stateful encapsulatio of the series of changes that have been made to the baseline
+public record struct BaselineArtifacts (Solution baselineSolution, ProjectId baselineProjectId, string baselineOutputAsmPath, DocResolver docResolver, EnC.ChangeMakerService changeMakerService);
