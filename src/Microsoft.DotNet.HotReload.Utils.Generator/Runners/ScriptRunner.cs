@@ -79,7 +79,7 @@ public class ScriptRunner : Runner {
     private static async IAsyncEnumerable<Delta> ScriptedPlanInputs (Script.ParsedScript parsedScript, BaselineArtifacts baselineArtifacts, [EnumeratorCancellation] CancellationToken ct = default)
     {
         await Task.CompletedTask; // to make compiler happy
-        var resolver = baselineArtifacts.docResolver;
+        var resolver = baselineArtifacts.DocResolver;
         var artifacts = parsedScript.Changes.Select(c => new Delta(Plan.Change.Create(ResolveForScript(resolver, c.Document), c.Update)));
         foreach (var a in artifacts) {
             yield return a;
