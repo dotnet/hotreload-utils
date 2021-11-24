@@ -27,8 +27,8 @@ public class LiveRunner : Runner {
     private static async IAsyncEnumerable<Delta> Livecoding (BaselineArtifacts baselineArtifacts, string watchDir, string pattern, [EnumeratorCancellation] CancellationToken cancellationToken= default) {
         var last = DateTime.UtcNow;
         var interval = TimeSpan.FromMilliseconds(250); /* FIXME: make this configurable */
-        var docResolver = baselineArtifacts.docResolver;
-        var baselineProjectId = baselineArtifacts.baselineProjectId;
+        var docResolver = baselineArtifacts.DocResolver;
+        var baselineProjectId = baselineArtifacts.BaselineProjectId;
 
         using var fswgen = new Util.FSWGen (watchDir, pattern);
         await foreach (var fsevent in fswgen.Watch(cancellationToken).ConfigureAwait(false)) {

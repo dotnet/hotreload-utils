@@ -12,25 +12,12 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
-public class BaselineProject {
-
-    private readonly Solution solution;
-
-    private readonly ProjectId projectId;
-
-    private readonly EnC.ChangeMakerService changeMakerService;
-
-    private BaselineProject (EnC.ChangeMakerService changeMakerService, Solution solution, ProjectId projectId)
-    {
-        this.solution = solution;
-        this.projectId = projectId;
-        this.changeMakerService = changeMakerService;
-    }
+public record BaselineProject (Solution Solution, ProjectId ProjectId, EnC.ChangeMakerService ChangeMakerService) {
 
 
     public static async Task<BaselineProject> Make (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
         (var changeMakerService, var solution, var projectId) = await PrepareMSBuildProject(config, capabilities, ct);
-        return new BaselineProject(changeMakerService, solution, projectId);
+        return new BaselineProject(solution, projectId, changeMakerService);
     }
 
     static async Task<(EnC.ChangeMakerService, Solution, ProjectId)> PrepareMSBuildProject (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default)
@@ -62,8 +49,8 @@ public class BaselineProject {
 
 
     public async Task<BaselineArtifacts> PrepareBaseline (CancellationToken ct = default) {
-        await changeMakerService.StartSessionAsync(solution, ct);
-        var project = solution.GetProject(projectId)!;
+        await ChangeMakerService.StartSessionAsync(Solution, ct);
+        var project = Solution.GetProject(ProjectId)!;
 
         // gets a snapshot of the text of the baseline document in memory
         // without this, roslyn doesn't appear to read the text until
@@ -79,11 +66,11 @@ public class BaselineProject {
         if (!ConsumeBaseline (project, out string? outputAsm))
                 throw new Exception ("could not consume baseline");
         var artifacts = new BaselineArtifacts() {
-            baselineSolution = solution,
-            baselineProjectId = projectId,
-            baselineOutputAsmPath = outputAsm,
-            docResolver = new DocResolver (project),
-            changeMakerService = changeMakerService
+            BaselineSolution = Solution,
+            BaselineProjectId = ProjectId,
+            BaselineOutputAsmPath = outputAsm,
+            DocResolver = new DocResolver (project),
+            ChangeMakerService = ChangeMakerService
         };
         await t;
         return artifacts;

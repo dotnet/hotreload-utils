@@ -10,20 +10,15 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.EnC;
 //
 // Inspired by https://github.com/dotnet/roslyn/issues/8962
 public class ChangeMaker {
-
-    private const string csharpCodeAnalysisAssemblyName = "Microsoft.CodeAnalysis.CSharp.Features";
     private const string codeAnalysisFeaturesAssemblyName = "Microsoft.CodeAnalysis.Features";
 
     private const string capabilitiesTypeName = "Microsoft.CodeAnalysis.EditAndContinue.EditAndContinueCapabilities";
 
-    struct Reflected {
-        internal readonly Type _capabilities {get; init;}
-
-    }
+    readonly record struct Reflected (Type Capabilities);
 
     private readonly Reflected _reflected;
 
-    public Type EditAncContinueCapabilitiesType => _reflected._capabilities;
+    public Type EditAncContinueCapabilitiesType => _reflected.Capabilities;
 
     public ChangeMaker () {
         _reflected = ReflectionInit();
@@ -31,11 +26,9 @@ public class ChangeMaker {
     // Get all the Roslyn stuff we need
     private static Reflected ReflectionInit ()
     {
-        var an = new AssemblyName (csharpCodeAnalysisAssemblyName);
-        var assm = AssemblyLoadContext.Default.LoadFromAssemblyName(an)!;
 
-        an = new AssemblyName(codeAnalysisFeaturesAssemblyName);
-        assm = AssemblyLoadContext.Default.LoadFromAssemblyName(an);
+        var an = new AssemblyName(codeAnalysisFeaturesAssemblyName);
+        var assm = AssemblyLoadContext.Default.LoadFromAssemblyName(an);
 
         var caps = assm.GetType (capabilitiesTypeName);
 
@@ -43,7 +36,7 @@ public class ChangeMaker {
             throw new Exception ("Couldn't find EditAndContinueCapabilities type");
         }
 
-        return new Reflected() { _capabilities =  caps,
+        return new Reflected() { Capabilities =  caps,
                                 };
     }
 
@@ -52,7 +45,7 @@ public class ChangeMaker {
     public object ConvertCapabilities (EditAndContinueCapabilities myCaps)
     {
         int i = (int)myCaps;
-        object theirCaps = Enum.ToObject(_reflected._capabilities, i);
+        object theirCaps = Enum.ToObject(_reflected.Capabilities, i);
         return theirCaps;
     }
 }

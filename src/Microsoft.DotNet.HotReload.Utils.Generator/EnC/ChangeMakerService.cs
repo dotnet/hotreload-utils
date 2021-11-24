@@ -15,31 +15,15 @@ public class ChangeMakerService
     private const string csharpCodeAnalysisAssemblyName = "Microsoft.CodeAnalysis.Features";
 
     private const string watchServiceName = "Microsoft.CodeAnalysis.ExternalAccess.Watch.Api.WatchHotReloadService";
-    private Type _watchServiceType;
-    private object _watchHotReloadService;
+    private readonly Type _watchServiceType;
+    private readonly object _watchHotReloadService;
     public ChangeMakerService(HostWorkspaceServices hostWorkspaceServices, EditAndContinueCapabilities capabilities) {
         ImmutableArray<string> caps = CapabilitiesToStrings(capabilities);
         Console.WriteLine("initializing ChangeMakerService with capabilities: " + string.Join(", ", caps));
         (_watchServiceType, _watchHotReloadService) = InstantiateWatchHotReloadService(hostWorkspaceServices, caps);
     }
 
-    public struct Update
-    {
-        public readonly Guid ModuleId;
-        public readonly ImmutableArray<byte> ILDelta;
-        public readonly ImmutableArray<byte> MetadataDelta;
-        public readonly ImmutableArray<byte> PdbDelta;
-        public readonly ImmutableArray<int> UpdatedTypes;
-
-        public Update(Guid moduleId, ImmutableArray<byte> ilDelta, ImmutableArray<byte> metadataDelta, ImmutableArray<byte> pdbDelta, ImmutableArray<int> updatedTypes)
-        {
-            ModuleId = moduleId;
-            ILDelta = ilDelta;
-            MetadataDelta = metadataDelta;
-            PdbDelta = pdbDelta;
-            UpdatedTypes = updatedTypes;
-        }
-    }
+    public readonly record struct Update (Guid ModuleId, ImmutableArray<byte> ILDelta, ImmutableArray<byte> MetadataDelta, ImmutableArray<byte> PdbDelta, ImmutableArray<int> UpdatedTypes);
 
     private static ImmutableArray<string> CapabilitiesToStrings(EditAndContinueCapabilities capabilities)
     {
@@ -56,7 +40,7 @@ public class ChangeMakerService
         return builder.ToImmutable();
     }
 
-    private Update WrapUpdate (object update)
+    private static Update WrapUpdate (object update)
     {
         var updateType = update.GetType()!;
         var moduleId = updateType.GetField("ModuleId")!.GetValue(update)!;
@@ -113,7 +97,7 @@ public class ChangeMakerService
         if (mi == null) {
             throw new Exception($"could not find method {watchServiceName}.EndSession");
         }
-        mi.Invoke(_watchHotReloadService, new object[] { });
+        mi.Invoke(_watchHotReloadService, Array.Empty<object>());
     }
 
     public Task<(ImmutableArray<Update> updates, ImmutableArray<Diagnostic> diagnostics)> EmitSolutionUpdateAsync(Solution solution, CancellationToken cancellationToken)

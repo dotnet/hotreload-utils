@@ -3,27 +3,15 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator.Script;
 
-public class ParsedScript {
-    /// null if the script didn't have any capabilities, or they were all knowns
-    public EnC.EditAndContinueCapabilities? Capabilities {get; init;}
+/// A parsed script.
+///
+/// Capabilities: null if the script didn't have any capabilities, or they were all unknowns
+/// Changes: the sequence of changes
+/// UnknownCapabilities: any capabilities we couldn't decode to an enum value
+public record ParsedScript (EnC.EditAndContinueCapabilities? Capabilities, IEnumerable<Plan.Change<string,string>> Changes, IEnumerable<string> UnknownCapabilities) {
 
-    public IEnumerable<Plan.Change<string,string>> Changes {get; init;}
+    public static ParsedScript Empty => new (null, Array.Empty<Plan.Change<string,string>>(), Array.Empty<string>());
 
-    public IEnumerable<string> UnknownCapabilities {get; init;}
-    public ParsedScript () {
-        Capabilities = EnC.EditAndContinueCapabilities.None;
-        Changes = Array.Empty<Plan.Change<string,string>>();
-        UnknownCapabilities = Array.Empty<string>();
-    }
+    public static ParsedScript Make(IEnumerable<Plan.Change<string,string>> changes, EnC.EditAndContinueCapabilities? capabilities, IEnumerable<string> unknownCapabilities) => new (capabilities, changes, unknownCapabilities);
 
-    public static ParsedScript Empty => new ();
-
-    public static ParsedScript Make(IEnumerable<Plan.Change<string,string>> changes, EnC.EditAndContinueCapabilities? capabilities, IEnumerable<string> unknownCapabilities)
-    {
-        return new ParsedScript {
-            Capabilities = capabilities,
-            Changes = changes,
-            UnknownCapabilities = unknownCapabilities,
-        };
-    }
 }

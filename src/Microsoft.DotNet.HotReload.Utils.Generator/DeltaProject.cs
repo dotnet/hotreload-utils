@@ -24,10 +24,10 @@ public class DeltaProject
     readonly DeltaNaming _nextName;
 
     public DeltaProject(BaselineArtifacts artifacts) {
-        _changeMakerService = artifacts.changeMakerService;
-        _solution = artifacts.baselineSolution;
-        _baseProjectId = artifacts.baselineProjectId;
-        _nextName = new DeltaNaming(artifacts.baselineOutputAsmPath, 1);
+        _changeMakerService = artifacts.ChangeMakerService;
+        _solution = artifacts.BaselineSolution;
+        _baseProjectId = artifacts.BaselineProjectId;
+        _nextName = new DeltaNaming(artifacts.BaselineOutputAsmPath, 1);
     }
 
     internal DeltaProject (DeltaProject prev, Solution newSolution)
@@ -98,7 +98,7 @@ public class DeltaProject
             foreach (var diag in diagnostics) {
                 sb.AppendLine (diag.ToString ());
             }
-            throw new DiffyException ($"Failed to emit delta for {oldDocument.Name}: {sb.ToString()}", exitStatus: 8);
+            throw new DiffyException ($"Failed to emit delta for {oldDocument.Name}: {sb}", exitStatus: 8);
         }
         foreach (var fancyChange in fancyChanges)
         {
@@ -106,8 +106,8 @@ public class DeltaProject
         }
 
         await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-            if (fancyChanges.Count() != 1) {
-                throw new DiffyException($"Expected only one module in the delta, got {fancyChanges.Count()}", exitStatus: 10);
+            if (fancyChanges.Length != 1) {
+                throw new DiffyException($"Expected only one module in the delta, got {fancyChanges.Length}", exitStatus: 10);
             }
             var update = fancyChanges.First();
             output.MetaStream.Write(update.MetadataDelta.AsSpan());
