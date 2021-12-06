@@ -13,7 +13,7 @@
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.2</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.1.0-2.21558.9</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.1.0-2.21601.3</MicrosoftCodeAnalysisVersion>
     <!-- Testing -->
     <MicrosoftNETTestSdkVersion>16.9.0-preview-20201201-01</MicrosoftNETTestSdkVersion>
     <MicrosoftDotNetRemoteExecutorVersion>7.0.0-beta.21603.6</MicrosoftDotNetRemoteExecutorVersion>
