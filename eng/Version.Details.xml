@@ -5,7 +5,7 @@
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>baf92d655d54049b5a9c2623afbd8667de1efdee</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.CodeAnalysis.Analyzers" Version="3.3.1">
+    <Dependency Name="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
       <Uri>https://github.com/dotnet/roslyn-analyzers</Uri>
       <Sha>294f95cd91a33365aa80117421aed139d8fe5a75</Sha>
     </Dependency>
