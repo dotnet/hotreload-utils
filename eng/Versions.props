@@ -16,9 +16,9 @@
     <MicrosoftCodeAnalysisVersion>4.1.0-3.21612.4</MicrosoftCodeAnalysisVersion>
     <!-- Testing -->
     <MicrosoftNETTestSdkVersion>16.9.0-preview-20201201-01</MicrosoftNETTestSdkVersion>
-    <MicrosoftDotNetRemoteExecutorVersion>7.0.0-beta.21603.6</MicrosoftDotNetRemoteExecutorVersion>
-    <MicrosoftDotNetXUnitExtensionsVersion>7.0.0-beta.21603.6</MicrosoftDotNetXUnitExtensionsVersion>
-    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.5.1-beta.21603.6</MicrosoftDotNetXUnitConsoleRunnerVersion>
+    <MicrosoftDotNetRemoteExecutorVersion>7.0.0-beta.21610.4</MicrosoftDotNetRemoteExecutorVersion>
+    <MicrosoftDotNetXUnitExtensionsVersion>7.0.0-beta.21610.4</MicrosoftDotNetXUnitExtensionsVersion>
+    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.5.1-beta.21610.4</MicrosoftDotNetXUnitConsoleRunnerVersion>
     <XUnitVersion>2.4.2-pre.9</XUnitVersion>
     <XUnitRunnerVisualStudioVersion>2.4.2</XUnitRunnerVisualStudioVersion>
     <CoverletCollectorVersion>1.3.0</CoverletCollectorVersion>
