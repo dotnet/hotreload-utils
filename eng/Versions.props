@@ -12,8 +12,8 @@
     <UsingToolXliff>false</UsingToolXliff>
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>3.3.2</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.1.0-2.21601.3</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.3.3</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisVersion>4.1.0-3.21612.4</MicrosoftCodeAnalysisVersion>
     <!-- Testing -->
     <MicrosoftNETTestSdkVersion>16.9.0-preview-20201201-01</MicrosoftNETTestSdkVersion>
     <MicrosoftDotNetRemoteExecutorVersion>7.0.0-beta.21610.4</MicrosoftDotNetRemoteExecutorVersion>
