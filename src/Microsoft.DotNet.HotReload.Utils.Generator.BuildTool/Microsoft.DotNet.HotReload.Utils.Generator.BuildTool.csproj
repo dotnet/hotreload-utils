@@ -4,6 +4,8 @@
     <Nullable>enable</Nullable>
     <TargetFramework>net6.0</TargetFramework>
     <PackageType>MSBuildSdk</PackageType>
+    <!-- Allow to run on later tooling (i.e. net7.0) if exact match isn't present -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
