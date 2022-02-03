@@ -61,7 +61,11 @@ stages:
           displayName: Linux
           timeoutInMinutes: 30
           pool:
-            vmImage: ubuntu-20.04
+            ${{ if eq(variables['System.TeamProject'], 'public') }}:
+              vmImage: ubuntu-20.04
+            ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+              name: NetCore1ESPool-Internal
+              demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
           steps:
           - bash: |
               eng/common/cibuild.sh -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=linux-x64 $(_InternalBuildArgs)
