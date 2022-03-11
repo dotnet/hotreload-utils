@@ -16,6 +16,8 @@ public class DeltaNaming {
     public string Dmeta => _baseAssemblyPath + "." + Rev + ".dmeta";
     public string Dil => _baseAssemblyPath + "." + Rev + ".dil";
     public string Dpdb => _baseAssemblyPath + "." + Rev + ".dpdb";
+
+    public string UpdateHandlerInfo => _baseAssemblyPath + "." + Rev + ".handler.json";
     public int Rev => _rev;
 
     public DeltaNaming Next()
