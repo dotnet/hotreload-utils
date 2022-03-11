@@ -48,7 +48,8 @@ public class DeltaProject
         var metaStream = File.Create(dinfo.Dmeta);
         var ilStream = File.Create(dinfo.Dil);
         var pdbStream = File.Create(dinfo.Dpdb);
-        return new DeltaOutputStreams(metaStream, ilStream, pdbStream);
+        var updateHandlerInfoStream = File.Create(dinfo.UpdateHandlerInfo);
+        return new DeltaOutputStreams(metaStream, ilStream, pdbStream, updateHandlerInfoStream);
     }
 
     /// Builds a delta for the specified document given a path to its updated contents and a revision count
@@ -113,6 +114,7 @@ public class DeltaProject
             output.MetaStream.Write(update.MetadataDelta.AsSpan());
             output.IlStream.Write(update.ILDelta.AsSpan());
             output.PdbStream.Write(update.PdbDelta.AsSpan());
+            System.Text.Json.JsonSerializer.Serialize(output.UpdateHandlerInfoStream, new UpdateHandlerInfo (update.UpdatedTypes));
             outputsReady?.Invoke(dinfo, output);
         }
         Console.WriteLine($"wrote {dinfo.Dmeta}");

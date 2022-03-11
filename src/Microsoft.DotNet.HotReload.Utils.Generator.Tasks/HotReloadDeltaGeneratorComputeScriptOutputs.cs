@@ -26,7 +26,7 @@ public class HotReloadDeltaGeneratorComputeScriptOutputs : Microsoft.Build.Utili
 
 
     /// The generated delta outputs
-    ///  Each item has a DeltaOutputType metadata with a value of "dmeta", "dil", or "dpdb"
+    ///  Each item has a DeltaOutputType metadata with a value of "dmeta", "dil", "dpdb" or "updateHandlerJson"
     ///    indicating what kind of delta output it is.
     [Output]
     public ITaskItem[] DeltaOutputs { get; set; }
@@ -47,7 +47,8 @@ public class HotReloadDeltaGeneratorComputeScriptOutputs : Microsoft.Build.Utili
     enum DeltaOutputType {
         dmeta,
         dil,
-        dpdb
+        dpdb,
+        updateHandlerJson,
     }
 
     public override bool Execute()
@@ -81,16 +82,23 @@ public class HotReloadDeltaGeneratorComputeScriptOutputs : Microsoft.Build.Utili
     private static ITaskItem[] ComputeOutputs (string baseAssemblyName, int count)
     {
         const string deltaOutputTypeMetadata = "DeltaOutputType";
-        ITaskItem[] result = new TaskItem[3*count];
+        DeltaOutputType[] outputTypes = new DeltaOutputType[] {
+            DeltaOutputType.dmeta,
+            DeltaOutputType.dil,
+            DeltaOutputType.dpdb,
+            DeltaOutputType.updateHandlerJson,
+        };
+        int itemsPerRev = outputTypes.Length;
+        ITaskItem[] result = new TaskItem[itemsPerRev*count];
         for (int i = 0; i < count; ++i)
         {
             int rev = 1+i;
-            string dmeta = NameForOutput (baseAssemblyName, rev, DeltaOutputType.dmeta);
-            string dil = NameForOutput (baseAssemblyName, rev, DeltaOutputType.dil);
-            string dpdb = NameForOutput (baseAssemblyName, rev, DeltaOutputType.dpdb);
-            result[3*i] = new TaskItem(dmeta, new Dictionary<string,string> { { deltaOutputTypeMetadata, nameof(DeltaOutputType.dmeta)}});
-            result[3*i+1] = new TaskItem(dil, new Dictionary<string,string> { { deltaOutputTypeMetadata, nameof(DeltaOutputType.dil)}});
-            result[3*i+2] = new TaskItem(dpdb, new Dictionary<string,string> { { deltaOutputTypeMetadata, nameof(DeltaOutputType.dpdb)}});
+            foreach (var outputType in outputTypes)
+            {
+                int index = i*itemsPerRev + (int)outputType;
+                string name = NameForOutput(baseAssemblyName, rev, outputType);
+                result[index] = new TaskItem(name, new Dictionary<string,string> { { deltaOutputTypeMetadata, outputType.ToString() } });
+            }
         }
         return result;
     }
@@ -101,6 +109,7 @@ public class HotReloadDeltaGeneratorComputeScriptOutputs : Microsoft.Build.Utili
             DeltaOutputType.dmeta => "dmeta",
             DeltaOutputType.dil => "dil",
             DeltaOutputType.dpdb => "dpdb",
+            DeltaOutputType.updateHandlerJson => "handler.json",
             _ => throw new Exception("unexpected")
         };
         return $"{baseName}.{rev}.{ext}";

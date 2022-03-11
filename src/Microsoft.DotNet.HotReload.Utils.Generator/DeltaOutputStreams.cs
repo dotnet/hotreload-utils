@@ -11,22 +11,27 @@ public sealed class DeltaOutputStreams : IAsyncDisposable {
     public Stream  IlStream {get; private set;}
     public Stream PdbStream {get; private set;}
 
-    public DeltaOutputStreams(Stream dmeta, Stream dil, Stream dpdb) {
+    public Stream UpdateHandlerInfoStream {get; private set;}
+
+    public DeltaOutputStreams(Stream dmeta, Stream dil, Stream dpdb, Stream updateHandlerInfo) {
         MetaStream = dmeta;
         IlStream = dil;
         PdbStream = dpdb;
+        UpdateHandlerInfoStream = updateHandlerInfo;
     }
 
     public void Dispose () {
         MetaStream?.Dispose();
         IlStream?.Dispose();
         PdbStream?.Dispose();
+        UpdateHandlerInfoStream?.Dispose();
     }
 
     public async ValueTask DisposeAsync () {
         if  (MetaStream != null) await MetaStream.DisposeAsync();
         if  (IlStream != null) await IlStream.DisposeAsync();
         if  (PdbStream != null) await PdbStream.DisposeAsync();
+        if  (UpdateHandlerInfoStream != null) await UpdateHandlerInfoStream.DisposeAsync();
     }
 
 }
