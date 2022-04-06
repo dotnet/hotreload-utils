@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- This repo version -->
     <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.1.0</VersionPrefix>
     <!-- Package pre-release label not including build number or the pre-release iteration-->
     <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
     <!-- Package pre-release version iteration. Combines with the label to produce a final pre-release suffix. -->
