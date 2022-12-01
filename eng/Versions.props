@@ -25,10 +25,10 @@
       These are used as reference assemblies only, so they must not take a ProdCon/source-build
       version. Insert "RefOnly" to avoid assignment via PVP.
     -->
-    <RefOnlyMicrosoftBuildVersion>16.8.0</RefOnlyMicrosoftBuildVersion>
+    <RefOnlyMicrosoftBuildVersion>17.3.2</RefOnlyMicrosoftBuildVersion>
     <RefOnlyMicrosoftBuildFrameworkVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildFrameworkVersion>
     <RefOnlyMicrosoftBuildTasksCoreVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildTasksCoreVersion>
     <RefOnlyMicrosoftBuildUtilitiesCoreVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildUtilitiesCoreVersion>
-    <RefOnlyNugetProjectModelVersion>6.2.1</RefOnlyNugetProjectModelVersion>
+    <RefOnlyNugetProjectModelVersion>6.2.2</RefOnlyNugetProjectModelVersion>
   </PropertyGroup>
 </Project>
