@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="ContinuousIntegrationBuild;Optimize;EmitDebugInformation">
+
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <IsPackable>false</IsPackable>
     <!-- to call AsssemblyExtensions.ApplyUpdate we need Optimize=false, EmitDebugInformation=true in all configurations -->
     <Optimize>false</Optimize>
     <EmitDebugInformation>true</EmitDebugInformation>
@@ -16,6 +15,6 @@
   </ItemGroup>
 
   <Import Project="..\ImportExplicitly.props" />
-
   <Import Project="$(InTreeGeneratorBuildToolTargetsPath)" />
+
 </Project>

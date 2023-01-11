@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project>
+
   <PropertyGroup>
     <!-- This repo version -->
     <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
@@ -31,4 +31,5 @@
     <RefOnlyMicrosoftBuildUtilitiesCoreVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildUtilitiesCoreVersion>
     <RefOnlyNugetProjectModelVersion>6.2.2</RefOnlyNugetProjectModelVersion>
   </PropertyGroup>
+
 </Project>
