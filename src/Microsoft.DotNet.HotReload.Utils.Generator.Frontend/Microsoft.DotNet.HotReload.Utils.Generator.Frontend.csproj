@@ -1,8 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Nullable>enable</Nullable>
-    <TargetFramework>net8.0</TargetFramework>
-  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator\Microsoft.DotNet.HotReload.Utils.Generator.csproj" />

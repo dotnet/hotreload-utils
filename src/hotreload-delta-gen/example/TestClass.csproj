@@ -1,35 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <OutputType>library</OutputType>
-        <EnableDefaultItems>false</EnableDefaultItems>
-        <DeltaScript>diffscript.json</DeltaScript>
-    </PropertyGroup>
-    <ItemGroup>
-      <Compile Include="TestClass.cs"/>
-      <ProjectReference Include="..\src\hotreload-delta-gen.csproj" ReferenceOutputAssembly="false" />
-    </ItemGroup>
 
-    <!-- find the built hotreload-delta-gen.dll from this repo -->
-    <PropertyGroup>
-      <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
-      <ToolConfiguration Condition="'$(ToolConfiguration)'==''">$(Configuration)</ToolConfiguration>
-      <ToolTargetFramework Condition="'$(ToolTargetFramework)'==''">$(TargetFramework)</ToolTargetFramework>
-      <HotReloadToolPath>$(OutputPath)\..\..\hotreload-delta-gen\$(ToolConfiguration)\$(ToolTargetFramework)\hotreload-delta-gen.dll</HotReloadToolPath>
-      <HotReloadToolCommand>$(DotNetTool) $(HotReloadToolPath)</HotReloadToolCommand>
-    </PropertyGroup>
+  <PropertyGroup>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <DeltaScript>diffscript.json</DeltaScript>
+  </PropertyGroup>
 
-    <!-- run the tool after this assembly is built -->
-    <Target Name="RunDiff" AfterTargets="Build">
-      <PropertyGroup>
-        <HotReloadGeneratorArgs>-msbuild:$(MSBuildProjectFullPath)</HotReloadGeneratorArgs>
-        <HotReloadGeneratorArgs>$(HotReloadGeneratorArgs) -script:$(DeltaScript)</HotReloadGeneratorArgs>
-        <HotReloadGeneratorArgs Condition="'$(Configuration)' != ''">$(HotReloadGeneratorArgs) -p:Configuration=$(Configuration)</HotReloadGeneratorArgs>
-        <HotReloadGeneratorArgs Condition="'$(RuntimeIdentifier)' != ''">$(HotReloadGeneratorArgs) -p:RuntimeIdentifier=$(RuntimeIdentifier)</HotReloadGeneratorArgs>
-        <HotReloadGeneratorArgs Condition="'$(BuiltRuntimeConfiguration)' != ''">$(HotReloadGeneratorArgs) -p:BuiltRuntimeConfiguration=$(BuiltRuntimeConfiguration)</HotReloadGeneratorArgs>
-        <HotReloadGeneratorArgs>$(HotReloadGeneratorArgs) -outputSummary:$(OutputPath)\hotreload-delta-gen-summary.json</HotReloadGeneratorArgs>
-      </PropertyGroup>
-      <Exec Command="$(HotReloadToolCommand) $(HotReloadGeneratorArgs)" />
-    </Target>
+  <ItemGroup>
+    <Compile Include="TestClass.cs"/>
+    <ProjectReference Include="..\src\hotreload-delta-gen.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- find the built hotreload-delta-gen.dll from this repo -->
+  <PropertyGroup>
+    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
+    <ToolConfiguration Condition="'$(ToolConfiguration)'==''">$(Configuration)</ToolConfiguration>
+    <ToolTargetFramework Condition="'$(ToolTargetFramework)'==''">$(TargetFramework)</ToolTargetFramework>
+    <HotReloadToolPath>$(OutputPath)\..\..\hotreload-delta-gen\$(ToolConfiguration)\$(ToolTargetFramework)\hotreload-delta-gen.dll</HotReloadToolPath>
+    <HotReloadToolCommand>$(DotNetTool) $(HotReloadToolPath)</HotReloadToolCommand>
+  </PropertyGroup>
+
+  <!-- run the tool after this assembly is built -->
+  <Target Name="RunDiff" AfterTargets="Build">
+    <PropertyGroup>
+      <HotReloadGeneratorArgs>-msbuild:$(MSBuildProjectFullPath)</HotReloadGeneratorArgs>
+      <HotReloadGeneratorArgs>$(HotReloadGeneratorArgs) -script:$(DeltaScript)</HotReloadGeneratorArgs>
+      <HotReloadGeneratorArgs Condition="'$(Configuration)' != ''">$(HotReloadGeneratorArgs) -p:Configuration=$(Configuration)</HotReloadGeneratorArgs>
+      <HotReloadGeneratorArgs Condition="'$(RuntimeIdentifier)' != ''">$(HotReloadGeneratorArgs) -p:RuntimeIdentifier=$(RuntimeIdentifier)</HotReloadGeneratorArgs>
+      <HotReloadGeneratorArgs Condition="'$(BuiltRuntimeConfiguration)' != ''">$(HotReloadGeneratorArgs) -p:BuiltRuntimeConfiguration=$(BuiltRuntimeConfiguration)</HotReloadGeneratorArgs>
+      <HotReloadGeneratorArgs>$(HotReloadGeneratorArgs) -outputSummary:$(OutputPath)\hotreload-delta-gen-summary.json</HotReloadGeneratorArgs>
+    </PropertyGroup>
+    <Exec Command="$(HotReloadToolCommand) $(HotReloadGeneratorArgs)" />
+  </Target>
 
 </Project>

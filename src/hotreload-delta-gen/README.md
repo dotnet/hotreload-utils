@@ -9,12 +9,12 @@ For integration into MS Build projects, see [../Microsoft.DotNet.HotReload.Utils
 
 The standalone `hotreload-delta-gen` tool is more useful for one-off experiments in which case it is best to install it as a global dotnet tool.
 
-## How to install from the dotnet7-transport NuGet feed
+## How to install from the dotnet8-transport NuGet feed
 
-Preview versions are published to the `dotnet7-transport` feed.
+Preview versions are published to the `dotnet8-transport` feed.
 
 ```console
-dotnet tool install --global --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7-transport/nuget/v3/index.json hotreload-delta-gen --version [LATEST_VER]
+dotnet tool install --global --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8-transport/nuget/v3/index.json hotreload-delta-gen --version [LATEST_VER]
 ```
 
 Where `[LATEST_VER]` is the latest published version (`dotnet tool install` will tell you the latest available if you omit the `--version` argument)
@@ -27,7 +27,7 @@ Install .NET 7
 
 Run `build.sh -restore -build -publish -pack -c Release` from the repo root.
 
-That will create the executable `artifacts/bin/hotreload-delta-gen/Release/net7.0/publish/hotreload-delta-gen`.
+That will create the executable `artifacts/bin/hotreload-delta-gen/Release/net8.0/publish/hotreload-delta-gen`.
 
 
 ## How to use it

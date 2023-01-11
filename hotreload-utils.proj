@@ -1,4 +1,5 @@
-<Project Sdk="Microsoft.Build.Traversal/3.0.3">
+<Project Sdk="Microsoft.Build.Traversal">
+
   <ItemGroup>
     <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.Generator/Microsoft.DotNet.HotReload.Utils.Generator.csproj" />
     <ProjectReference Include="src/Microsoft.DotNet.HotReload.Utils.Generator.Data/Microsoft.DotNet.HotReload.Utils.Generator.Data.csproj" />
@@ -9,4 +10,5 @@
 
     <ProjectReference Include="tests\**\*.*proj" />
   </ItemGroup>
+
 </Project>
