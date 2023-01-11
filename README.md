@@ -1,6 +1,6 @@
 # Hot Reload Utilities #
 
-Testing utilities for .NET hot reload.
+Testing utilities for ".NET Hot Reload".
 
 ## What's in here ##
 
