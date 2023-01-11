@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <PackageType>MSBuildSdk</PackageType>
+    <!-- Allow to run on later tooling if exact match isn't present -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
