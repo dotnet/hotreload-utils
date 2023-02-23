@@ -1,4 +1,5 @@
 variables:
+  - template: /eng/common/templates/variables/pool-providers.yml
   - name: Build.Repository.Clean
     value: true
   - name: _TeamName
@@ -62,10 +63,11 @@ stages:
           timeoutInMinutes: 30
           pool:
             ${{ if eq(variables['System.TeamProject'], 'public') }}:
-              vmImage: ubuntu-20.04
+              name: $(DncEngPublicBuildPool)
+              demands: ImageOverride -equals build.ubuntu.2204.amd64.open
             ${{ if eq(variables['System.TeamProject'], 'internal') }}:
-              name: NetCore1ESPool-Internal
-              demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+              name: $(DncEngInternalBuildPool)
+              demands: ImageOverride -equals build.ubuntu.2204.amd64
           steps:
           - bash: |
               eng/common/cibuild.sh -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=linux-x64 $(_InternalBuildArgs)
