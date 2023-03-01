@@ -19,8 +19,7 @@
       <IncludeAssets>build; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <!-- FIXME: Use NuGetBuildTasksPackageVersion  and NuGetFrameworksPackageVersion-->
-    <PackageReference Include="NuGet.Frameworks" Version="6.6.0-preview.2.29" />
+    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksPackageVersion)" />
 
   </ItemGroup>
 
