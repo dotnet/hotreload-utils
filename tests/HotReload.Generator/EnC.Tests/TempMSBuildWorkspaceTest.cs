@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Emit;
 
 using CancellationToken = System.Threading.CancellationToken;
 using SourceText = Microsoft.CodeAnalysis.Text.SourceText;
+using TempDirectory = Microsoft.DotNet.HotReload.Utils.Common.TempDirectory;
 
 using Xunit;
 
@@ -30,7 +31,7 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
 {
     public Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace Workspace { get; }
     public GlobalFilesFixture GlobalFiles { get; }
-    public TempDirectory TempDir { get; }
+    private protected TempDirectory TempDir { get; }
     public TempMSBuildWorkspaceTest(MSBuildLocatorFixture _1, GlobalFilesFixture globalFiles)
     {
         GlobalFiles = globalFiles;

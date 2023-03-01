@@ -6,9 +6,9 @@ using System.IO;
 
 #nullable enable
 
-namespace EnC.Tests;
+namespace Microsoft.DotNet.HotReload.Utils.Common;
 
-public class TempDirectory : IDisposable
+internal class TempDirectory : IDisposable
 {
     public TempDirectory(bool keep = false, string? dirname = null)
     {
