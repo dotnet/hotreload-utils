@@ -14,7 +14,7 @@ namespace ImportExplicitly.ShouldNotRun.Tests
             // Check that the delta generator did not run - there should be no .dmeta files next to the assembly
 
             var path = Path.GetDirectoryName(typeof(ImportExplicitlyShouldNotRun).Assembly.Location);
-            var metadataDeltas = Directory.GetFiles(path, "*.dmeta");
+            var metadataDeltas = Directory.GetFiles(path!, "*.dmeta");
             Assert.Empty(metadataDeltas);
         }
 

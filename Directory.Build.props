@@ -14,7 +14,7 @@
     <NetCurrent Condition="'$(NetCurrent)' == ''">net8.0</NetCurrent>
 
     <TargetFramework>$(NetCurrent)</TargetFramework>
-    <Nullable Condition="'$(IsTestProject)' != 'true'">enable</Nullable>
+    <Nullable>enable</Nullable>
 
     <!--
       Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
