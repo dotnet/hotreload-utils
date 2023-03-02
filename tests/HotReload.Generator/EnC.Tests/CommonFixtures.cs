@@ -2,8 +2,6 @@ using System;
 
 namespace EnC.Tests;
 
-#nullable enable
-
 public class MSBuildLocatorFixture : IDisposable
 {
     private static readonly object _lock = new();

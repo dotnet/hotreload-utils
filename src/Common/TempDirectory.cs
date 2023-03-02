@@ -4,8 +4,6 @@
 using System;
 using System.IO;
 
-#nullable enable
-
 namespace Microsoft.DotNet.HotReload.Utils.Common;
 
 internal class TempDirectory : IDisposable

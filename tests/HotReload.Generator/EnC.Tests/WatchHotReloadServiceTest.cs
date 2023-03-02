@@ -13,8 +13,6 @@ using Microsoft.CodeAnalysis.Emit;
 
 using Xunit;
 
-#nullable enable
-
 namespace EnC.Tests;
 
 public class WatchHotReloadServiceTest : TempMSBuildWorkspaceTest

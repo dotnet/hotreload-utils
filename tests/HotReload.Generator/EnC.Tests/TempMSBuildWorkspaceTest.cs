@@ -14,8 +14,6 @@ using TempDirectory = Microsoft.DotNet.HotReload.Utils.Common.TempDirectory;
 
 using Xunit;
 
-#nullable enable
-
 namespace EnC.Tests;
 
 /// <summary> Each test gets its own temporary directory and MSBuildWorkspace </summary>
