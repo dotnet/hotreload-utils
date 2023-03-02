@@ -6,7 +6,7 @@ namespace EnC.Tests;
 
 public class MSBuildLocatorFixture : IDisposable
 {
-    static object _lock = new();
+    private static readonly object _lock = new();
     public MSBuildLocatorFixture()
     {
         if (Microsoft.Build.Locator.MSBuildLocator.IsRegistered)
