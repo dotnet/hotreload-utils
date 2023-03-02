@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis.MSBuild;
 
 using CancellationToken = System.Threading.CancellationToken;
 using SourceText = Microsoft.CodeAnalysis.Text.SourceText;
@@ -27,13 +28,13 @@ namespace EnC.Tests;
 /// </remarks>
 public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IClassFixture<GlobalFilesFixture>, IDisposable
 {
-    public Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace Workspace { get; }
+    public MSBuildWorkspace Workspace { get; }
     public GlobalFilesFixture GlobalFiles { get; }
     private protected TempDirectory TempDir { get; }
     public TempMSBuildWorkspaceTest(MSBuildLocatorFixture _1, GlobalFilesFixture globalFiles)
     {
         GlobalFiles = globalFiles;
-        Workspace = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create();
+        Workspace = MSBuildWorkspace.Create();
         Workspace.WorkspaceFailed += OnWorkspaceFailed;
         TempDir = new TempDirectory();
     }
