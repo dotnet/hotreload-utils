@@ -1,5 +1,4 @@
 variables:
-  - template: /eng/common/templates/variables/pool-providers.yml
   - name: Build.Repository.Clean
     value: true
   - name: _TeamName
@@ -63,10 +62,10 @@ stages:
           timeoutInMinutes: 30
           pool:
             ${{ if eq(variables['System.TeamProject'], 'public') }}:
-              name: $(DncEngPublicBuildPool)
+              name: NetCore-Svc-Public
               demands: ImageOverride -equals build.ubuntu.2204.amd64.open
             ${{ if eq(variables['System.TeamProject'], 'internal') }}:
-              name: $(DncEngInternalBuildPool)
+              name: NetCore1ESPool-Svc-Internal
               demands: ImageOverride -equals build.ubuntu.2204.amd64
           steps:
           - bash: |
