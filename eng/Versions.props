@@ -11,7 +11,7 @@
     <UsingToolXliff>false</UsingToolXliff>
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>3.3.3</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>4.7.0-1.23211.12</MicrosoftCodeAnalysisVersion>
     <SystemConfigurationConfigurationManagerVersion>6.0.0</SystemConfigurationConfigurationManagerVersion>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
