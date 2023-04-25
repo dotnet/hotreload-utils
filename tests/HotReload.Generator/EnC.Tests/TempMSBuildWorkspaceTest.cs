@@ -92,18 +92,18 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
 
     protected async Task<Project> PrepareProject(CancellationToken cancellationToken = default)
     {
-        (var solution, var projectId) = await CreateProject("""
-            <Project Sdk="Microsoft.NET.Sdk">
+        (var solution, var projectId) = await CreateProject(@"
+            <Project Sdk=""Microsoft.NET.Sdk"">
                 <PropertyGroup>
                     <OutputType>Library</OutputType>
-                    <TargetFramework>net8.0</TargetFramework>
+                    <TargetFramework>net6.0</TargetFramework>
                     <EnableDefaultItems>false</EnableDefaultItems>
                 </PropertyGroup>
                 <ItemGroup>
-                    <!-- Compile Include="Program.cs" -->
+                    <!-- Compile Include=""Program.cs"" -->
                 </ItemGroup>
             </Project>
-            """, cancellationToken);
+            ", cancellationToken);
         Assert.NotNull(solution);
         var project = solution.GetProject(projectId);
         Assert.NotNull(project);
@@ -121,11 +121,12 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
     {
         if (!emitResult.Success)
         {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
             foreach (var diag in emitResult.Diagnostics)
             {
-                Console.WriteLine(diag);
+                sb.AppendLine(diag.ToString());
             }
-            Assert.True(false, $"{file}:{line} EmitResult failed in {caller}");
+            Assert.True(false, $"{file}:{line} EmitResult failed in {caller} due to {sb}");
         }
     }
 

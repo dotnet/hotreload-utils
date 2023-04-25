@@ -26,14 +26,14 @@ public class WatchHotReloadServiceTest : TempMSBuildWorkspaceTest
     {
         var cancellationToken = CancellationToken.None;
         var project = await PrepareProject(cancellationToken);
-        var src = MakeText("""
+        var src = MakeText(@"
             using System;
             public class C1 {
                 public static void M1() {
-                    Console.WriteLine("Hello");
+                    Console.WriteLine(""Hello"");
                 }
             }
-            """);
+            ");
         WithBaselineSource(ref project, "Class1.cs", src, out var d);
         var comp = await project.GetCompilationAsync(cancellationToken);
         Assert.NotNull(comp);
