@@ -92,18 +92,18 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
 
     protected async Task<Project> PrepareProject(CancellationToken cancellationToken = default)
     {
-        (var solution, var projectId) = await CreateProject("""
-            <Project Sdk="Microsoft.NET.Sdk">
+        (var solution, var projectId) = await CreateProject(@"
+            <Project Sdk=""Microsoft.NET.Sdk"">
                 <PropertyGroup>
                     <OutputType>Library</OutputType>
                     <TargetFramework>net8.0</TargetFramework>
                     <EnableDefaultItems>false</EnableDefaultItems>
                 </PropertyGroup>
                 <ItemGroup>
-                    <!-- Compile Include="Program.cs" -->
+                    <!-- Compile Include=""Program.cs"" -->
                 </ItemGroup>
             </Project>
-            """, cancellationToken);
+            ", cancellationToken);
         Assert.NotNull(solution);
         var project = solution.GetProject(projectId);
         Assert.NotNull(project);
