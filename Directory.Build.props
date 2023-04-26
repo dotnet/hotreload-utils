@@ -10,9 +10,6 @@
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>Latest</LangVersion>
 
-    <!-- TODO: Remove when https://github.com/dotnet/arcade/pull/12161 is merged and consumed. -->
-    <NetCurrent Condition="'$(NetCurrent)' == ''">net7.0</NetCurrent>
-
     <TargetFramework>$(NetCurrent)</TargetFramework>
     <Nullable>enable</Nullable>
 
