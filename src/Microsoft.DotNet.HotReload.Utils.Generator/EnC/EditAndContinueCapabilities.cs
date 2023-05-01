@@ -45,4 +45,19 @@ public enum EditAndContinueCapabilities
     /// Whether the runtime supports updating the Param table, and hence related edits (eg parameter renames)
     /// </summary>
     UpdateParameters = 1 << 6,
+
+    /// <summary>
+    /// Adding a static or instance method, property or event to an existing type (without backing fields), such that the method and/or the type are generic.
+    /// </summary>
+    GenericAddMethodToExistingType = 1 << 7,
+
+    /// <summary>
+    /// Updating an existing static or instance method, property or event (without backing fields) that is generic and/or contained in a generic type.
+    /// </summary>
+    GenericUpdateMethod = 1 << 8,
+
+    /// <summary>
+    /// Adding a static or instance field to an existing generic type.
+    /// </summary>
+    GenericAddFieldToExistingType = 1 << 9,
 }
