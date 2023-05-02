@@ -73,6 +73,15 @@ stages:
               eng/common/cibuild.sh -configuration $(_BuildConfig) $(_InternalPublishArg) /p:ToolConfiguration=$(_BuildConfig) /p:ToolRid=linux-x64 $(_InternalBuildArgs)
             displayName: Build and Publish
 
+          - task: PublishTestResults@2
+          displayName: Publish Test Results
+          inputs:
+            testRunner: XUnit
+            testResultsFiles: 'artifacts/$(_BuildConfig)/TestResults/*.xml'
+            mergeTestResults: true
+            testRunTitle: 'Unit Tests'
+          condition: always()
+
 ############ POST BUILD ARCADE LOGIC ############
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: /eng/common/templates/post-build/post-build.yml
