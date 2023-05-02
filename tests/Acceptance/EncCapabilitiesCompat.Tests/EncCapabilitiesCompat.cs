@@ -37,6 +37,13 @@ namespace EncCapabilitiesCompatTest {
         public static IReadOnlyList<CapDescriptor> GetGeneratorCapabilities() => MakeDescriptor(typeof(Microsoft.DotNet.HotReload.Utils.Generator.EnC.EditAndContinueCapabilities));
         public static IReadOnlyList<CapDescriptor> GetRoslynCapabilities() => MakeDescriptor(ChangeMaker.EditAncContinueCapabilitiesType);
 
+
+        [Fact]
+        public static void TestFailing()
+        {
+            Assert.True(false, "This test should fail");
+        }
+
         [Fact]
         public static void SameCapabilities () {
             // Check that roslyn and hotreload-utils have the same EnC capabilities defined.
