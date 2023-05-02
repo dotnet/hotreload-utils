@@ -74,13 +74,13 @@ stages:
             displayName: Build and Publish
 
           - task: PublishTestResults@2
-          displayName: Publish Test Results
-          inputs:
-            testRunner: XUnit
-            testResultsFiles: 'artifacts/$(_BuildConfig)/TestResults/*.xml'
-            mergeTestResults: true
-            testRunTitle: 'Unit Tests'
-          condition: always()
+            displayName: Publish Test Results
+            inputs:
+              testRunner: XUnit
+              testResultsFiles: 'artifacts/$(_BuildConfig)/TestResults/*.xml'
+              mergeTestResults: true
+              testRunTitle: 'Unit Tests'
+            condition: always()
 
 ############ POST BUILD ARCADE LOGIC ############
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
