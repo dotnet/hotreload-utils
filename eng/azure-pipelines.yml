@@ -77,7 +77,7 @@ stages:
             displayName: Publish Test Results
             inputs:
               testRunner: XUnit
-              testResultsFiles: 'artifacts/$(_BuildConfig)/TestResults/*.xml'
+              testResultsFiles: 'artifacts/TestResults/$(_BuildConfig)/*.xml'
               mergeTestResults: true
               testRunTitle: 'Unit Tests'
             condition: always()
