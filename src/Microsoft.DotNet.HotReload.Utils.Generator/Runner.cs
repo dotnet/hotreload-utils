@@ -86,9 +86,17 @@ public abstract class Runner {
 
     protected EnC.EditAndContinueCapabilities DefaultCapabilities ()
     {
-        var allCaps = EnC.EditAndContinueCapabilities.Baseline | EnC.EditAndContinueCapabilities.AddMethodToExistingType
-            | EnC.EditAndContinueCapabilities.AddStaticFieldToExistingType | EnC.EditAndContinueCapabilities.AddInstanceFieldToExistingType
-            | EnC.EditAndContinueCapabilities.NewTypeDefinition | EnC.EditAndContinueCapabilities.ChangeCustomAttributes;
+        var allCaps = EnC.EditAndContinueCapabilities.Baseline
+            | EnC.EditAndContinueCapabilities.AddMethodToExistingType
+            | EnC.EditAndContinueCapabilities.AddStaticFieldToExistingType
+            | EnC.EditAndContinueCapabilities.AddInstanceFieldToExistingType
+            | EnC.EditAndContinueCapabilities.NewTypeDefinition
+            | EnC.EditAndContinueCapabilities.ChangeCustomAttributes
+            | EnC.EditAndContinueCapabilities.UpdateParameters
+            | EnC.EditAndContinueCapabilities.GenericAddMethodToExistingType
+            | EnC.EditAndContinueCapabilities.GenericUpdateMethod
+            | EnC.EditAndContinueCapabilities.GenericAddFieldToExistingType
+            ;
         return allCaps;
     }
     public abstract IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default);
