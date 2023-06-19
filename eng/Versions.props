@@ -15,7 +15,7 @@
     <MicrosoftCodeAnalysisVersion>4.7.0-3.23318.1</MicrosoftCodeAnalysisVersion>
     <SystemConfigurationConfigurationManagerVersion>6.0.0</SystemConfigurationConfigurationManagerVersion>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
-    <NuGetBuildTasksPackageVersion>6.7.0-preview.3.65</NuGetBuildTasksPackageVersion>
+    <NuGetBuildTasksPackageVersion>6.7.0-preview.3.86</NuGetBuildTasksPackageVersion>
     <NuGetFrameworksPackageVersion>$(NuGetBuildTasksPackageVersion)</NuGetFrameworksPackageVersion>
     <!-- Testing -->
     <MicrosoftDotNetRemoteExecutorVersion>8.0.0-beta.23309.8</MicrosoftDotNetRemoteExecutorVersion>
