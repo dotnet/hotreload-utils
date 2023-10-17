@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- This repo version -->
     <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
-    <VersionPrefix>8.0.0</VersionPrefix>
+    <VersionPrefix>9.0.0</VersionPrefix>
     <!-- Package pre-release label not including build number or the pre-release iteration-->
     <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
     <!-- Package pre-release version iteration. Combines with the label to produce a final pre-release suffix. -->
