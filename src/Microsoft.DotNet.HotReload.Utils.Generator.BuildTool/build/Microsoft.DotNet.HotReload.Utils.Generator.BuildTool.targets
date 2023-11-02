@@ -7,7 +7,7 @@
 
     <_HotReloadDeltaGeneratorPath Condition="'$(_HotReloadDeltaGeneratorPath)' == ''">$(MSBuildThisFileDirectory)..\tools\net8.0\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
 
-    <_HotReloadDeltaGeneratorCommand>"$(DotNetTool)" $(_HotReloadDeltaGeneratorPath)</_HotReloadDeltaGeneratorCommand>
+    <_HotReloadDeltaGeneratorCommand>"$(DotNetTool)" "$(_HotReloadDeltaGeneratorPath)"</_HotReloadDeltaGeneratorCommand>
 
     <_HotReloadDeltaGeneratorTasksPath Condition="'$(_HotReloadDeltaGeneratorTasksPath)' == ''">$(MSBuildThisFileDirectory)..\tools\net8.0\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.dll</_HotReloadDeltaGeneratorTasksPath>
   </PropertyGroup>
@@ -41,8 +41,8 @@
       Outputs="@(_HotReloadDeltaGeneratorOutputs)"
       >
     <PropertyGroup>
-      <_HotReloadDeltaGeneratorArgs>-msbuild:$(MSBuildProjectFullPath)</_HotReloadDeltaGeneratorArgs>
-      <_HotReloadDeltaGeneratorArgs>$(_HotReloadDeltaGeneratorArgs) -script:$(_HotReloadDeltaGeneratorDeltaScript)</_HotReloadDeltaGeneratorArgs>
+      <_HotReloadDeltaGeneratorArgs>"-msbuild:$(MSBuildProjectFullPath)"</_HotReloadDeltaGeneratorArgs>
+      <_HotReloadDeltaGeneratorArgs>$(_HotReloadDeltaGeneratorArgs) "-script:$(_HotReloadDeltaGeneratorDeltaScript)"</_HotReloadDeltaGeneratorArgs>
 
       <!-- This is a little bit delicate: we're invoking a design-time msbuild here, and we need it to come back with the same OutputPath as the current
           run of msbuild.  If there are other properties that affect where the baseline assembly ends up, we need to pass those here too.
