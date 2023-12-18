@@ -96,7 +96,7 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
             <Project Sdk="Microsoft.NET.Sdk">
                 <PropertyGroup>
                     <OutputType>Library</OutputType>
-                    <TargetFramework>net8.0</TargetFramework>
+                    <TargetFramework>net9.0</TargetFramework>
                     <EnableDefaultItems>false</EnableDefaultItems>
                 </PropertyGroup>
                 <ItemGroup>
