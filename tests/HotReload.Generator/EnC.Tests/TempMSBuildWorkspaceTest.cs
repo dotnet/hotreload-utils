@@ -92,11 +92,12 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
 
     protected async Task<Project> PrepareProject(CancellationToken cancellationToken = default)
     {
-        (var solution, var projectId) = await CreateProject("""
+        string targetFramework = $"net{Environment.Version.Major}.{Environment.Version.Minor}";
+        (var solution, var projectId) = await CreateProject($"""
             <Project Sdk="Microsoft.NET.Sdk">
                 <PropertyGroup>
                     <OutputType>Library</OutputType>
-                    <TargetFramework>net9.0</TargetFramework>
+                    <TargetFramework>{targetFramework}</TargetFramework>
                     <EnableDefaultItems>false</EnableDefaultItems>
                 </PropertyGroup>
                 <ItemGroup>

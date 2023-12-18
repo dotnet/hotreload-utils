@@ -13,6 +13,33 @@
     <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.csproj" ExcludeAssets="runtime"  />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingVersion)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <HotReloadTargetsTemplateFile>Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets.in</HotReloadTargetsTemplateFile>
+    <HotReloadTargetsOutputFile>$(IntermediateOutputPath)Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets</HotReloadTargetsOutputFile>
+  </PropertyGroup>
+
+  <Target Name="ReplaceTemplateParametersInHotReloadTargetsTemplate"
+          Inputs="$(HotReloadTargetsTemplateFile)"
+          Outputs="$(HotReloadTargetsOutputFile)"
+          BeforeTargets="Build">
+
+    <GenerateFileFromTemplate TemplateFile="$(HotReloadTargetsTemplateFile)"
+                              OutputPath="$(HotReloadTargetsOutputFile)"
+                              Properties="NetToolCurrent=$(NetToolCurrent)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+
+    <ItemGroup>
+      <None Include="$(HotReloadTargetsOutputFile)" Pack="true">
+        <PackagePath>build/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets</PackagePath>
+      </None>
+    </ItemGroup>
+  </Target>
+
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 
 </Project>

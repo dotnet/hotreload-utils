@@ -2,7 +2,9 @@
 
   <!-- Set the paths for the generator buildtool and tasks assemblies explicitly so that we can Import the in-tree BuildTool.targets file -->
   <PropertyGroup>
-    <InTreeGeneratorBuildToolTargetsPath>$(RepoRoot)src\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\build\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets</InTreeGeneratorBuildToolTargetsPath>
+    <!-- Override the TFM in the template file -->
+    <_HotReloadDeltaGeneratorTFM>$(NetCurrent)</_HotReloadDeltaGeneratorTFM>
+    <InTreeGeneratorBuildToolTargetsPath>$(RepoRoot)src\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.targets.in</InTreeGeneratorBuildToolTargetsPath>
     <_HotReloadDeltaGeneratorPath>$(BaseOutputPath)..\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
     <_HotReloadDeltaGeneratorTasksPath>$(BaseOutputPath)..\Microsoft.DotNet.HotReload.Utils.Generator.Tasks\$(Configuration)\$(TargetFramework)\Microsoft.DotNet.HotReload.Utils.Generator.Tasks.dll</_HotReloadDeltaGeneratorTasksPath>
   </PropertyGroup>

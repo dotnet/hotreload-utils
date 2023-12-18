@@ -25,7 +25,7 @@ Then run the tool as `hotreload-delta-gen` assuming that `${HOME}/.dotnet/tools`
 
 Run `build.sh -restore -build -publish -pack -c Release` from the repo root.
 
-That will create the executable `artifacts/bin/hotreload-delta-gen/Release/net9.0/publish/hotreload-delta-gen`.
+That will create the executable `artifacts/bin/hotreload-delta-gen/Release/<dotnet version>/publish/hotreload-delta-gen`.
 
 
 ## How to use it
