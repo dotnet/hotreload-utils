@@ -125,7 +125,7 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
             {
                 Console.WriteLine(diag);
             }
-            Assert.True(false, $"{file}:{line} EmitResult failed in {caller}");
+            Assert.Fail($"{file}:{line} EmitResult failed in {caller}");
         }
     }
 
