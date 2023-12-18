@@ -29,7 +29,7 @@
 
     <GenerateFileFromTemplate TemplateFile="$(HotReloadTargetsTemplateFile)"
                               OutputPath="$(HotReloadTargetsOutputFile)"
-                              Properties="NetCurrent=$(NetCurrent)">
+                              Properties="NetToolCurrent=$(NetToolCurrent)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
 
