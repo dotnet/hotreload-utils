@@ -96,7 +96,7 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
             <Project Sdk="Microsoft.NET.Sdk">
                 <PropertyGroup>
                     <OutputType>Library</OutputType>
-                    <TargetFramework>net8.0</TargetFramework>
+                    <TargetFramework>net9.0</TargetFramework>
                     <EnableDefaultItems>false</EnableDefaultItems>
                 </PropertyGroup>
                 <ItemGroup>
@@ -125,7 +125,7 @@ public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IC
             {
                 Console.WriteLine(diag);
             }
-            Assert.True(false, $"{file}:{line} EmitResult failed in {caller}");
+            Assert.Fail($"{file}:{line} EmitResult failed in {caller}");
         }
     }
 
