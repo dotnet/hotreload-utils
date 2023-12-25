@@ -12,7 +12,7 @@
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.9.0-3.23615.7</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.9.0-3.23621.4</MicrosoftCodeAnalysisVersion>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
     <NuGetBuildTasksPackageVersion>6.9.0-preview.1.64</NuGetBuildTasksPackageVersion>
     <NuGetFrameworksPackageVersion>$(NuGetBuildTasksPackageVersion)</NuGetFrameworksPackageVersion>
