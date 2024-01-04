@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.CodeAnalysis" Version="4.9.0-3.23615.7">
+    <Dependency Name="Microsoft.CodeAnalysis" Version="4.9.0-3.23629.3">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>6a1cfc22d6b40c4e0fe5ac98a77a251c987a7c51</Sha>
+      <Sha>ebb588725e707db23d8723b633258e7eb918277b</Sha>
     </Dependency>
     <Dependency Name="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
       <Uri>https://github.com/dotnet/roslyn-analyzers</Uri>
@@ -31,9 +31,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>9e5fd26c0d1a187dfa08242d83e341634d4b1b07</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Build.Tasks" Version="6.9.0-preview.1.64">
+    <Dependency Name="NuGet.Build.Tasks" Version="6.9.0-preview.1.70">
       <Uri>https://github.com/nuget/nuget.client</Uri>
-      <Sha>2a234707a663f731e4de93cba4014ed1a8259def</Sha>
+      <Sha>6a82332d4936d893fb1e22fd86f2e3cb4d54c471</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
