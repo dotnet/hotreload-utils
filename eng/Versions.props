@@ -17,10 +17,10 @@
     <NuGetBuildTasksPackageVersion>6.9.0-preview.1.70</NuGetBuildTasksPackageVersion>
     <NuGetFrameworksPackageVersion>$(NuGetBuildTasksPackageVersion)</NuGetFrameworksPackageVersion>
     <!-- arcade -->
-    <MicrosoftDotNetBuildTasksTemplatingVersion>9.0.0-beta.24058.6</MicrosoftDotNetBuildTasksTemplatingVersion>
-    <MicrosoftDotNetRemoteExecutorVersion>9.0.0-beta.24058.6</MicrosoftDotNetRemoteExecutorVersion>
-    <MicrosoftDotNetXUnitExtensionsVersion>9.0.0-beta.24058.6</MicrosoftDotNetXUnitExtensionsVersion>
-    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.6.1-beta.24058.6</MicrosoftDotNetXUnitConsoleRunnerVersion>
+    <MicrosoftDotNetBuildTasksTemplatingVersion>9.0.0-beta.24060.1</MicrosoftDotNetBuildTasksTemplatingVersion>
+    <MicrosoftDotNetRemoteExecutorVersion>9.0.0-beta.24060.1</MicrosoftDotNetRemoteExecutorVersion>
+    <MicrosoftDotNetXUnitExtensionsVersion>9.0.0-beta.24060.1</MicrosoftDotNetXUnitExtensionsVersion>
+    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.6.1-beta.24060.1</MicrosoftDotNetXUnitConsoleRunnerVersion>
     <!--
       These are used as reference assemblies only, so they must not take a ProdCon/source-build
       version. Insert "RefOnly" to avoid assignment via PVP.
