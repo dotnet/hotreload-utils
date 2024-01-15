@@ -14,7 +14,7 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>4.9.0-3.24054.13</MicrosoftCodeAnalysisVersion>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
-    <NuGetBuildTasksPackageVersion>6.9.0-preview.1.70</NuGetBuildTasksPackageVersion>
+    <NuGetBuildTasksPackageVersion>6.9.0-rc.74</NuGetBuildTasksPackageVersion>
     <NuGetFrameworksPackageVersion>$(NuGetBuildTasksPackageVersion)</NuGetFrameworksPackageVersion>
     <!-- arcade -->
     <MicrosoftDotNetBuildTasksTemplatingVersion>9.0.0-beta.24060.1</MicrosoftDotNetBuildTasksTemplatingVersion>
