@@ -18,9 +18,9 @@
     <NuGetBuildTasksPackageVersion>6.6.0-preview.3.61</NuGetBuildTasksPackageVersion>
     <NuGetFrameworksPackageVersion>$(NuGetBuildTasksPackageVersion)</NuGetFrameworksPackageVersion>
     <!-- Testing -->
-    <MicrosoftDotNetRemoteExecutorVersion>6.0.0-beta.24059.3</MicrosoftDotNetRemoteExecutorVersion>
-    <MicrosoftDotNetXUnitExtensionsVersion>6.0.0-beta.24059.3</MicrosoftDotNetXUnitExtensionsVersion>
-    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.5.1-beta.24059.3</MicrosoftDotNetXUnitConsoleRunnerVersion>
+    <MicrosoftDotNetRemoteExecutorVersion>6.0.0-beta.24113.1</MicrosoftDotNetRemoteExecutorVersion>
+    <MicrosoftDotNetXUnitExtensionsVersion>6.0.0-beta.24113.1</MicrosoftDotNetXUnitExtensionsVersion>
+    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.5.1-beta.24113.1</MicrosoftDotNetXUnitConsoleRunnerVersion>
     <XUnitVersion>2.4.2</XUnitVersion>
     <XUnitRunnerVisualStudioVersion>2.4.2</XUnitRunnerVisualStudioVersion>
     <!--
