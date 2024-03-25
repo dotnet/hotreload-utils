@@ -12,7 +12,7 @@
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.10.0-3.24168.1</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.10.0-3.24175.2</MicrosoftCodeAnalysisVersion>
     <!-- Dependencie from roslyn -->
     <MicrosoftExtensionsLoggingVersion>8.0.0</MicrosoftExtensionsLoggingVersion>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
