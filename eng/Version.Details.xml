@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.CodeAnalysis" Version="4.9.2-3.24129.6">
+    <Dependency Name="Microsoft.CodeAnalysis" Version="4.10.0-3.24175.2">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>9934fb9e3527e1c0c51314e57d4aab30f97e8f9e</Sha>
+      <Sha>919d4dbfb0dffb35a702417e28ceea652d248bc6</Sha>
     </Dependency>
     <Dependency Name="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
       <Uri>https://github.com/dotnet/roslyn-analyzers</Uri>
       <Sha>294f95cd91a33365aa80117421aed139d8fe5a75</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Extensions.Logging" Version="8.0.0">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>5535e31a712343a63f5d7d796cd874e563e5ac14</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
