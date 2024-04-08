@@ -5,27 +5,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <!-- from dotnet/roslyn -->
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisVersion)" />
     <!-- this one has the EnC analyzer that we need-->
     <PackageReference Include="Microsoft.CodeAnalysis.Features" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />
     <!-- to support MSBuildWorkspace -->
-    <PackageReference Include="Microsoft.Build.Locator" Version="$(MicrosoftBuildLocatorVersion)" />
     <PackageReference Include="Microsoft.Build" Version="$(RefOnlyMicrosoftBuildVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(RefOnlyMicrosoftBuildFrameworkVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <!-- added to fix error when opening an MSBuildWorkspace project:
-        "ProcessFrameworkReferences" task failed unexpectedly.
-        System.IO.FileNotFoundException: Could not load file or assembly 'NuGet.Frameworks' ...
-    -->
-    <PackageReference Include="Nuget.ProjectModel" Version="$(RefOnlyNugetProjectModelVersion)">
-      <IncludeAssets>build; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
 
     <!-- TODO: workaround for https://github.com/dotnet/roslyn/issues/72938, remove once it is fixed -->
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />

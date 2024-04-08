@@ -31,9 +31,5 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>ace00d8719b8d1fdfd0cc05f71bb9af216338d27</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Build.Tasks" Version="6.10.0-preview.2.97">
-      <Uri>https://github.com/nuget/nuget.client</Uri>
-      <Sha>fb50d1a45ed10b39b5f335bc3a4bdcaea9b951cf</Sha>
-    </Dependency>
   </ToolsetDependencies>
 </Dependencies>

@@ -50,7 +50,6 @@ public abstract class Runner {
     protected Func<CancellationToken,Task>? OutputsDone {get; set;} = null;
 
     public async Task<BaselineArtifacts> SetupBaseline (EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
-        InitMSBuild();
         BaselineProject baselineProject = await Microsoft.DotNet.HotReload.Utils.Generator.BaselineProject.Make (config, capabilities, ct);
 
         var baselineArtifacts = await baselineProject.PrepareBaseline(ct);
@@ -111,11 +110,6 @@ public abstract class Runner {
             /* fixme: why does FSW sometimes queue up 2 events in quick succession after a single save? */
             deltaProject = await deltaProject.BuildDelta (delta, ignoreUnchanged: config.Live, makeOutputs: makeOutputs, outputsReady: outputsReady, ct: ct);
         }
-    }
-
-    private static void InitMSBuild ()
-    {
-        Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
     }
 
 }
