@@ -26,6 +26,9 @@
       <IncludeAssets>build; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+
+    <!-- TODO: workaround for https://github.com/dotnet/roslyn/issues/72938, remove once it is fixed -->
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
