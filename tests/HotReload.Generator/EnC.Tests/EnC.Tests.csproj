@@ -10,21 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />
-
-    <PackageReference Include="Microsoft.Build.Locator" Version="$(MicrosoftBuildLocatorVersion)" />
-    <PackageReference Include="Microsoft.Build" Version="$(RefOnlyMicrosoftBuildVersion)" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(RefOnlyMicrosoftBuildFrameworkVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <!-- added to fix error when opening an MSBuildWorkspace project:
-        "ProcessFrameworkReferences" task failed unexpectedly.
-        System.IO.FileNotFoundException: Could not load file or assembly 'NuGet.Frameworks' ...
-    -->
-    <PackageReference Include="Nuget.ProjectModel" Version="$(RefOnlyNugetProjectModelVersion)">
-      <IncludeAssets>build; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksPackageVersion)" />
-
   </ItemGroup>
 
   <ItemGroup>

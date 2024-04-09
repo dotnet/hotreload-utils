@@ -17,7 +17,7 @@ namespace EnC.Tests;
 
 public class WatchHotReloadServiceTest : TempMSBuildWorkspaceTest
 {
-    public WatchHotReloadServiceTest(MSBuildLocatorFixture fixture, GlobalFilesFixture globalFiles) : base(fixture, globalFiles)
+    public WatchHotReloadServiceTest(GlobalFilesFixture globalFiles) : base(globalFiles)
     {
     }
 

@@ -26,12 +26,12 @@ namespace EnC.Tests;
 ///    Set <c>TempDir.Keep = true</c> if you want to keep the temp directory.
 ///   </para>
 /// </remarks>
-public class TempMSBuildWorkspaceTest : IClassFixture<MSBuildLocatorFixture>, IClassFixture<GlobalFilesFixture>, IDisposable
+public class TempMSBuildWorkspaceTest : IClassFixture<GlobalFilesFixture>, IDisposable
 {
     public MSBuildWorkspace Workspace { get; }
     public GlobalFilesFixture GlobalFiles { get; }
     private protected TempDirectory TempDir { get; }
-    public TempMSBuildWorkspaceTest(MSBuildLocatorFixture _1, GlobalFilesFixture globalFiles)
+    public TempMSBuildWorkspaceTest(GlobalFilesFixture globalFiles)
     {
         GlobalFiles = globalFiles;
         Workspace = MSBuildWorkspace.Create();
