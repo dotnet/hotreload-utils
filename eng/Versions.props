@@ -12,7 +12,7 @@
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.8.0-7.24067.24</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.8.0-7.24225.6</MicrosoftCodeAnalysisVersion>
     <SystemConfigurationConfigurationManagerVersion>6.0.0</SystemConfigurationConfigurationManagerVersion>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
     <NuGetBuildTasksPackageVersion>6.8.0-rc.122</NuGetBuildTasksPackageVersion>
@@ -27,10 +27,11 @@
       These are used as reference assemblies only, so they must not take a ProdCon/source-build
       version. Insert "RefOnly" to avoid assignment via PVP.
     -->
-    <RefOnlyMicrosoftBuildVersion>17.3.2</RefOnlyMicrosoftBuildVersion>
+    <RefOnlyMicrosoftBuildVersion>17.3.4</RefOnlyMicrosoftBuildVersion>
     <RefOnlyMicrosoftBuildFrameworkVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildFrameworkVersion>
     <RefOnlyMicrosoftBuildTasksCoreVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildTasksCoreVersion>
     <RefOnlyMicrosoftBuildUtilitiesCoreVersion>$(RefOnlyMicrosoftBuildVersion)</RefOnlyMicrosoftBuildUtilitiesCoreVersion>
     <RefOnlyNugetProjectModelVersion>6.2.4</RefOnlyNugetProjectModelVersion>
+    <RefOnlyNugetFrameworksVersion>6.2.4</RefOnlyNugetFrameworksVersion>
   </PropertyGroup>
 </Project>
