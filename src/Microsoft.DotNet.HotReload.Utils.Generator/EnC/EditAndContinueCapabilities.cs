@@ -60,4 +60,9 @@ public enum EditAndContinueCapabilities
     /// Adding a static or instance field to an existing generic type.
     /// </summary>
     GenericAddFieldToExistingType = 1 << 9,
+
+    /// <summary>
+    /// The runtime supports adding to InterfaceImpl table.
+    /// </summary>
+    AddExplicitInterfaceImplementation = 1 << 10,
 }
