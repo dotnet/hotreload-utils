@@ -11,10 +11,10 @@ The standalone `hotreload-delta-gen` tool is more useful for one-off experiments
 
 ## How to install from the dotnet9-transport NuGet feed
 
-Preview versions are published to the `dotnet9-transport` feed.
+Preview versions are published to the `dotnet10-transport` feed.
 
 ```console
-dotnet tool install --global --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9-transport/nuget/v3/index.json hotreload-delta-gen --version [LATEST_VER]
+dotnet tool install --global --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10-transport/nuget/v3/index.json hotreload-delta-gen --version [LATEST_VER]
 ```
 
 Where `[LATEST_VER]` is the latest published version (`dotnet tool install` will tell you the latest available if you omit the `--version` argument)
