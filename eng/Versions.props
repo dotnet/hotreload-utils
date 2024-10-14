@@ -11,7 +11,7 @@
     <UsingToolXliff>false</UsingToolXliff>
     <!-- Libs -->
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.12.0-3.24504.7</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.12.0-3.24510.2</MicrosoftCodeAnalysisVersion>
     <!-- arcade -->
     <MicrosoftDotNetBuildTasksTemplatingVersion>10.0.0-beta.24511.1</MicrosoftDotNetBuildTasksTemplatingVersion>
     <MicrosoftDotNetRemoteExecutorVersion>10.0.0-beta.24511.1</MicrosoftDotNetRemoteExecutorVersion>
