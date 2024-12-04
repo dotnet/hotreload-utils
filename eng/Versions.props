@@ -12,8 +12,8 @@
     <!-- Libs -->
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>4.12.0-3.24574.8</MicrosoftCodeAnalysisVersion>
-    <SystemFormatsAsn1Version>7.0.0</SystemFormatsAsn1Version>
-    <SystemTextJsonVersion>8.0.4</SystemTextJsonVersion>
+    <SystemFormatsAsn1Version>8.0.1</SystemFormatsAsn1Version>
+    <SystemTextJsonVersion>8.0.5</SystemTextJsonVersion>
     <!-- arcade -->
     <MicrosoftDotNetBuildTasksTemplatingVersion>10.0.0-beta.24578.2</MicrosoftDotNetBuildTasksTemplatingVersion>
     <MicrosoftDotNetRemoteExecutorVersion>10.0.0-beta.24578.2</MicrosoftDotNetRemoteExecutorVersion>
