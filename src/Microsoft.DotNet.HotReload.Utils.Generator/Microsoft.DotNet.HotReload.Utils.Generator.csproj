@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" ExcludeAssets="All" PrivateAssets="All" NoWarn="NU1901;NU1902;NU1903;NU1904" />
-    <PackageReference Include="System.Text.Json" Version="6.0.0" ExcludeAssets="All" PrivateAssets="All" NoWarn="NU1901;NU1902;NU1903;NU1904" />
     <!-- Upgrade to a non-vulnerable version of Asn1 - which will be ignored in favor of the framework copy  -->
     <PackageReference Include="System.Formats.Asn1" Version="$(SystemFormatsAsn1Version)" ExcludeAssets="All" PrivateAssets="All" />
   </ItemGroup>
