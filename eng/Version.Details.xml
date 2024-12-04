@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.CodeAnalysis" Version="4.12.0-3.24558.5">
+    <Dependency Name="Microsoft.CodeAnalysis" Version="4.12.0-3.24574.8">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>21192bfc323cbdd5a1f6e5dadca56ef0558c8adf</Sha>
+      <Sha>dfa7fc6bdea31a858a402168384192b633c811fa</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24564.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24578.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c1852b9ac37df9a86630c2f078dbee43f7b186e7</Sha>
+      <Sha>e8de3415124309210e4cbd0105e4a9da8dc01696</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24564.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24578.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c1852b9ac37df9a86630c2f078dbee43f7b186e7</Sha>
+      <Sha>e8de3415124309210e4cbd0105e4a9da8dc01696</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XUnitExtensions" Version="10.0.0-beta.24564.1">
+    <Dependency Name="Microsoft.DotNet.XUnitExtensions" Version="10.0.0-beta.24578.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c1852b9ac37df9a86630c2f078dbee43f7b186e7</Sha>
+      <Sha>e8de3415124309210e4cbd0105e4a9da8dc01696</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XUnitConsoleRunner" Version="2.9.2-beta.24564.1">
+    <Dependency Name="Microsoft.DotNet.XUnitConsoleRunner" Version="2.9.2-beta.24578.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c1852b9ac37df9a86630c2f078dbee43f7b186e7</Sha>
+      <Sha>e8de3415124309210e4cbd0105e4a9da8dc01696</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.RemoteExecutor" Version="10.0.0-beta.24564.1">
+    <Dependency Name="Microsoft.DotNet.RemoteExecutor" Version="10.0.0-beta.24578.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c1852b9ac37df9a86630c2f078dbee43f7b186e7</Sha>
+      <Sha>e8de3415124309210e4cbd0105e4a9da8dc01696</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
