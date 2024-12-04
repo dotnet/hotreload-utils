@@ -12,4 +12,9 @@
     <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator.Data\Microsoft.DotNet.HotReload.Utils.Generator.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The SDK distributes the live version of Json we can't reference that https://github.com/dotnet/runtime/issues/108262 -->
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonToolsetVersion)" NoWarn="NU1901;NU1902;NU1903;NU1904" />
+  </ItemGroup>
+
 </Project>

@@ -15,6 +15,8 @@
     <MicrosoftCodeAnalysisVersion>4.8.0-7.24527.6</MicrosoftCodeAnalysisVersion>
     <SystemConfigurationConfigurationManagerVersion>6.0.0</SystemConfigurationConfigurationManagerVersion>
     <SystemFormatsAsn1Version>8.0.1</SystemFormatsAsn1Version>
+    <SystemTextJsonToolsetVersion>8.0.4</SystemTextJsonToolsetVersion>
+
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
     <NuGetBuildTasksPackageVersion>6.8.0-rc.122</NuGetBuildTasksPackageVersion>
     <NuGetFrameworksPackageVersion>$(NuGetBuildTasksPackageVersion)</NuGetFrameworksPackageVersion>
