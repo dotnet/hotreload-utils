@@ -12,4 +12,9 @@
     <ProjectReference Include="..\Microsoft.DotNet.HotReload.Utils.Generator.Data\Microsoft.DotNet.HotReload.Utils.Generator.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Upgrade to a non-vulnerable version of Asn1 - which will be ignored in favor of the framework copy  -->
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" ExcludeAssets="All" PrivateAssets="All" />
+  </ItemGroup>
+
 </Project>
