@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <!-- The SDK distributes the live version of Json we can't reference that https://github.com/dotnet/runtime/issues/108262 -->
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" ExcludeAssets="All" PrivateAssets="All" NoWarn="NU1901;NU1902;NU1903;NU1904" />
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" ExcludeAssets="All" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
