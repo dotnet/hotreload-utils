@@ -12,7 +12,7 @@
     <!-- Libs -->
     <MicrosoftBuildLocatorVersion>1.4.1</MicrosoftBuildLocatorVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>4.8.0-7.25076.5</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.8.0-7.25114.3</MicrosoftCodeAnalysisVersion>
     <SystemConfigurationConfigurationManagerVersion>6.0.0</SystemConfigurationConfigurationManagerVersion>
     <SystemFormatsAsn1Version>8.0.1</SystemFormatsAsn1Version>
     <SystemTextJsonVersion>8.0.5</SystemTextJsonVersion>
