@@ -8,8 +8,4 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" ExcludeAssets="All" PrivateAssets="all" />
-  </ItemGroup>
-
 </Project>
