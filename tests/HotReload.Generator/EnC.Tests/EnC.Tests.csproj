@@ -14,12 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" ExcludeAssets="All" PrivateAssets="all" />
-    <!-- Upgrade to a non-vulnerable version of Asn1 - which will be ignored in favor of the framework copy  -->
-    <PackageReference Include="System.Formats.Asn1" Version="$(SystemFormatsAsn1Version)" ExcludeAssets="All" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="..\..\..\global.json" LogicalName="projectData/global.json" />
     <EmbeddedResource Include="..\..\..\NuGet.config" LogicalName="projectData/NuGet.config" />
   </ItemGroup>
