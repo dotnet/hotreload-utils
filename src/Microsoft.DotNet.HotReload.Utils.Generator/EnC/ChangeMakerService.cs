@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
@@ -32,15 +34,73 @@ public class ChangeMakerService
 
     public readonly record struct Update (Guid ModuleId, ImmutableArray<byte> ILDelta, ImmutableArray<byte> MetadataDelta, ImmutableArray<byte> PdbDelta, ImmutableArray<int> UpdatedTypes);
 
+    public enum Status
+    {
+        /// <summary>
+        /// No significant changes made that need to be applied.
+        /// </summary>
+        NoChangesToApply,
+
+        /// <summary>
+        /// Changes can be applied either via updates or restart.
+        /// </summary>
+        ReadyToApply,
+
+        /// <summary>
+        /// Some changes are errors that block rebuild of the module.
+        /// This means that the code is in a broken state that cannot be resolved by restarting the application.
+        /// </summary>
+        Blocked,
+    }
+
+    public readonly struct Updates2
+    {
+        /// <summary>
+        /// Status of the updates.
+        /// </summary>
+        public readonly Status Status { get; init; }
+
+        /// <summary>
+        /// Syntactic, semantic and emit diagnostics.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Status"/> is <see cref="Status.Blocked"/> if these diagnostics contain any errors.
+        /// </remarks>
+        public required ImmutableArray<Diagnostic> CompilationDiagnostics { get; init; }
+
+        /// <summary>
+        /// Rude edits per project.
+        /// </summary>
+        public required ImmutableArray<(ProjectId project, ImmutableArray<Diagnostic> diagnostics)> RudeEdits { get; init; }
+
+        /// <summary>
+        /// Updates to be applied to modules. Empty if there are blocking rude edits.
+        /// Only updates to projects that are not included in <see cref="ProjectsToRebuild"/> are listed.
+        /// </summary>
+        public ImmutableArray<Update> ProjectUpdates { get; init; }
+
+        /// <summary>
+        /// Running projects that need to be restarted due to rude edits in order to apply changes.
+        /// </summary>
+        public ImmutableDictionary<ProjectId, ImmutableArray<ProjectId>> ProjectsToRestart { get; init; }
+
+        /// <summary>
+        /// Projects with changes that need to be rebuilt in order to apply changes.
+        /// </summary>
+        public ImmutableArray<ProjectId> ProjectsToRebuild { get; init; }
+    }
+
     private static ImmutableArray<string> CapabilitiesToStrings(EditAndContinueCapabilities capabilities)
     {
         var builder = ImmutableArray.CreateBuilder<string>();
         var names = Enum.GetNames(typeof(EditAndContinueCapabilities));
-        foreach (var name in names) {
+        foreach (var name in names)
+        {
             var val = Enum.Parse<EditAndContinueCapabilities>(name);
             if (val == EditAndContinueCapabilities.None)
                 continue;
-            if (capabilities.HasFlag(val)) {
+            if (capabilities.HasFlag(val))
+            {
                 builder.Add(name);
             }
         }
@@ -59,15 +119,17 @@ public class ChangeMakerService
 
     }
 
-    private static ImmutableArray<Update> WrapUpdates (object updates)
+    private static Updates2 WrapUpdates(object updates)
     {
-        IEnumerable updatesEnumerable = (IEnumerable)updates;
-        var builder = ImmutableArray.CreateBuilder<Update>();
-        foreach (var update in updatesEnumerable)
+        return new Updates2
         {
-            builder.Add(WrapUpdate(update));
-        }
-        return builder.ToImmutable();
+            Status = (Status)updates.GetType().GetProperty("Status")!.GetValue(updates)!,
+            CompilationDiagnostics = (ImmutableArray<Diagnostic>)updates.GetType().GetProperty("CompilationDiagnostics")!.GetValue(updates)!,
+            RudeEdits = (ImmutableArray<(ProjectId, ImmutableArray<Diagnostic>)>)updates.GetType().GetProperty("RudeEdits")!.GetValue(updates)!,
+            ProjectUpdates = [.. ((IEnumerable)updates.GetType().GetProperty("ProjectUpdates")!.GetValue(updates)!).Cast<object>().Select(WrapUpdate)],
+            ProjectsToRestart = (ImmutableDictionary<ProjectId, ImmutableArray<ProjectId>>)updates.GetType().GetProperty("ProjectsToRestart")!.GetValue(updates)!,
+            ProjectsToRebuild = (ImmutableArray<ProjectId>)updates.GetType().GetProperty("ProjectsToRebuild")!.GetValue(updates)!
+        };
     }
     public static (Type, object) InstantiateWatchHotReloadService(HostWorkspaceServices hostWorkspaceServices, ImmutableArray<string> capabilities)
     {
@@ -107,20 +169,39 @@ public class ChangeMakerService
         mi.Invoke(_watchHotReloadService, Array.Empty<object>());
     }
 
-    public Task<(ImmutableArray<Update> updates, ImmutableArray<Diagnostic> diagnostics)> EmitSolutionUpdateAsync(Solution solution, CancellationToken cancellationToken)
+    public Task<Updates2> EmitSolutionUpdateAsync(Solution solution, CancellationToken cancellationToken)
     {
-        var mi = _watchServiceType.GetMethod("EmitSolutionUpdateAsync");
-        if (mi == null) {
-            throw new Exception($"could not find method {watchServiceName}.EmitSolutionUpdateAsync");
-        }
-        object resultTask = mi.Invoke(_watchHotReloadService, new object[] { solution, cancellationToken })!;
+        var runningProjectInfoType = _watchServiceType.GetNestedType("RunningProjectInfo", BindingFlags.Public)!;
+        var immutableDictionaryCreateRangeMethod = typeof(ImmutableDictionary).GetMethod(
+            "CreateRange",
+            BindingFlags.Static | BindingFlags.Public,
+            [ typeof(IEnumerable<>).MakeGenericType(Type.MakeGenericSignatureType(typeof(KeyValuePair<,>), Type.MakeGenericMethodParameter(0), Type.MakeGenericMethodParameter(1))) ])!
+            .MakeGenericMethod(typeof(ProjectId), runningProjectInfoType);
 
-        // The task returns (ImmutableArray<Update>, ImmutableArray<Diagnostic>), except that
-        // the Update is the nested class in WatchHotReloadService, so we can't write the type directly.
-        // Instead we take apart the tuple and convert the first component to an array of our own Update type.
+        var mi = _watchServiceType.GetMethod("GetUpdatesAsync", BindingFlags.Public | BindingFlags.Instance, [typeof(Solution), immutableDictionaryCreateRangeMethod.ReturnType, typeof(CancellationToken)]);
+        if (mi == null) {
+            throw new Exception($"could not find method {watchServiceName}.GetUpdatesAsync");
+        }
+
+        var kvpProjectIdRunningProjectInfoType = typeof(KeyValuePair<,>).MakeGenericType(typeof(ProjectId), runningProjectInfoType);
+
+        var runningProjectsList = Array.CreateInstance(kvpProjectIdRunningProjectInfoType, solution.ProjectIds.Count);
+
+        for (int i = 0; i < solution.ProjectIds.Count; i++)
+        {
+            var projectId = solution.ProjectIds[i];
+            var runningProjectInfo = Activator.CreateInstance(runningProjectInfoType)!;
+            runningProjectsList.SetValue(Activator.CreateInstance(kvpProjectIdRunningProjectInfoType, projectId, runningProjectInfo)!, i);
+        }
+
+        object resultTask = mi.Invoke(_watchHotReloadService, [solution, immutableDictionaryCreateRangeMethod.Invoke(null, [ runningProjectsList ])!, cancellationToken])!;
+
+        // The task returns Updates2, except that
+        // the Update2 type is a nested struct in WatchHotReloadService, so we can't write the type directly.
+        // Instead we take apart the type and convert the first component to our own Update2 type.
         //
         // We basically want to do
-        //   resultTask.ContinueWith ((t) => (WrapUpdate(t.Result.Item1), t.Result.Item2);
+        //   resultTask.ContinueWith ((t) => WrapUpdate(t.Result));
         // but then we need to make a Func<T> that again mentions the internal Update type.
         //
         // So instead we do:
@@ -136,18 +217,14 @@ public class ChangeMakerService
         //  because OnCompleted only needs an Action and we can use reflection to take the result apart
 
 
-        var tcs = new TaskCompletionSource<(ImmutableArray<Update>, ImmutableArray<Diagnostic>)>();
+        var tcs = new TaskCompletionSource<Updates2>();
 
         var awaiter = resultTask.GetType().GetMethod("GetAwaiter")!.Invoke(resultTask, Array.Empty<object>())!;
 
         Action continuation = delegate {
             try {
                 var result = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
-                var resultType = result.GetType();
-
-                var updates = resultType.GetField("Item1")!.GetValue(result)!;
-                var diagnostics = (ImmutableArray<Diagnostic>)resultType.GetField("Item2")!.GetValue(result)!;
-                tcs.SetResult ((WrapUpdates (updates), diagnostics));
+                tcs.SetResult (WrapUpdates (result));
             } catch (TaskCanceledException e) {
                 tcs.TrySetCanceled(e.CancellationToken);
             } catch (Exception e) {
