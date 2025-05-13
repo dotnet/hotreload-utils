@@ -65,4 +65,6 @@ public enum EditAndContinueCapabilities
     /// The runtime supports adding to InterfaceImpl table.
     /// </summary>
     AddExplicitInterfaceImplementation = 1 << 10,
+
+    AddFieldRva = 1 << 11,
 }

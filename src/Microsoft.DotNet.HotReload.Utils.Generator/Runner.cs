@@ -95,6 +95,8 @@ public abstract class Runner {
             | EnC.EditAndContinueCapabilities.GenericAddMethodToExistingType
             | EnC.EditAndContinueCapabilities.GenericUpdateMethod
             | EnC.EditAndContinueCapabilities.GenericAddFieldToExistingType
+            | EnC.EditAndContinueCapabilities.AddExplicitInterfaceImplementation
+            | EnC.EditAndContinueCapabilities.AddFieldRva
             ;
         return allCaps;
     }

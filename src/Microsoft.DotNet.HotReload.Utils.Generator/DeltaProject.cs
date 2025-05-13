@@ -92,25 +92,25 @@ public class DeltaProject
 
         Console.WriteLine ($"Found changes in {oldDocument.Name}");
 
-        (var fancyChanges, var diagnostics) = await _changeMakerService.EmitSolutionUpdateAsync (updatedSolution, ct);
+        var updates2 = await _changeMakerService.EmitSolutionUpdateAsync (updatedSolution, ct);
 
-        if (diagnostics.Any()) {
+        if (updates2.CompilationDiagnostics.Any()) {
             var sb = new StringBuilder();
-            foreach (var diag in diagnostics) {
+            foreach (var diag in updates2.CompilationDiagnostics) {
                 sb.AppendLine (diag.ToString ());
             }
             throw new DiffyException ($"Failed to emit delta for {oldDocument.Name}: {sb}", exitStatus: 8);
         }
-        foreach (var fancyChange in fancyChanges)
+        foreach (var fancyChange in updates2.ProjectUpdates)
         {
             Console.WriteLine("change service made {0}", fancyChange.ModuleId);
         }
 
         await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-            if (fancyChanges.Length != 1) {
-                throw new DiffyException($"Expected only one module in the delta, got {fancyChanges.Length}", exitStatus: 10);
+            if (updates2.ProjectUpdates.Length != 1) {
+                throw new DiffyException($"Expected only one module in the delta, got {updates2.ProjectUpdates.Length}", exitStatus: 10);
             }
-            var update = fancyChanges.First();
+            var update = updates2.ProjectUpdates.First();
             output.MetaStream.Write(update.MetadataDelta.AsSpan());
             output.IlStream.Write(update.ILDelta.AsSpan());
             output.PdbStream.Write(update.PdbDelta.AsSpan());
