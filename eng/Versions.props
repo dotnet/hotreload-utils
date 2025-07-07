@@ -10,7 +10,7 @@
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
     <!-- roslyn -->
-    <MicrosoftCodeAnalysisVersion>5.0.0-1.25328.2</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>5.0.0-1.25353.13</MicrosoftCodeAnalysisVersion>
     <!-- arcade -->
     <MicrosoftDotNetBuildTasksTemplatingVersion>10.0.0-beta.25326.3</MicrosoftDotNetBuildTasksTemplatingVersion>
     <MicrosoftDotNetRemoteExecutorVersion>10.0.0-beta.25326.3</MicrosoftDotNetRemoteExecutorVersion>
