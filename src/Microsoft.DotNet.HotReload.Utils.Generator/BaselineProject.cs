@@ -35,7 +35,7 @@ public record BaselineProject (Solution Solution, ProjectId ProjectId, EnC.Chang
                     Console.WriteLine ($"MSBuildWorkspace {diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
                     if (!warning)
                         throw new DiffyException ("failed workspace", 1);
-                };
+                });
                 Microsoft.Build.Framework.ILogger? logger = null;
 #if false
                 logger = new Microsoft.Build.Logging.BinaryLogger () {
