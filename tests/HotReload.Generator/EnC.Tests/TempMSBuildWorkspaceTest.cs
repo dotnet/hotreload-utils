@@ -35,11 +35,11 @@ public class TempMSBuildWorkspaceTest : IClassFixture<GlobalFilesFixture>, IDisp
     {
         GlobalFiles = globalFiles;
         Workspace = MSBuildWorkspace.Create();
-        Workspace.WorkspaceFailed += OnWorkspaceFailed;
+        _ = Workspace.RegisterWorkspaceFailedHandler(OnWorkspaceFailed);
         TempDir = new TempDirectory();
     }
 
-    public virtual void OnWorkspaceFailed(object? sender, WorkspaceDiagnosticEventArgs e)
+    public virtual void OnWorkspaceFailed(WorkspaceDiagnosticEventArgs e)
     {
         if (e.Diagnostic.Kind == WorkspaceDiagnosticKind.Warning)
             return;

@@ -28,7 +28,7 @@ public record BaselineProject (Solution Solution, ProjectId ProjectId, EnC.Chang
                 var props = new Dictionary<string,string> (config.Properties);
                 msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
                 msw.LoadMetadataForReferencedProjects = true;
-                msw.WorkspaceFailed += (_sender, diag) => {
+                _ = msw.RegisterWorkspaceFailedHandler(diag => {
                     bool warning = diag.Diagnostic.Kind == WorkspaceDiagnosticKind.Warning;
                     if (!warning)
                         Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
