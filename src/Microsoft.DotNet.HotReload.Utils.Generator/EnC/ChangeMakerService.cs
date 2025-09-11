@@ -169,6 +169,16 @@ public class ChangeMakerService
         mi.Invoke(_watchHotReloadService, Array.Empty<object>());
     }
 
+    public void CommitUpdate()
+    {
+        var mi = _watchServiceType.GetMethod("CommitUpdate");
+        if (mi == null)
+        {
+            throw new Exception($"could not find method {watchServiceName}.CommitUpdate");
+        }
+        mi.Invoke(_watchHotReloadService, Array.Empty<object>());
+    }
+
     public Task<Updates2> EmitSolutionUpdateAsync(Solution solution, CancellationToken cancellationToken)
     {
         var runningProjectInfoType = _watchServiceType.GetNestedType("RunningProjectInfo", BindingFlags.Public)!;

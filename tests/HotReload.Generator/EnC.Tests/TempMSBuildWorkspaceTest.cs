@@ -113,7 +113,7 @@ public class TempMSBuildWorkspaceTest : IClassFixture<GlobalFilesFixture>, IDisp
 
     protected void WithBaselineSource(ref Project project, string csFileName, SourceText src, out DocumentId docId)
     {
-        var d = project.AddDocument(csFileName, src);
+        var d = project.AddDocument(csFileName, src, filePath: Path.Combine(project.FilePath!, csFileName));
         project = d.Project;
         docId = d.Id;
     }
