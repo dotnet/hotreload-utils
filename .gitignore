@@ -11,5 +11,6 @@ publish/
 *.dil
 *.dmeta
 *.dpdb
+/.vs/
 /.vscode/
 /out/
