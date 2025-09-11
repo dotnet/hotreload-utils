@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Acceptance/EncCapabilitiesCompat.Tests/EncCapabilitiesCompat.Tests.csproj" />
+    <Project Path="tests/BuildTool/ImportExplcitly.ShouldNotRun.Tests/ImportExplicitly.ShouldNotRun.Tests.csproj" />
+    <Project Path="tests/BuildTool/ImportExplcitly.Tests/ImportExplicitly.Tests.csproj" />
+    <Project Path="tests/HotReload.Generator/EnC.Tests/EnC.Tests.csproj" />
+  </Folder>
+  <Project Path="src/hotreload-delta-gen/src/hotreload-delta-gen.csproj" />
+  <Project Path="src/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool/Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.csproj" />
+  <Project Path="src/Microsoft.DotNet.HotReload.Utils.Generator.Data/Microsoft.DotNet.HotReload.Utils.Generator.Data.csproj" />
+  <Project Path="src/Microsoft.DotNet.HotReload.Utils.Generator.Frontend/Microsoft.DotNet.HotReload.Utils.Generator.Frontend.csproj" />
+  <Project Path="src/Microsoft.DotNet.HotReload.Utils.Generator.Tasks/Microsoft.DotNet.HotReload.Utils.Generator.Tasks.csproj" />
+  <Project Path="src/Microsoft.DotNet.HotReload.Utils.Generator/Microsoft.DotNet.HotReload.Utils.Generator.csproj" />
+</Solution>

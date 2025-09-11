@@ -94,17 +94,20 @@ public class DeltaProject
 
         var updates2 = await _changeMakerService.EmitSolutionUpdateAsync (updatedSolution, ct);
 
-        if (updates2.CompilationDiagnostics.Any()) {
+        if (updates2.CompilationDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)) {
             var sb = new StringBuilder();
             foreach (var diag in updates2.CompilationDiagnostics) {
                 sb.AppendLine (diag.ToString ());
             }
             throw new DiffyException ($"Failed to emit delta for {oldDocument.Name}: {sb}", exitStatus: 8);
         }
+
         foreach (var fancyChange in updates2.ProjectUpdates)
         {
             Console.WriteLine("change service made {0}", fancyChange.ModuleId);
         }
+
+        _changeMakerService.CommitUpdate();
 
         await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
             if (updates2.ProjectUpdates.Length != 1) {
