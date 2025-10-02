@@ -44,7 +44,7 @@ public class WatchHotReloadServiceTest : TempMSBuildWorkspaceTest
         using (var peStream = File.OpenWrite(project.CompilationOutputInfo.AssemblyPath!))
         using (var pdbStream = File.OpenWrite(Path.ChangeExtension(project.CompilationOutputInfo.AssemblyPath!, ".pdb")))
         {
-            var emitResult = comp.Emit(peStream, pdbStream, options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb));
+            var emitResult = comp.Emit(peStream, pdbStream, options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb), cancellationToken: TestContext.Current.CancellationToken);
             ValidateEmitResult(emitResult);
         }
 
