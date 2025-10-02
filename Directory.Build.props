@@ -16,6 +16,8 @@
       Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
     -->
     <IsShipping>false</IsShipping>
+
+    <TestRunnerName>XunitV3</TestRunnerName>
   </PropertyGroup>
 
 </Project>
