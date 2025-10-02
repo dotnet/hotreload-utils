@@ -17,7 +17,7 @@
     -->
     <IsShipping>false</IsShipping>
 
-    <TestRunnerName>XunitV3</TestRunnerName>
+    <TestRunnerName>XUnitV3</TestRunnerName>
   </PropertyGroup>
 
 </Project>
