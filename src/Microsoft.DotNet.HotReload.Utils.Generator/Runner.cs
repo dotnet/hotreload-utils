@@ -10,7 +10,12 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
 public abstract class Runner {
+    readonly protected Config config;
 
+    protected Runner(Config config)
+    {
+        this.config = config;
+    }
 
     public static Runner Make (Config config)
     {
@@ -19,6 +24,7 @@ public abstract class Runner {
         else
             return new Runners.ScriptRunner (config);
     }
+
     public async Task Run (CancellationToken ct = default) {
         await PrepareToRun(ct);
         var capabilities = PrepareCapabilities();
@@ -33,11 +39,6 @@ public abstract class Runner {
             await OutputsDone (ct);
     }
 
-    readonly protected Config config;
-    protected Runner (Config config) {
-        this.config = config;
-    }
-
     /// Delegate that is called to create the delta output streams.
     /// If not set, a default is used that writes the deltas to files.
     protected  Func<DeltaNaming,DeltaOutputStreams>? MakeOutputs {get; set; } = null;
@@ -49,8 +50,8 @@ public abstract class Runner {
     /// Called when all the outputs have been emitted.
     protected Func<CancellationToken,Task>? OutputsDone {get; set;} = null;
 
-    public async Task<BaselineArtifacts> SetupBaseline (EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
-        BaselineProject baselineProject = await Microsoft.DotNet.HotReload.Utils.Generator.BaselineProject.Make (config, capabilities, ct);
+    private async Task<BaselineArtifacts> SetupBaseline (EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
+        BaselineProject baselineProject = await BaselineProject.Make (config, capabilities, ct);
 
         var baselineArtifacts = await baselineProject.PrepareBaseline(ct);
 
@@ -100,9 +101,10 @@ public abstract class Runner {
             ;
         return allCaps;
     }
-    public abstract IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default);
 
-    public async Task GenerateDeltas (DeltaProject deltaProject, IAsyncEnumerable<Delta> deltas,
+    private protected abstract IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default);
+
+    private async Task GenerateDeltas (DeltaProject deltaProject, IAsyncEnumerable<Delta> deltas,
                                         Func<DeltaNaming,DeltaOutputStreams>? makeOutputs = null,
                                         Action<DeltaNaming, DeltaOutputStreams>? outputsReady = null,
                                         CancellationToken ct =  default)

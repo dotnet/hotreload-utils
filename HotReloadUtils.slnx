@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/tests/">
-    <Project Path="tests/Acceptance/EncCapabilitiesCompat.Tests/EncCapabilitiesCompat.Tests.csproj" />
     <Project Path="tests/BuildTool/ImportExplcitly.ShouldNotRun.Tests/ImportExplicitly.ShouldNotRun.Tests.csproj" />
     <Project Path="tests/BuildTool/ImportExplcitly.Tests/ImportExplicitly.Tests.csproj" />
     <Project Path="tests/HotReload.Generator/EnC.Tests/EnC.Tests.csproj" />

@@ -11,11 +11,12 @@ using System.Runtime.CompilerServices;
 namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners;
 
 /// Generate deltas by watching for changes to the source files of the project
-public class LiveRunner : Runner {
+internal class LiveRunner : Runner {
     public LiveRunner (Config config) : base (config) { }
 
     protected override Task PrepareToRun (CancellationToken ct = default) => Task.CompletedTask;
-    public override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
+
+    private protected override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
     {
         return Livecoding (baselineArtifacts, config.LiveCodingWatchDir, config.LiveCodingWatchPattern, ct);
     }
