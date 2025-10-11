@@ -7,49 +7,57 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.ExternalAccess.HotReload.Api;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.Build.Framework;
+using System.Linq;
+using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
-public record BaselineProject (Solution Solution, ProjectId ProjectId, EnC.ChangeMakerService ChangeMakerService) {
-
+internal record BaselineProject (Solution Solution, ProjectId ProjectId, HotReloadService HotReloadService) {
 
     public static async Task<BaselineProject> Make (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default) {
         (var changeMakerService, var solution, var projectId) = await PrepareMSBuildProject(config, capabilities, ct);
         return new BaselineProject(solution, projectId, changeMakerService);
     }
 
-    static async Task<(EnC.ChangeMakerService, Solution, ProjectId)> PrepareMSBuildProject (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default)
+    static async Task<(HotReloadService, Solution, ProjectId)> PrepareMSBuildProject (Config config, EnC.EditAndContinueCapabilities capabilities, CancellationToken ct = default)
     {
-                Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace msw;
-                // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
-                // to get an output path, is that true?
-                var props = new Dictionary<string,string> (config.Properties);
-                msw = Microsoft.CodeAnalysis.MSBuild.MSBuildWorkspace.Create(props);
-                msw.LoadMetadataForReferencedProjects = true;
-                _ = msw.RegisterWorkspaceFailedHandler(diag => {
-                    bool warning = diag.Diagnostic.Kind == WorkspaceDiagnosticKind.Warning;
-                    if (!warning)
-                        Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
-                    Console.WriteLine ($"MSBuildWorkspace {diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
-                    if (!warning)
-                        throw new DiffyException ("failed workspace", 1);
-                });
-                Microsoft.Build.Framework.ILogger? logger = null;
-#if false
-                logger = new Microsoft.Build.Logging.BinaryLogger () {
-                    Parameters = "/tmp/enc.binlog"
-                };
-#endif
-                var project = await msw.OpenProjectAsync (config.ProjectPath, logger, null, ct);
+        // https://stackoverflow.com/questions/43386267/roslyn-project-configuration says I have to specify at least a Configuration property
+        // to get an output path, is that true?
+        var props = new Dictionary<string,string> (config.Properties);
+        var workspace = MSBuildWorkspace.Create(props);
+        workspace.LoadMetadataForReferencedProjects = true;
+        _ = workspace.RegisterWorkspaceFailedHandler(diag => {
+            bool warning = diag.Diagnostic.Kind == WorkspaceDiagnosticKind.Warning;
+            if (!warning)
+                Console.WriteLine ($"msbuild failed opening project {config.ProjectPath}");
+            Console.WriteLine ($"MSBuildWorkspace {diag.Diagnostic.Kind}: {diag.Diagnostic.Message}");
+            if (!warning)
+                throw new DiffyException ("failed workspace", 1);
+        });
 
-                return (EnC.ChangeMakerService.Make (msw.Services, capabilities), msw.CurrentSolution, project.Id);
+        ILogger? logger = null;
+#if false
+        logger = new Microsoft.Build.Logging.BinaryLogger () {
+            Parameters = "/tmp/enc.binlog"
+        };
+#endif
+        var project = await workspace.OpenProjectAsync (config.ProjectPath, logger, null, ct);
+
+        var service = new HotReloadService(
+            workspace.CurrentSolution.Services,
+            () => new([.. capabilities.ToString().Split(", ")]));
+
+        return (service, workspace.CurrentSolution, project.Id);
     }
 
 
     public async Task<BaselineArtifacts> PrepareBaseline (CancellationToken ct = default) {
-        await ChangeMakerService.StartSessionAsync(Solution, ct);
+        await HotReloadService.StartSessionAsync(Solution, ct);
         var project = Solution.GetProject(ProjectId)!;
 
         // gets a snapshot of the text of the baseline document in memory
@@ -70,7 +78,7 @@ public record BaselineProject (Solution Solution, ProjectId ProjectId, EnC.Chang
             BaselineProjectId = ProjectId,
             BaselineOutputAsmPath = outputAsm,
             DocResolver = new DocResolver (project),
-            ChangeMakerService = ChangeMakerService
+            HotReloadService = HotReloadService
         };
         await t;
         return artifacts;

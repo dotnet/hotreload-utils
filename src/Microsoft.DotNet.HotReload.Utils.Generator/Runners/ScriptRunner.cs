@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator.Runners;
 
 /// Generate deltas by reading a script from a configuration file
 /// listing the changed versions of the project source files.
-public class ScriptRunner : Runner {
+internal class ScriptRunner : Runner {
 
     Script.ParsedScript? parsedScript;
     public ScriptRunner (Config config) : base (config) {
@@ -69,7 +69,8 @@ public class ScriptRunner : Runner {
         }
         return true;
     }
-    public override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
+
+    private protected override IAsyncEnumerable<Delta> SetupDeltas (BaselineArtifacts baselineArtifacts, CancellationToken ct = default)
     {
         if (parsedScript == null)
             return Util.AsyncEnumerableExtras.Empty<Delta>();

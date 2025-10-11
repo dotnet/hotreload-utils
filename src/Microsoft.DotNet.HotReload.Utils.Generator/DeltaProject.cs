@@ -10,21 +10,22 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.HotReload.Api;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
 /// Drives the creation of deltas from textual changes.
-public class DeltaProject
+internal class DeltaProject
 {
-    readonly EnC.ChangeMakerService _changeMakerService;
+    readonly HotReloadService _hotReloadService;
 
     readonly Solution _solution;
     readonly ProjectId _baseProjectId;
     readonly DeltaNaming _nextName;
 
     public DeltaProject(BaselineArtifacts artifacts) {
-        _changeMakerService = artifacts.ChangeMakerService;
+        _hotReloadService = artifacts.HotReloadService;
         _solution = artifacts.BaselineSolution;
         _baseProjectId = artifacts.BaselineProjectId;
         _nextName = new DeltaNaming(artifacts.BaselineOutputAsmPath, 1);
@@ -32,7 +33,7 @@ public class DeltaProject
 
     internal DeltaProject (DeltaProject prev, Solution newSolution)
     {
-        _changeMakerService = prev._changeMakerService;
+        _hotReloadService = prev._hotReloadService;
         _solution = newSolution;
         _baseProjectId = prev._baseProjectId;
         _nextName = prev._nextName.Next ();
@@ -92,28 +93,28 @@ public class DeltaProject
 
         Console.WriteLine ($"Found changes in {oldDocument.Name}");
 
-        var updates2 = await _changeMakerService.EmitSolutionUpdateAsync (updatedSolution, ct);
+        var updates = await _hotReloadService.GetUpdatesAsync (updatedSolution, runningProjects: [], ct);
 
-        if (updates2.CompilationDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)) {
+        if (updates.PersistentDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)) {
             var sb = new StringBuilder();
-            foreach (var diag in updates2.CompilationDiagnostics) {
+            foreach (var diag in updates.PersistentDiagnostics) {
                 sb.AppendLine (diag.ToString ());
             }
             throw new DiffyException ($"Failed to emit delta for {oldDocument.Name}: {sb}", exitStatus: 8);
         }
 
-        foreach (var fancyChange in updates2.ProjectUpdates)
+        foreach (var fancyChange in updates.ProjectUpdates)
         {
             Console.WriteLine("change service made {0}", fancyChange.ModuleId);
         }
 
-        _changeMakerService.CommitUpdate();
+        _hotReloadService.CommitUpdate();
 
         await using (var output = makeOutputs != null ?  makeOutputs(dinfo) : DefaultMakeFileOutputs(dinfo)) {
-            if (updates2.ProjectUpdates.Length != 1) {
-                throw new DiffyException($"Expected only one module in the delta, got {updates2.ProjectUpdates.Length}", exitStatus: 10);
+            if (updates.ProjectUpdates.Length != 1) {
+                throw new DiffyException($"Expected only one module in the delta, got {updates.ProjectUpdates.Length}", exitStatus: 10);
             }
-            var update = updates2.ProjectUpdates.First();
+            var update = updates.ProjectUpdates.First();
             output.MetaStream.Write(update.MetadataDelta.AsSpan());
             output.IlStream.Write(update.ILDelta.AsSpan());
             output.PdbStream.Write(update.PdbDelta.AsSpan());
