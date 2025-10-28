@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.HotReload.Api;
 
 namespace Microsoft.DotNet.HotReload.Utils.Generator;
 
@@ -12,4 +13,4 @@ namespace Microsoft.DotNet.HotReload.Utils.Generator;
 /// BaselineOutputAsmPath: absolute path of the baseline assembly
 /// DocResolver: a map from document ids to documents
 /// ChangeMakerService: A stateful encapsulatio of the series of changes that have been made to the baseline
-public record struct BaselineArtifacts (Solution BaselineSolution, ProjectId BaselineProjectId, string BaselineOutputAsmPath, DocResolver DocResolver, EnC.ChangeMakerService ChangeMakerService);
+internal record struct BaselineArtifacts (Solution BaselineSolution, ProjectId BaselineProjectId, string BaselineOutputAsmPath, DocResolver DocResolver, HotReloadService HotReloadService);
