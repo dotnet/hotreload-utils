@@ -12,10 +12,10 @@
     <!-- roslyn -->
     <MicrosoftCodeAnalysisVersion>5.3.0-1.25524.13</MicrosoftCodeAnalysisVersion>
     <!-- arcade -->
-    <MicrosoftDotNetBuildTasksTemplatingVersion>11.0.0-beta.25524.1</MicrosoftDotNetBuildTasksTemplatingVersion>
-    <MicrosoftDotNetRemoteExecutorVersion>11.0.0-beta.25524.1</MicrosoftDotNetRemoteExecutorVersion>
-    <MicrosoftDotNetXUnitExtensionsVersion>11.0.0-beta.25524.1</MicrosoftDotNetXUnitExtensionsVersion>
-    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.9.3-beta.25524.1</MicrosoftDotNetXUnitConsoleRunnerVersion>
+    <MicrosoftDotNetBuildTasksTemplatingVersion>11.0.0-beta.25531.1</MicrosoftDotNetBuildTasksTemplatingVersion>
+    <MicrosoftDotNetRemoteExecutorVersion>11.0.0-beta.25531.1</MicrosoftDotNetRemoteExecutorVersion>
+    <MicrosoftDotNetXUnitExtensionsVersion>11.0.0-beta.25531.1</MicrosoftDotNetXUnitExtensionsVersion>
+    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.9.3-beta.25531.1</MicrosoftDotNetXUnitConsoleRunnerVersion>
     <!--
       These are used as reference assemblies only, so they must not take a ProdCon/source-build
       version. Insert "RefOnly" to avoid assignment via PVP.
