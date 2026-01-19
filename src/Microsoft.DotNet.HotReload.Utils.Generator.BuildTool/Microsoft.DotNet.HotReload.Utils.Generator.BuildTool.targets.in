@@ -5,7 +5,7 @@
     <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
     <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
 
-    <_HotReloadDeltaGeneratorTFM Condition="'$(_HotReloadDeltaGeneratorTFM)' == ''">${NetToolCurrent}</_HotReloadDeltaGeneratorTFM>
+    <_HotReloadDeltaGeneratorTFM Condition="'$(_HotReloadDeltaGeneratorTFM)' == ''">${BundledNETCoreAppTargetFramework}</_HotReloadDeltaGeneratorTFM>
 
     <_HotReloadDeltaGeneratorPath Condition="'$(_HotReloadDeltaGeneratorPath)' == ''">$(MSBuildThisFileDirectory)..\tools\$(_HotReloadDeltaGeneratorTFM)\Microsoft.DotNet.HotReload.Utils.Generator.BuildTool.dll</_HotReloadDeltaGeneratorPath>
 
