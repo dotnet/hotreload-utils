@@ -29,7 +29,7 @@
 
     <GenerateFileFromTemplate TemplateFile="$(HotReloadTargetsTemplateFile)"
                               OutputPath="$(HotReloadTargetsOutputFile)"
-                              Properties="NetToolCurrent=$(NetToolCurrent)">
+                              Properties="BundledNETCoreAppTargetFramework=$(BundledNETCoreAppTargetFramework)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
 
