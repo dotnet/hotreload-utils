@@ -7,25 +7,25 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25626.5">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.26080.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d8dca0b41b903e7182e64543773390b969dab96b</Sha>
+      <Sha>b0f891cf7c1febc0ebbae7dd787f8a0b4c0cbc95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.25626.5">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.26080.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d8dca0b41b903e7182e64543773390b969dab96b</Sha>
+      <Sha>b0f891cf7c1febc0ebbae7dd787f8a0b4c0cbc95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XUnitExtensions" Version="10.0.0-beta.25626.5">
+    <Dependency Name="Microsoft.DotNet.XUnitExtensions" Version="10.0.0-beta.26080.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d8dca0b41b903e7182e64543773390b969dab96b</Sha>
+      <Sha>b0f891cf7c1febc0ebbae7dd787f8a0b4c0cbc95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XUnitConsoleRunner" Version="2.9.3-beta.25626.5">
+    <Dependency Name="Microsoft.DotNet.XUnitConsoleRunner" Version="2.9.3-beta.26080.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d8dca0b41b903e7182e64543773390b969dab96b</Sha>
+      <Sha>b0f891cf7c1febc0ebbae7dd787f8a0b4c0cbc95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.RemoteExecutor" Version="10.0.0-beta.25626.5">
+    <Dependency Name="Microsoft.DotNet.RemoteExecutor" Version="10.0.0-beta.26080.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d8dca0b41b903e7182e64543773390b969dab96b</Sha>
+      <Sha>b0f891cf7c1febc0ebbae7dd787f8a0b4c0cbc95</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
