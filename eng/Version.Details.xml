@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.CodeAnalysis" Version="5.7.0-1.26217.5">
+    <Dependency Name="Microsoft.CodeAnalysis" Version="5.7.0-1.26226.5">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>77dc97b1312bf5969e6f8d36312871aa75ed92cc</Sha>
+      <Sha>8ef6c26347d8dcacc932230062125fda935760dd</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
