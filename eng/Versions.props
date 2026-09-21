@@ -12,10 +12,10 @@
     <!-- roslyn -->
     <MicrosoftCodeAnalysisVersion>5.6.0-2.26178.1</MicrosoftCodeAnalysisVersion>
     <!-- arcade -->
-    <MicrosoftDotNetBuildTasksTemplatingVersion>11.0.0-beta.26461.5</MicrosoftDotNetBuildTasksTemplatingVersion>
-    <MicrosoftDotNetRemoteExecutorVersion>11.0.0-beta.26461.5</MicrosoftDotNetRemoteExecutorVersion>
-    <MicrosoftDotNetXUnitExtensionsVersion>11.0.0-beta.26461.5</MicrosoftDotNetXUnitExtensionsVersion>
-    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.9.3-beta.26461.5</MicrosoftDotNetXUnitConsoleRunnerVersion>
+    <MicrosoftDotNetBuildTasksTemplatingVersion>12.0.0-beta.26469.3</MicrosoftDotNetBuildTasksTemplatingVersion>
+    <MicrosoftDotNetRemoteExecutorVersion>12.0.0-beta.26469.3</MicrosoftDotNetRemoteExecutorVersion>
+    <MicrosoftDotNetXUnitExtensionsVersion>12.0.0-beta.26469.3</MicrosoftDotNetXUnitExtensionsVersion>
+    <MicrosoftDotNetXUnitConsoleRunnerVersion>2.9.3-beta.26469.3</MicrosoftDotNetXUnitConsoleRunnerVersion>
     <!-- msbuild -->
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
     <MicrosoftBuildFrameworkVersion>$(MicrosoftBuildVersion)</MicrosoftBuildFrameworkVersion>
